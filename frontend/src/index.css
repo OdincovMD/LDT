@@ -1,0 +1,13 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  img {
+    @apply max-w-none;
+  }
+  
+  body {
+    font-family: 'Inter', sans-serif;
+  }
+}
