@@ -350,7 +350,7 @@ const Register = () => {
           <div className="mt-6 text-center">
             <p className="text-gray-600">
               Уже есть аккаунт?{' '}
-              <Link to={ENDPOINTS.LOGIN} onClick={() => {dispatch(setCurrentPage(PAGE_NAMES.OGIN))}} className="text-green-600 hover:text-green-500 font-medium">
+              <Link to={ENDPOINTS.LOGIN} onClick={() => {dispatch(setCurrentPage(PAGE_NAMES.LOGIN))}} className="text-green-600 hover:text-green-500 font-medium">
                 Войти в систему
               </Link>
             </p>

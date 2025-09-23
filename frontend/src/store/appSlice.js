@@ -5,7 +5,7 @@ import { registerUser } from "../asyncActions/registerUser"
 
 import { PAGE_NAMES } from '../imports/ENDPOINTS'
 
-// Функция для загрузки начального состояния из localStorage
+// Функция для загрузки начального состояния из localStorage или sessionStorage
 const loadInitialState = () => {
   const savedUser = localStorage.getItem('user')
   const rememberMe = localStorage.getItem('rememberMe') === 'true'
@@ -69,7 +69,7 @@ const appSlice = createSlice({
         localStorage.setItem('rememberMe', 'true')
       } else {
         sessionStorage.setItem('user', JSON.stringify(action.payload.user))
-        // Очищаем localStorage если был запомнен предыдущий пользователь
+        // Очищаем localStorage, если был запомнен предыдущий пользователь
         localStorage.removeItem('user')
         localStorage.setItem('rememberMe', 'false')
       }
