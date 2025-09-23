@@ -23,6 +23,9 @@
 /frontend/*.sln
 /frontend/*.sw?
 
+# temp files
+/temp
+
 # misc
 *.pptx
 *.pdf
