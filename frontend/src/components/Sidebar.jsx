@@ -1,25 +1,40 @@
 import { useSelector, useDispatch } from 'react-redux'
 import { Link, useLocation } from 'react-router-dom'
 import { 
-  Home, 
+  Home,
+  LogIn,
   User, 
   Mail, 
-  ChevronLeft 
+  ChevronLeft
 } from 'lucide-react'
+
+import { ENDPOINTS, PAGE_NAMES } from "../imports/ENDPOINTS"
+import { setCurrentPage, toggleSidebar } from '../store/appSlice'
 
 export default function Sidebar({ isOpen }) {
   const dispatch = useDispatch()
   const location = useLocation()
 
+  const user = useSelector(state => state.app.user)
+
+  const baseMenuItems = [
+    { path: ENDPOINTS.HOME, label: 'Главная', icon: Home },
+    { path: ENDPOINTS.ABOUT, label: 'О нас', icon: User },
+    { path: ENDPOINTS.CONTACT, label: 'Контакты', icon: Mail }
+  ]
+
+  const unauthMenuItems = [
+    { path: ENDPOINTS.LOGIN, label: 'Войти', icon: LogIn },
+  ]
+
   const menuItems = [
-    { path: '/', label: 'Главная', icon: Home },
-    { path: '/about', label: 'О нас', icon: User },
-    { path: '/contact', label: 'Контакты', icon: Mail }
+    ...baseMenuItems,
+    ...(!user ? unauthMenuItems : [])
   ]
 
   const handleNavigate = (path) => {
-    const pageName = path === '/' ? 'home' : path.slice(1)
-    dispatch({ type: 'SET_CURRENT_PAGE', payload: pageName })
+    const pageName = path === ENDPOINTS.HOME ? PAGE_NAMES.HOME : path.slice(1)
+    dispatch(setCurrentPage(pageName))
   }
 
   if (!isOpen) {
@@ -27,7 +42,7 @@ export default function Sidebar({ isOpen }) {
       <div className="w-16 bg-blue-600 min-h-screen fixed left-0 top-0 z-40">
         <div className="p-4">
           <button
-            onClick={() => dispatch({ type: 'TOGGLE_SIDEBAR' })}
+            onClick={() => dispatch(toggleSidebar())}
             className="text-white p-2 hover:bg-blue-700 rounded-md"
           >
             <ChevronLeft size={24} className="rotate-180" />
@@ -42,7 +57,7 @@ export default function Sidebar({ isOpen }) {
       <div className="p-4 flex items-center justify-between border-b border-blue-500">
         <h2 className="text-xl font-semibold">Меню</h2>
         <button
-          onClick={() => dispatch({ type: 'TOGGLE_SIDEBAR' })}
+          onClick={() => dispatch(toggleSidebar())}
           className="p-2 hover:bg-blue-700 rounded-md"
         >
           <ChevronLeft size={24} />
@@ -53,7 +68,7 @@ export default function Sidebar({ isOpen }) {
         <ul className="space-y-2">
           {menuItems.map((item) => {
             const Icon = item.icon
-            const isActive = location.pathname === item.path
+            const isActive = (location.pathname === item.path) || ((location.pathname === ENDPOINTS.REGISTER) && (item.path === ENDPOINTS.LOGIN))
             
             return (
               <li key={item.path}>

@@ -1,0 +1,160 @@
+import { createSlice } from '@reduxjs/toolkit'
+
+import { loginUser } from "../asyncActions/loginUser"
+import { registerUser } from "../asyncActions/registerUser"
+
+import { PAGE_NAMES } from '../imports/ENDPOINTS'
+
+// Функция для загрузки начального состояния из localStorage
+const loadInitialState = () => {
+  const savedUser = localStorage.getItem('user')
+  const rememberMe = localStorage.getItem('rememberMe') === 'true'
+  
+  if (!rememberMe) {
+    sessionStorage.removeItem('user')
+    return {
+      user: null,
+      rememberMe: false
+    }
+  }
+
+  return {
+    user: savedUser ? JSON.parse(savedUser) : null,
+    rememberMe
+  }
+}
+
+const initialState = {
+  sidebarOpen: true,
+  currentPage: PAGE_NAMES.HOME,
+  loading: false,
+  error: null,
+  ...loadInitialState()
+}
+
+const appSlice = createSlice({
+  name: "app",
+  initialState: initialState,
+  reducers: {
+    toggleSidebar: (state) => {
+      state.sidebarOpen = !state.sidebarOpen
+    },
+
+    setCurrentPage: (state, action) => {
+      state.currentPage = action.payload
+    },
+
+    setRememberMe: (state, action) => {
+      state.rememberMe = action.payload
+      localStorage.setItem('rememberMe', action.payload.toString())
+      
+      if (state.user) {
+        if (action.payload) {
+          localStorage.setItem('user', JSON.stringify(state.user))
+          sessionStorage.removeItem('user')
+        } else {
+          sessionStorage.setItem('user', JSON.stringify(state.user))
+          localStorage.removeItem('user')
+        }
+      }
+    },
+
+    loginSuccess: (state, action) => {
+      state.loading = false
+      state.user = action.payload.user
+      state.error = null
+
+      if (state.rememberMe) {
+        localStorage.setItem('user', JSON.stringify(action.payload.user))
+        localStorage.setItem('rememberMe', 'true')
+      } else {
+        sessionStorage.setItem('user', JSON.stringify(action.payload.user))
+        // Очищаем localStorage если был запомнен предыдущий пользователь
+        localStorage.removeItem('user')
+        localStorage.setItem('rememberMe', 'false')
+      }
+    },
+
+    logout: (state) => {
+      state.user = null
+      state.rememberMe = false
+      state.currentPage = PAGE_NAMES.HOME
+      
+      // Очищаем все хранилища
+      localStorage.removeItem('user')
+      localStorage.removeItem('rememberMe')
+      sessionStorage.removeItem('user')
+    },
+
+    clearError: (state) => {
+      state.error = null
+    }
+  },
+
+  extraReducers: (builder) => {
+    builder
+      // Логин
+      .addCase(loginUser.pending, (state) => {
+        state.loading = true
+        state.error = null
+      })
+      .addCase(loginUser.fulfilled, (state, action) => {
+        state.loading = false
+        state.user = action.payload.user
+        state.rememberMe = action.payload.rememberMe
+        state.error = null
+        
+        const storage = action.payload.rememberMe ? localStorage : sessionStorage
+        storage.setItem('user', JSON.stringify(action.payload.user))
+        localStorage.setItem('rememberMe', action.payload.rememberMe.toString())
+        
+        if (action.payload.rememberMe) {
+          sessionStorage.removeItem('user')
+        } else {
+          localStorage.removeItem('user')
+        }
+      })
+      .addCase(loginUser.rejected, (state, action) => {
+        state.loading = false
+        state.error = action.payload
+        state.user = null
+      })
+      
+      // Регистрация
+      .addCase(registerUser.pending, (state) => {
+        state.loading = true
+        state.error = null
+      })
+      .addCase(registerUser.fulfilled, (state, action) => {
+        state.loading = false
+        state.user = action.payload.user
+        state.rememberMe = action.payload.rememberMe
+        state.error = null
+        
+        const storage = action.payload.rememberMe ? localStorage : sessionStorage
+        storage.setItem('user', JSON.stringify(action.payload.user))
+        localStorage.setItem('rememberMe', action.payload.rememberMe.toString())
+        
+        if (action.payload.rememberMe) {
+          sessionStorage.removeItem('user')
+        } else {
+          localStorage.removeItem('user')
+        }
+      })
+      .addCase(registerUser.rejected, (state, action) => {
+        state.loading = false
+        state.error = action.payload
+        state.user = null
+      })
+  }
+})
+
+export const {
+  toggleSidebar,
+  setCurrentPage,
+  setRememberMe,
+  logout,
+  clearError
+} = appSlice.actions
+
+export const appReducer = appSlice.reducer

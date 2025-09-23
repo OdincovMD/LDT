@@ -2,12 +2,14 @@ import { useSelector, useDispatch } from 'react-redux'
 import Sidebar from './Sidebar'
 import Header from './Header'
 
+import { toggleSidebar } from '../store/appSlice'
+
 export default function Layout({ children }) {
   const sidebarOpen = useSelector(state => state.app.sidebarOpen)
   const dispatch = useDispatch()
 
   const toggleSidebar = () => {
-    dispatch({ type: 'TOGGLE_SIDEBAR' })
+    dispatch(toggleSidebar())
   }
 
   return (

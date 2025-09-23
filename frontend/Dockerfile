@@ -9,8 +9,7 @@ RUN apk update && apk add bash && \
     npm install
     # npm install react-redux react-router-dom && \
     # npm install -D tailwindcss postcss autoprefixer && \
-    # npm install lucide-react && \
-    # npx tailwindcss init -p
+    # npm install lucide-react &&
 
 COPY . .
 
