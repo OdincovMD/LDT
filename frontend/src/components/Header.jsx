@@ -3,41 +3,45 @@ import { LogOut, UserCircle } from 'lucide-react'
 import { useNavigate, useLocation } from 'react-router-dom'
 
 import { ENDPOINTS, PAGE_NAMES } from "../imports/ENDPOINTS"
-import { logout, setCurrentPage } from '../store/appSlice'
+import { logout } from '../store/appSlice'
 
 export default function Header() { // ← Убираем пропс onToggleSidebar
   const dispatch = useDispatch()
   const navigate = useLocation()
   const location = useLocation()
 
-  const currentPage = useSelector(state => state.app.currentPage)
   const user = useSelector(state => state.app.user)
   const sidebarOpen = useSelector(state => state.app.sidebarOpen)
 
   const pageTitles = {
-    [PAGE_NAMES.HOME]: 'Главная - Мониторинг системы',
+    [PAGE_NAMES.HOME]: 'Главная',
     [PAGE_NAMES.ABOUT]: 'О нашей компании',
     [PAGE_NAMES.CONTACT]: 'Контактная информация',
     [PAGE_NAMES.LOGIN]: 'Вход в систему',
-    [PAGE_NAMES.REGISTER]: 'Регистрация аккаунта'
+    [PAGE_NAMES.REGISTER]: 'Регистрация аккаунта',
+    [PAGE_NAMES.DASHBOARD]: 'Система мониторинга'
   }
 
   const pageDescriptions = {
-    [PAGE_NAMES.HOME]: 'Панель мониторинга в реальном времени',
+    [PAGE_NAMES.HOME]: 'Личный кабинет пользователя',
     [PAGE_NAMES.ABOUT]: 'Информация о нашем проекте и команде',
     [PAGE_NAMES.CONTACT]: 'Свяжитесь с нами для сотрудничества',
     [PAGE_NAMES.LOGIN]: 'Введите ваши учетные данные',
-    [PAGE_NAMES.REGISTER]: 'Создайте новый аккаунт'
+    [PAGE_NAMES.REGISTER]: 'Создайте новый аккаунт',
+    [PAGE_NAMES.DASHBOARD]: 'Мониторинг в реальном времени'
   }
 
   const getCurrentPageFromPath = () => {
     const path = location.pathname
-    if (path === ENDPOINTS.HOME) return PAGE_NAMES.HOME
-    if (path === ENDPOINTS.ABOUT) return PAGE_NAMES.ABOUT
-    if (path === ENDPOINTS.CONTACT) return PAGE_NAMES.CONTACT
-    if (path === ENDPOINTS.LOGIN) return PAGE_NAMES.LOGIN
-    if (path === ENDPOINTS.REGISTER) return PAGE_NAMES.REGISTER
-    return PAGE_NAMES.HOME
+    switch (path) {
+      case (ENDPOINTS.HOME): return PAGE_NAMES.HOME
+      case (ENDPOINTS.ABOUT): return PAGE_NAMES.ABOUT
+      case (ENDPOINTS.CONTACT): return PAGE_NAMES.CONTACT
+      case (ENDPOINTS.LOGIN): return PAGE_NAMES.LOGIN
+      case (ENDPOINTS.REGISTER): return PAGE_NAMES.REGISTER
+      case (ENDPOINTS.DASHBOARD): return PAGE_NAMES.DASHBOARD
+      default: return PAGE_NAMES.HOME
+    }
   }
 
   const currentPageName = getCurrentPageFromPath()
@@ -46,7 +50,6 @@ export default function Header() { // ← Убираем пропс onToggleSide
 
   const handleLogout = () => {
     dispatch(logout())
-    dispatch(setCurrentPage(PAGE_NAMES.LOGIN))
     navigate(ENDPOINTS.LOGIN)
   }
 

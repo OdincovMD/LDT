@@ -6,7 +6,8 @@ export const ENDPOINTS = {
     REGISTER: "/register",
     FORGOT_PASSWORD: "/forgot-password",
     TERMS: "/terms",
-    PRIVACY: "/privacy"
+    PRIVACY: "/privacy",
+    DASHBOARD: "/dashboard"
 }
 
 export const PAGE_NAMES = {
@@ -14,5 +15,6 @@ export const PAGE_NAMES = {
     CONTACT: 'contact',
     ABOUT: 'about',
     LOGIN: 'login',
-    REGISTER: 'register'
+    REGISTER: 'register',
+    DASHBOARD: "dashboard"
 }

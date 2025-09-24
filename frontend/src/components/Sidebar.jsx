@@ -5,11 +5,12 @@ import {
   LogIn,
   User, 
   Mail, 
-  ChevronLeft
+  ChevronLeft,
+  Monitor
 } from 'lucide-react'
 
 import { ENDPOINTS, PAGE_NAMES } from "../imports/ENDPOINTS"
-import { setCurrentPage, toggleSidebar } from '../store/appSlice'
+import { toggleSidebar } from '../store/appSlice'
 
 export default function Sidebar({ isOpen }) {
   const dispatch = useDispatch()
@@ -23,18 +24,22 @@ export default function Sidebar({ isOpen }) {
     { path: ENDPOINTS.CONTACT, label: 'Контакты', icon: Mail }
   ]
 
+  const authMenuItems = [
+    { path: ENDPOINTS.DASHBOARD, label: 'Система', icon: Monitor } // ← Добавляем
+  ]
+
   const unauthMenuItems = [
     { path: ENDPOINTS.LOGIN, label: 'Войти', icon: LogIn },
   ]
 
   const menuItems = [
     ...baseMenuItems,
+    ...(user ? authMenuItems : []),
     ...(!user ? unauthMenuItems : [])
   ]
 
   const handleNavigate = (path) => {
     const pageName = path === ENDPOINTS.HOME ? PAGE_NAMES.HOME : path.slice(1)
-    dispatch(setCurrentPage(pageName))
   }
 
   if (!isOpen) {

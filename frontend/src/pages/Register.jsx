@@ -6,7 +6,7 @@ import { Mail, Lock, User, Eye, EyeOff, UserPlus, Check, X } from 'lucide-react'
 import { useState, useEffect } from 'react'
 
 import { ENDPOINTS, PAGE_NAMES } from "../imports/ENDPOINTS"
-import { setRememberMe, setCurrentPage } from '../store/appSlice'
+import { setRememberMe } from '../store/appSlice'
 import { registerUser } from '../asyncActions/registerUser'
 
 const Register = () => {
@@ -33,10 +33,6 @@ const Register = () => {
   }, [watchRememberMe, dispatch])
 
   useEffect(() => {
-    dispatch(setCurrentPage(PAGE_NAMES.REGISTER))
-  }, [dispatch])
-
-  useEffect(() => {
     const calculatePasswordStrength = (pass) => {
       let strength = 0
       if (pass.length >= 8) strength += 1
@@ -58,7 +54,7 @@ const Register = () => {
         rememberMe: data.rememberMe
       })).unwrap()
       
-      setCurrentPage(PAGE_NAMES.HOME)
+      // Если успешно, переходим на главную
       navigate(ENDPOINTS.HOME)
 
     } catch (error) {
@@ -350,7 +346,7 @@ const Register = () => {
           <div className="mt-6 text-center">
             <p className="text-gray-600">
               Уже есть аккаунт?{' '}
-              <Link to={ENDPOINTS.LOGIN} onClick={() => {dispatch(setCurrentPage(PAGE_NAMES.LOGIN))}} className="text-green-600 hover:text-green-500 font-medium">
+              <Link to={ENDPOINTS.LOGIN} className="text-green-600 hover:text-green-500 font-medium">
                 Войти в систему
               </Link>
             </p>

@@ -26,7 +26,6 @@ const loadInitialState = () => {
 
 const initialState = {
   sidebarOpen: true,
-  currentPage: PAGE_NAMES.HOME,
   loading: false,
   error: null,
   ...loadInitialState()
@@ -38,10 +37,6 @@ const appSlice = createSlice({
   reducers: {
     toggleSidebar: (state) => {
       state.sidebarOpen = !state.sidebarOpen
-    },
-
-    setCurrentPage: (state, action) => {
-      state.currentPage = action.payload
     },
 
     setRememberMe: (state, action) => {
@@ -78,7 +73,6 @@ const appSlice = createSlice({
     logout: (state) => {
       state.user = null
       state.rememberMe = false
-      state.currentPage = PAGE_NAMES.HOME
       
       // Очищаем все хранилища
       localStorage.removeItem('user')
@@ -151,7 +145,6 @@ const appSlice = createSlice({
 
 export const {
   toggleSidebar,
-  setCurrentPage,
   setRememberMe,
   logout,
   clearError

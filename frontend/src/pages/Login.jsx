@@ -6,7 +6,7 @@ import { Mail, Lock, LogIn, Eye, EyeOff } from 'lucide-react'
 import { useState, useEffect } from 'react'
 
 import { ENDPOINTS, PAGE_NAMES } from "../imports/ENDPOINTS"
-import { setRememberMe, setCurrentPage } from '../store/appSlice'
+import { setRememberMe } from '../store/appSlice'
 import { loginUser } from '../asyncActions/loginUser'
 
 const Login = () => {
@@ -27,10 +27,6 @@ const Login = () => {
   dispatch(setRememberMe(watchRememberMe))
   }, [watchRememberMe, dispatch])
 
-  useEffect(() => {
-    dispatch(setCurrentPage(PAGE_NAMES.LOGIN))
-  }, [dispatch])
-
   const onSubmit = async (data) => {
     try {
       // Диспатчим асинхронный thunk с fetch
@@ -41,7 +37,6 @@ const Login = () => {
       })).unwrap()
       
       // Если успешно, перенаправляем
-      dispatch(setCurrentPage(PAGE_NAMES.HOME))
       navigate(ENDPOINTS.HOME)
 
     } catch (error) {
@@ -171,7 +166,7 @@ const Login = () => {
           <div className="mt-6 text-center">
             <p className="text-gray-600">
               Еще нет аккаунта?{' '}
-              <Link to={ENDPOINTS.REGISTER} onClick={() => {dispatch(setCurrentPage(PAGE_NAMES.REGISTER))}} className="text-blue-600 hover:text-blue-500 font-medium">
+              <Link to={ENDPOINTS.REGISTER} className="text-blue-600 hover:text-blue-500 font-medium">
                 Зарегистрироваться
               </Link>
             </p>
