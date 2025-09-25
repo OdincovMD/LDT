@@ -3,15 +3,14 @@ FastAPI-приложение для онлайн-инференса КТГ.
 """
 
 from fastapi import FastAPI
-import uvicorn
 import os
-from ml.inference.core import CTGInference
-from ml.inference.postprocess import AlarmConfig, AlarmState
-from ml.api.schemas import WindowRequest, PredictionResponse
+from inference.core import CTGInference
+from inference.postprocess import AlarmConfig, AlarmState
+from api.schemas import WindowRequest, PredictionResponse
 
 app = FastAPI(title="ML service")
 
-model = CTGInference(os.path.join("ml", "inference", "models", "model_v1.cbm"))
+model = CTGInference(os.path.join("inference", "models", "model_v1.cbm"))
 
 cfg = AlarmConfig(
     on_thr=0.80,      # включаем тревогу
@@ -34,6 +33,3 @@ def predict(req: WindowRequest):
         label=int(result["label"]),
         alert=alert
     )
-
-if __name__ == "__main__":
-    uvicorn.run("ml.api.main:app", host="0.0.0.0", port=8000, reload=True)

@@ -8,7 +8,7 @@
 from fastapi import APIRouter, HTTPException
 from typing import List
 from src.schemas import RawSignalCreate, RawSignalRead
-from src.queries.orm import SyncOrm
+from src.queries.sync_orm import SyncOrm
 
 router = APIRouter()
 

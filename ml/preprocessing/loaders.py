@@ -8,7 +8,7 @@
 import numpy as np
 import pandas as pd
 from scipy.signal import medfilt
-from ml.config import P
+from config import P
 
 
 def load_window_from_json(payload: dict) -> pd.DataFrame:

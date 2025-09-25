@@ -7,10 +7,10 @@
 
 import pandas as pd
 import numpy as np
-from ml.config import Params
-from ml.features.extra import compute_window_extra_features
-from ml.features.common import compute_window_basic_features
-from ml.features.figo_rules import summarize_events_on_window
+from config import Params
+from features.extra import compute_window_extra_features
+from features.common import compute_window_basic_features
+from features.figo_rules import summarize_events_on_window
 
 
 class CTGFeatureBuilder:

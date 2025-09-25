@@ -5,7 +5,7 @@
 
 from fastapi import APIRouter, HTTPException
 from src.schemas import UserRead
-from src.queries.orm import SyncOrm
+from src.queries.sync_orm import SyncOrm
 
 router = APIRouter()
 
