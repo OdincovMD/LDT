@@ -35,7 +35,6 @@ const Register = () => {
   useEffect(() => {
     const calculatePasswordStrength = (pass) => {
       let strength = 0
-      if (pass.length >= 8) strength += 1
       if (/[A-Z]/.test(pass)) strength += 1
       if (/[0-9]/.test(pass)) strength += 1
       if (/[^A-Za-z0-9]/.test(pass)) strength += 1
@@ -65,13 +64,13 @@ const Register = () => {
 
   // Функция для отображения силы пароля
   const renderPasswordStrength = () => {
-    const strengthText = ['Слабый', 'Средний', 'Хороший', 'Отличный']
-    const strengthColors = ['bg-red-500', 'bg-orange-500', 'bg-yellow-500', 'bg-green-500']
+    const strengthText = ['Слабый', 'Средний', 'Отличный']
+    const strengthColors = ['bg-red-500', 'bg-yellow-500', 'bg-green-500']
     
     return (
       <div className="mt-2">
         <div className="flex space-x-1 mb-1">
-          {[1, 2, 3, 4].map((level) => (
+          {[1, 2, 3].map((level) => (
             <div
               key={level}
               className={`h-1 flex-1 rounded-full ${
@@ -82,8 +81,8 @@ const Register = () => {
         </div>
         <p className={`text-xs ${
           passwordStrength === 0 ? 'text-gray-500' : 
-          passwordStrength <= 2 ? 'text-red-600' : 
-          passwordStrength === 3 ? 'text-yellow-600' : 'text-green-600'
+          passwordStrength < 2 ? 'text-red-600' : 
+          passwordStrength === 2 ? 'text-yellow-600' : 'text-green-600'
         }`}>
           {password ? strengthText[passwordStrength - 1] || 'Слабый' : 'Введите пароль'}
         </p>
@@ -196,8 +195,8 @@ const Register = () => {
                   {...register('password', {
                     required: 'Пароль обязателен',
                     minLength: {
-                      value: 6,
-                      message: 'Пароль должен быть не менее 6 символов'
+                      value: 8,
+                      message: 'Пароль должен быть не менее 8 символов'
                     }
                   })}
                   type={showPassword ? 'text' : 'password'}

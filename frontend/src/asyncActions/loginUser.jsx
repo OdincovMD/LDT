@@ -1,43 +1,51 @@
 import { env } from "../imports/ENV"
 import { createAsyncThunk } from "@reduxjs/toolkit"
 
-import { ENDPOINTS } from "../imports/ENDPOINTS"
+import { BACKEND_ENDPOINTS } from "../imports/ENDPOINTS"
 
 export const loginUser = createAsyncThunk(
     'app/loginUser',
     async ({ email, password, rememberMe }, { rejectWithValue }) => {
 
-      return { 
-        user: {
-            name: 'Иван Иванов',
-            email: 'ivanivanov@mail.ru'
+    try {
+      const response_1 = await fetch(`${env.BACKEND_URL}${BACKEND_ENDPOINTS.AUTH.LOGIN}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
         },
-        rememberMe
+        body: JSON.stringify({ 
+          email: email,
+          password: password 
+        }),
+      })
+
+      if (!response_1.ok) {
+        const errorData = await response_1.json().catch(() => ({ message: 'Неизвестная ошибка' }))
+        throw new Error(errorData.message || `HTTP ошибка: ${response_1.status}`)
       }
 
-    /* Заглушка */
-    // try {
-    //   const response = await fetch(`${env.BACKEND_URL}${ENDPOINTS.LOGIN}`, {
-    //     method: 'POST',
-    //     headers: {
-    //       'Content-Type': 'application/json',
-    //     },
-    //     body: JSON.stringify({ email, password }),
-    //   })
+      // Всё прошло без ошибок, значит, можно обратиться к бэку по id пользователя
+      const token = await response_1.json()
 
-    //   if (!response.ok) {
-    //     const errorData = await response.json().catch(() => ({ message: 'Неизвестная ошибка' }))
-    //     throw new Error(errorData.message || `HTTP ошибка: ${response.status}`)
-    //   }
+      const user_id = token.acces_token.split('_')[2]
 
-    //   const data = await response.json()
+      const response_2 = await fetch(`${env.BACKEND_URL}${BACKEND_ENDPOINTS.USERS.BY_ID(user_id)}`, {
+        method: 'GET',
+      })
+
+      if (!response_2.ok) {
+        const errorData = await response_2.json().catch(() => ({ message: 'Неизвестная ошибка' }))
+        throw new Error(errorData.message || `HTTP ошибка: ${response_2.status}`)
+      }
       
-    //   return { 
-    //     user: data.user,
-    //     rememberMe 
-    //   }
-    // } catch (error) {
-    //   return rejectWithValue(error.message)
-    // }
+      const data = await response_2.json()
+
+      return { 
+        user: data.user,
+        rememberMe: rememberMe 
+      }
+    } catch (error) {
+      return rejectWithValue(error.message)
+    }
   }
 )
