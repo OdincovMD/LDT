@@ -1,0 +1,35 @@
+seed: 42
+
+# Предобработка сигналов
+kernel_size: 7             # размер окна медианного сглаживания
+alpha: 0.04                # коэф. экспоненциального сглаживания baseline
+fs: 1.0                    # частота дискретизации (Гц)
+baseline_minutes: 5.0      # окно для baseline (минуты)
+
+# UC (uterine contractions)
+uc_min_distance_s: 30.0
+uc_min_width_s: 20.0
+uc_rel_start: 0.30
+uc_prominence_min: 5.0
+uc_prominence_k_mad: 4.0
+uc_height_k_mad: 3.0
+uc_local_base_window_s: 20.0
+
+# Decelerations (FIGO criteria)
+decel_min_drop_bpm: 15.0
+decel_min_duration_s: 15.0
+prolonged_decel_min_s: 60.0
+abrupt_onset_s: 30.0
+
+# Accelerations (FIGO criteria)
+accel_min_rise_bpm: 15.0
+accel_min_duration_s: 15.0
+accel_total_threshold: 4
+
+# Variability
+low_var_bpm: 5.0
+low_var_min_s: 600.0
+
+# Tachycardia / Bradycardia
+tachy_bpm: 160.0
+brady_bpm: 110.0
