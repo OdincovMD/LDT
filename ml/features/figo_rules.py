@@ -11,7 +11,7 @@
 import pandas as pd
 import numpy as np
 from scipy.ndimage import label
-from ml.features.uc_features import detect_contractions
+from features.uc_features import detect_contractions
 
 def rolling_sd(x: np.ndarray, win_s: int, p) -> np.ndarray:
     """

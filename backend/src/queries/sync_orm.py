@@ -12,8 +12,8 @@ from sqlalchemy import select, inspect
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 from passlib.context import CryptContext
 
-from backend.src.database import Base, sync_engine, session_factory
-from backend.src import models
+from src.database import Base, sync_engine, session_factory
+from src import models
 
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -47,14 +47,14 @@ class SyncOrm:
         return pwd_context.verify(password, hashed)
 
     @staticmethod
-    def create_user(email: str, password: str, full_name: Optional[str] = None) -> models.User:
+    def create_user(email: str, password: str, name: Optional[str] = None) -> models.User:
         """
         Создаёт пользователя с уникальным email.
         Возвращает объект User или поднимает ValueError при дубликате.
         """
         with session_factory() as session:
             hashed = SyncOrm.hash_password(password)
-            user = models.User(email=email, hashed_password=hashed, full_name=full_name)
+            user = models.User(email=email, hashed_password=hashed, name=name)
             session.add(user)
             try:
                 session.commit()
@@ -82,12 +82,12 @@ class SyncOrm:
     #         PATIENT
     # =============================
     @staticmethod
-    def create_patient(owner_id: int, full_name: str, birth_date: Optional[datetime] = None) -> models.Patient:
+    def create_patient(owner_id: int, name: str, birth_date: Optional[datetime] = None) -> models.Patient:
         """
         Создаёт пациента для указанного пользователя.
         """
         with session_factory() as session:
-            patient = models.Patient(owner_id=owner_id, full_name=full_name, birth_date=birth_date)
+            patient = models.Patient(owner_id=owner_id, name=name, birth_date=birth_date)
             session.add(patient)
             try:
                 session.commit()

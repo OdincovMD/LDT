@@ -7,8 +7,8 @@
 
 from fastapi import APIRouter, HTTPException
 from typing import List
-from backend.src.schemas import PredictionCreate, PredictionRead
-from backend.src.queries.orm import SyncOrm
+from src.schemas import PredictionCreate, PredictionRead
+from src.queries.sync_orm import SyncOrm
 
 router = APIRouter()
 

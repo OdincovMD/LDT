@@ -5,8 +5,8 @@
 
 from fastapi import APIRouter, HTTPException
 from typing import List
-from backend.src.schemas import CaseCreate, CaseRead
-from backend.src.queries.orm import SyncOrm
+from src.schemas import CaseCreate, CaseRead
+from src.queries.sync_orm import SyncOrm
 
 router = APIRouter()
 

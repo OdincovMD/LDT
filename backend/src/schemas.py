@@ -24,7 +24,7 @@ class ORMModel(BaseModel):
 class UserBase(BaseModel):
     """Общие поля пользователя: email и ФИО."""
     email: EmailStr
-    full_name: Optional[str] = None
+    name: Optional[str] = None
 
 
 class UserCreate(UserBase):
@@ -55,7 +55,7 @@ class Token(BaseModel):
 # =========================
 class PatientBase(BaseModel):
     """Общие поля пациента."""
-    full_name: str
+    name: str
     birth_date: Optional[datetime] = None
 
 
@@ -137,3 +137,16 @@ class PredictionRead(ORMModel, PredictionBase):
     id: int
     case_id: int
     created_at: datetime
+
+
+# =========================
+#     МОДЕЛИ ЗАПРОСОВ
+# =========================
+class SimStartReq(BaseModel):
+    case_id: int
+    hz: float = Field(1.0, gt=0, le=10, description="Частота генерации сигналов, Гц (0<Hz≤10)")
+
+
+class SimStopReq(BaseModel):
+    case_id: int
+

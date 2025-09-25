@@ -7,8 +7,8 @@
 
 from fastapi import APIRouter, HTTPException
 from typing import List
-from backend.src.schemas import PatientCreate, PatientRead
-from backend.src.queries.orm import SyncOrm
+from src.schemas import PatientCreate, PatientRead
+from src.queries.sync_orm import SyncOrm
 
 router = APIRouter()
 
@@ -20,7 +20,7 @@ def create_patient(patient: PatientCreate, owner_id: int):
     owner_id сейчас передаётся в query-параметрах.
     """
     try:
-        return SyncOrm.create_patient(owner_id, patient.full_name, patient.birth_date)
+        return SyncOrm.create_patient(owner_id, patient.name, patient.birth_date)
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Failed to create patient: {e}")
 

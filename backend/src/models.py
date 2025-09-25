@@ -15,7 +15,7 @@ from sqlalchemy import (
     func,
 )
 from sqlalchemy.orm import relationship
-from backend.src.database import BaseModel
+from src.database import BaseModel
 
 
 class User(BaseModel):
@@ -28,7 +28,7 @@ class User(BaseModel):
     id = Column(Integer, primary_key=True, index=True)
     email = Column(String, unique=True, nullable=False, index=True)
     hashed_password = Column(String, nullable=False)
-    full_name = Column(String, nullable=True)
+    name = Column(String, nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
     # связи: один пользователь → много пациентов
@@ -46,7 +46,7 @@ class Patient(BaseModel):
     __tablename__ = "patients"
 
     id = Column(Integer, primary_key=True, index=True)
-    full_name = Column(String, nullable=False)
+    name = Column(String, nullable=False)
     birth_date = Column(DateTime, nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 

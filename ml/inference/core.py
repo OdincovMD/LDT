@@ -10,9 +10,9 @@
 
 import pandas as pd
 from catboost import CatBoostClassifier
-from ml.preprocessing.loaders import load_window_from_json
-from ml.features.builder import CTGFeatureBuilder
-from ml.config import P
+from preprocessing.loaders import load_window_from_json
+from features.builder import CTGFeatureBuilder
+from config import P
 
 
 class CTGInference:

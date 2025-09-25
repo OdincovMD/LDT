@@ -26,7 +26,7 @@ class Settings(BaseSettings):
         return f"postgresql://{self.DB_USER}:{self.DB_PASS}@{self.DB_HOST}:{self.DB_PORT}/{self.DB_NAME}"
     
     # Конфигурация pydantic-settings
-    model_config = SettingsConfigDict(env_file="backend/.env")
+    model_config = SettingsConfigDict(env_file=".env")
 
 
 settings = Settings()

@@ -6,8 +6,8 @@
 """
 
 from fastapi import APIRouter, HTTPException
-from backend.src.schemas import UserCreate, UserRead, LoginRequest, Token
-from backend.src.queries.orm import SyncOrm
+from src.schemas import UserCreate, UserRead, LoginRequest, Token
+from src.queries.sync_orm import SyncOrm
 
 router = APIRouter()
 
@@ -18,7 +18,7 @@ def register(user: UserCreate):
     При дублировании email возвращает 400.
     """
     try:
-        return SyncOrm.create_user(user.email, user.password, user.full_name)
+        return SyncOrm.create_user(user.email, user.password, user.name)
     except ValueError:
         raise HTTPException(status_code=400, detail="Email already registered")
 

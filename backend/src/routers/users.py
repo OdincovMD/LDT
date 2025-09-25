@@ -4,8 +4,8 @@
 """
 
 from fastapi import APIRouter, HTTPException
-from backend.src.schemas import UserRead
-from backend.src.queries.orm import SyncOrm
+from src.schemas import UserRead
+from src.queries.sync_orm import SyncOrm
 
 router = APIRouter()
 

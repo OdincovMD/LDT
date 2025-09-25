@@ -60,4 +60,4 @@ def load_params(path: str) -> Params:
     return Params(**cfg)
 
 
-P = load_params(os.path.join("ml", "configs", "default.yaml"))
+P = load_params(os.path.join("configs", "default.yaml"))
