@@ -8,6 +8,7 @@ import { PAGE_NAMES } from '../imports/ENDPOINTS'
 // Функция для загрузки начального состояния из localStorage или sessionStorage
 const loadInitialState = () => {
   const savedUser = localStorage.getItem('user')
+  const checkUser = savedUser === 'undefined' ? null : savedUser
   const rememberMe = localStorage.getItem('rememberMe') === 'true'
   
   if (!rememberMe) {
@@ -19,7 +20,7 @@ const loadInitialState = () => {
   }
 
   return {
-    user: savedUser ? JSON.parse(savedUser) : null,
+    user: checkUser ? JSON.parse(checkUser) : null,
     rememberMe
   }
 }

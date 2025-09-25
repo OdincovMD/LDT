@@ -2,7 +2,7 @@ import React from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { useDispatch, useSelector } from 'react-redux'
-import { Mail, Lock, LogIn, Eye, EyeOff } from 'lucide-react'
+import { Mail, Lock, LogIn, Eye, EyeOff, X } from 'lucide-react'
 import { useState, useEffect } from 'react'
 
 import { ENDPOINTS, PAGE_NAMES } from "../imports/ENDPOINTS"
@@ -41,7 +41,7 @@ const Login = () => {
 
     } catch (error) {
       // Ошибка уже обработана в extraReducers
-      console.error('Login failed:', error)
+      console.error('Login failed:', error.details)
     }
   }
 
@@ -58,8 +58,10 @@ const Login = () => {
             <p className="text-gray-600">Введите ваши учетные данные</p>
           </div>
 
+          {/* Отображение ошибок */}
           {error && (
-            <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
+            <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded flex items-center">
+              <X size={16} className="mr-2" />
               {error}
             </div>
           )}

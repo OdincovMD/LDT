@@ -21,7 +21,7 @@ export const loginUser = createAsyncThunk(
       })
 
       if (!response_1.ok) {
-        const errorData = await response_1.json().catch(() => ({ message: 'Неизвестная ошибка' }))
+        const errorData = await response_1.json().catch(() => ({ detail: 'Неизвестная ошибка' }))
         throw new Error(errorData.detail || `HTTP ошибка: ${response_1.status}`)
       }
 
@@ -39,7 +39,7 @@ export const loginUser = createAsyncThunk(
       })
 
       if (!response_2.ok) {
-        const errorData = await response_2.json().catch(() => ({ message: 'Неизвестная ошибка' }))
+        const errorData = await response_2.json().catch(() => ({ detail: 'Неизвестная ошибка' }))
         throw new Error(errorData.detail || `HTTP ошибка: ${response_2.status}`)
       }
       
