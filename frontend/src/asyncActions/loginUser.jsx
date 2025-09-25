@@ -12,6 +12,7 @@ export const loginUser = createAsyncThunk(
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'accept': 'application/json',
         },
         body: JSON.stringify({ 
           email: email,
@@ -21,21 +22,25 @@ export const loginUser = createAsyncThunk(
 
       if (!response_1.ok) {
         const errorData = await response_1.json().catch(() => ({ message: 'Неизвестная ошибка' }))
-        throw new Error(errorData.message || `HTTP ошибка: ${response_1.status}`)
+        throw new Error(errorData.detail || `HTTP ошибка: ${response_1.status}`)
       }
 
       // Всё прошло без ошибок, значит, можно обратиться к бэку по id пользователя
       const token = await response_1.json()
 
-      const user_id = token.acces_token.split('_')[2]
+      const user_id = token.access_token.split('_')[2]
 
       const response_2 = await fetch(`${env.BACKEND_URL}${BACKEND_ENDPOINTS.USERS.BY_ID(user_id)}`, {
         method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'accept': 'application/json',
+        },
       })
 
       if (!response_2.ok) {
         const errorData = await response_2.json().catch(() => ({ message: 'Неизвестная ошибка' }))
-        throw new Error(errorData.message || `HTTP ошибка: ${response_2.status}`)
+        throw new Error(errorData.detail || `HTTP ошибка: ${response_2.status}`)
       }
       
       const data = await response_2.json()

@@ -29,5 +29,6 @@
 # misc
 *.pptx
 *.pdf
+.env
 
 .git

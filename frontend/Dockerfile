@@ -16,10 +16,10 @@ COPY . .
 RUN npx tailwindcss init -p
 
 EXPOSE 5173
-# ARG BACKEND_URL
-# RUN echo "export const env = { \
-#             BACKEND_URL: '${BACKEND_URL}'\
-#             }"\
-#           > /app/src/imports/ENV.js
+ARG BACKEND_URL
+RUN echo "export const env = { \
+            BACKEND_URL: '${BACKEND_URL}'\
+            }"\
+          > /app/src/imports/ENV.js
 
 CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0", "--port", "5173"]

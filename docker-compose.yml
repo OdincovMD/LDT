@@ -1,15 +1,45 @@
 services:
+
+  # nginx:
+  #   build:
+  #     context: ./nginx
+  #     dockerfile: Dockerfile
+  #   ports:
+  #     - "90:80"
+  #   depends_on:
+  #     - frontend
+  #   networks:
+  #     - app-network
+  #   # develop:
+  #   #   watch:
+  #   #     - action: sync+restart
+  #   #       path: ./nginx/nginx.conf
+  #   #       target: /etc/nginx/nginx.conf
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    env_file:
+      - .env
+    ports:
+    - "9000:9000"
+    networks:
+      - app-network
+
   frontend:
     build:
       context: ./frontend
       dockerfile: Dockerfile
+      args:
+      - BACKEND_URL=${BACKEND_URL}
     environment:
       - NODE_ENV=development
       - WATCHPACK_POLLING=true
     networks:
       - app-network
-    # depends_on:
-    #   - backend
+    depends_on:
+      - backend
     ports:
       - "5173:5173"
     develop:
@@ -17,7 +47,61 @@ services:
         - action: sync
           path: ./frontend
           target: /app
+    
+  # ml:
+  #   build:
+  #     context: ./ml
+  #     dockerfile: Dockerfile
+  #   ports:
+  #   - "8000:8000"
+  #   networks:
+  #   - app-network
+  #   volumes:
+  #   - ./ml/weight:/app/weight
+  #   - ./log:/app/log
+  #    develop:
+  #      watch:
+  #        - action: sync+restart
+  #          path: ./ml
+  #          target: /app
+
+  postgres:
+    image: postgres:latest
+    container_name: postgres
+    restart: always
+    shm_size: 128mb
+    environment:
+      - POSTGRES_USER=${DB_USER}
+      - POSTGRES_PASSWORD=${DB_PASS}
+      - POSTGRES_DB=${DB_NAME}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - app-network
+    # develop:
+    #   watch:
+    #     - action: sync+restart
+    #       path: ./db
+    #       target: /app
+
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@example.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+    ports:
+      - "5050:80"
+    depends_on:
+      - postgres
+    networks:
+      - app-network
 
 networks:
   app-network:
     driver: bridge
+
+volumes:
+  postgres_data:

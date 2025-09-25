@@ -12,6 +12,7 @@ export const registerUser = createAsyncThunk(
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'accept': 'application/json',
         },
         body: JSON.stringify({ 
           email: email,

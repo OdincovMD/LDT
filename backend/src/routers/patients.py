@@ -7,8 +7,8 @@
 
 from fastapi import APIRouter, HTTPException
 from typing import List
-from backend.src.schemas import PatientCreate, PatientRead
-from backend.src.queries.orm import SyncOrm
+from src.schemas import PatientCreate, PatientRead
+from src.queries.orm import SyncOrm
 
 router = APIRouter()
 

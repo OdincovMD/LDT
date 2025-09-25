@@ -5,10 +5,19 @@
 """
 
 from fastapi import FastAPI
-from backend.src.routers import auth, users, patients, cases, stream, predictions
-from backend.src.queries.orm import SyncOrm
+from fastapi.middleware.cors import CORSMiddleware
+
+from src.routers import auth, users, patients, cases, stream, predictions
+from src.queries.orm import SyncOrm
 
 app = FastAPI(title="Backend", version="1.0.0")
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 @app.on_event("startup")
 def on_startup():
@@ -22,7 +31,7 @@ app.include_router(cases.router, prefix="/cases", tags=["cases"])
 app.include_router(stream.router, prefix="/stream", tags=["stream"])
 app.include_router(predictions.router, prefix="/predictions", tags=["predictions"])
 
-
-if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run("backend.src.main:app", host="0.0.0.0", port=8000, reload=True)
+# Добавим корневой эндпоинт для проверки
+@app.get("/")
+def root():
+    return {"message": "Backend is running!"}

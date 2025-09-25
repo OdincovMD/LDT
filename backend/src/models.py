@@ -15,7 +15,7 @@ from sqlalchemy import (
     func,
 )
 from sqlalchemy.orm import relationship
-from backend.src.database import BaseModel
+from src.database import BaseModel
 
 
 class User(BaseModel):

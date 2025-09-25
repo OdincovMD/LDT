@@ -12,8 +12,8 @@ from sqlalchemy import select, inspect
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 from passlib.context import CryptContext
 
-from backend.src.database import Base, sync_engine, session_factory
-from backend.src import models
+from src.database import Base, sync_engine, session_factory
+from src import models
 
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
