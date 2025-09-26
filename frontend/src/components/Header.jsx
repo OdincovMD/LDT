@@ -2,10 +2,10 @@ import { useDispatch, useSelector } from 'react-redux'
 import { LogOut, UserCircle } from 'lucide-react'
 import { useNavigate, useLocation } from 'react-router-dom'
 
-import { ENDPOINTS, PAGE_NAMES } from "../imports/ENDPOINTS"
+import { FRONTEND_PAGES, PAGE_NAMES } from "../imports/ENDPOINTS"
 import { logout } from '../store/appSlice'
 
-export default function Header() { // ← Убираем пропс onToggleSidebar
+export default function Header() {
   const dispatch = useDispatch()
   const navigate = useLocation()
   const location = useLocation()
@@ -15,31 +15,34 @@ export default function Header() { // ← Убираем пропс onToggleSide
 
   const pageTitles = {
     [PAGE_NAMES.HOME]: 'Главная',
+    [PAGE_NAMES.PATIENTS]: 'Мои пациенты',
+    [PAGE_NAMES.DASHBOARD]: 'Система мониторинга',
     [PAGE_NAMES.ABOUT]: 'О нашей компании',
     [PAGE_NAMES.CONTACT]: 'Контактная информация',
     [PAGE_NAMES.LOGIN]: 'Вход в систему',
-    [PAGE_NAMES.REGISTER]: 'Регистрация аккаунта',
-    [PAGE_NAMES.DASHBOARD]: 'Система мониторинга'
+    [PAGE_NAMES.REGISTER]: 'Регистрация аккаунта'
   }
 
   const pageDescriptions = {
     [PAGE_NAMES.HOME]: 'Личный кабинет пользователя',
+    [PAGE_NAMES.PATIENTS]: 'Управление пациентами и их исследованиями',
+    [PAGE_NAMES.DASHBOARD]: 'Мониторинг в реальном времени',
     [PAGE_NAMES.ABOUT]: 'Информация о нашем проекте и команде',
     [PAGE_NAMES.CONTACT]: 'Свяжитесь с нами для сотрудничества',
     [PAGE_NAMES.LOGIN]: 'Введите ваши учетные данные',
     [PAGE_NAMES.REGISTER]: 'Создайте новый аккаунт',
-    [PAGE_NAMES.DASHBOARD]: 'Мониторинг в реальном времени'
   }
 
   const getCurrentPageFromPath = () => {
     const path = location.pathname
     switch (path) {
-      case (ENDPOINTS.HOME): return PAGE_NAMES.HOME
-      case (ENDPOINTS.ABOUT): return PAGE_NAMES.ABOUT
-      case (ENDPOINTS.CONTACT): return PAGE_NAMES.CONTACT
-      case (ENDPOINTS.LOGIN): return PAGE_NAMES.LOGIN
-      case (ENDPOINTS.REGISTER): return PAGE_NAMES.REGISTER
-      case (ENDPOINTS.DASHBOARD): return PAGE_NAMES.DASHBOARD
+      case (FRONTEND_PAGES.HOME): return PAGE_NAMES.HOME
+      case (FRONTEND_PAGES.PATIENTS): return PAGE_NAMES.PATIENTS
+      case (FRONTEND_PAGES.DASHBOARD): return PAGE_NAMES.DASHBOARD
+      case (FRONTEND_PAGES.ABOUT): return PAGE_NAMES.ABOUT
+      case (FRONTEND_PAGES.CONTACT): return PAGE_NAMES.CONTACT
+      case (FRONTEND_PAGES.LOGIN): return PAGE_NAMES.LOGIN
+      case (FRONTEND_PAGES.REGISTER): return PAGE_NAMES.REGISTER
       default: return PAGE_NAMES.HOME
     }
   }
@@ -47,11 +50,6 @@ export default function Header() { // ← Убираем пропс onToggleSide
   const currentPageName = getCurrentPageFromPath()
   const pageTitle = pageTitles[currentPageName] || 'Мониторинг системы'
   const pageDescription = pageDescriptions[currentPageName] || ''
-
-  const handleLogout = () => {
-    dispatch(logout())
-    navigate(ENDPOINTS.LOGIN)
-  }
 
   return (
     <header className="bg-white shadow-sm border-b border-gray-200">
@@ -78,7 +76,7 @@ export default function Header() { // ← Убираем пропс onToggleSide
                   <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
                     <UserCircle size={20} className="text-white" />
                   </div>
-                  
+                {/*                   
                   <button 
                     onClick={handleLogout}
                     className="flex items-center space-x-1 px-3 py-2 rounded-md hover:bg-red-50 transition-colors duration-200"
@@ -86,7 +84,8 @@ export default function Header() { // ← Убираем пропс onToggleSide
                   >
                     <LogOut size={16} className="text-red-600" />
                     <span className="text-red-600 text-sm font-medium hidden md:inline">Выйти</span>
-                  </button>
+                  </button> 
+                */}
                 </div>
               ) : (
                 <div className="flex items-center space-x-2 text-sm text-gray-600">

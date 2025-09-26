@@ -1,45 +1,55 @@
 import { useSelector, useDispatch } from 'react-redux'
-import { Link, useLocation } from 'react-router-dom'
+import { Link, useLocation, Navigate } from 'react-router-dom'
 import { 
   Home,
   LogIn,
   User, 
   Mail, 
   ChevronLeft,
-  Monitor
+  Monitor,
+  LogOut,
+  Users
 } from 'lucide-react'
 
-import { ENDPOINTS, PAGE_NAMES } from "../imports/ENDPOINTS"
-import { toggleSidebar } from '../store/appSlice'
+import { FRONTEND_PAGES, PAGE_NAMES } from "../imports/ENDPOINTS"
+import { logout, toggleSidebar } from '../store/appSlice'
 
 export default function Sidebar({ isOpen }) {
   const dispatch = useDispatch()
+  const navigate = useLocation()
   const location = useLocation()
 
   const user = useSelector(state => state.app.user)
 
-  const baseMenuItems = [
-    { path: ENDPOINTS.HOME, label: 'Главная', icon: Home },
-    { path: ENDPOINTS.ABOUT, label: 'О нас', icon: User },
-    { path: ENDPOINTS.CONTACT, label: 'Контакты', icon: Mail }
-  ]
+  const baseMenuItems = {
+    HOME: { path: FRONTEND_PAGES.HOME, label: 'Главная', icon: Home },
+    ABOUT: { path: FRONTEND_PAGES.ABOUT, label: 'О нас', icon: User },
+    CONTACTS: { path: FRONTEND_PAGES.CONTACT, label: 'Контакты', icon: Mail }
+  }
 
-  const authMenuItems = [
-    { path: ENDPOINTS.DASHBOARD, label: 'Система', icon: Monitor } // ← Добавляем
-  ]
+  const authMenuItems = {
+    DASHBOARD: { path: FRONTEND_PAGES.DASHBOARD, label: 'Система', icon: Monitor },
+    USERS: {path: FRONTEND_PAGES.PATIENTS, label: 'Мои пациенты', icon: Users},
+    LOGOUT: { path: FRONTEND_PAGES.LOGOUT, label: 'Выйти', icon: LogOut },
+}
 
-  const unauthMenuItems = [
-    { path: ENDPOINTS.LOGIN, label: 'Войти', icon: LogIn },
-  ]
+  const unauthMenuItems = {
+    LOGIN: { path: FRONTEND_PAGES.LOGIN, label: 'Войти', icon: LogIn },
+  }
 
   const menuItems = [
-    ...baseMenuItems,
-    ...(user ? authMenuItems : []),
-    ...(!user ? unauthMenuItems : [])
+    baseMenuItems.HOME,
+    ...(user ? [authMenuItems.USERS, authMenuItems.DASHBOARD] : []),
+    baseMenuItems.ABOUT,
+    baseMenuItems.CONTACTS,
+    ...(user ? [authMenuItems.LOGOUT] : [unauthMenuItems.LOGIN]),
   ]
 
-  const handleNavigate = (path) => {
-    const pageName = path === ENDPOINTS.HOME ? PAGE_NAMES.HOME : path.slice(1)
+  const handleLogout = () => {
+    dispatch(logout())
+    return (
+      <Navigate to={FRONTEND_PAGES.LOGIN}/>
+    )
   }
 
   if (!isOpen) {
@@ -72,27 +82,40 @@ export default function Sidebar({ isOpen }) {
       <nav className="p-4">
         <ul className="space-y-2">
           {menuItems.map((item) => {
-            const Icon = item.icon
-            const isActive = (location.pathname === item.path) || ((location.pathname === ENDPOINTS.REGISTER) && (item.path === ENDPOINTS.LOGIN))
-            
-            return (
-              <li key={item.path}>
-                <Link
-                  to={item.path}
-                  onClick={() => handleNavigate(item.path)}
-                  className={`flex items-center space-x-3 p-3 rounded-md transition-colors ${
-                    isActive 
+              const Icon = item.icon
+              const isActive = (location.pathname === item.path) || 
+                              ((location.pathname === FRONTEND_PAGES.REGISTER) && (item.path === FRONTEND_PAGES.LOGIN))
+              
+              const commonClasses = `flex items-center space-x-3 p-3 rounded-md transition-colors ${
+                  isActive 
                       ? 'bg-blue-700 text-white' 
                       : 'hover:bg-blue-700 text-blue-100'
-                  }`}
-                >
-                  <Icon size={20} />
-                  <span>{item.label}</span>
-                </Link>
-              </li>
-            )
+              }`
+
+              if (item.path !== FRONTEND_PAGES.LOGOUT) {
+                  return (
+                      <li key={item.path}>
+                          <Link to={item.path} className={commonClasses}>
+                              <Icon size={20} />
+                              <span>{item.label}</span>
+                          </Link>
+                      </li>
+                  )
+              }
+              
+              return (
+                  <li key={item.path}>
+                      <button
+                          onClick={handleLogout}
+                          className={`${commonClasses} w-full text-left`}
+                      >
+                          <Icon size={20} />
+                          <span>{item.label}</span>
+                      </button>
+                  </li>
+              )
           })}
-        </ul>
+      </ul>
       </nav>
     </div>
   )

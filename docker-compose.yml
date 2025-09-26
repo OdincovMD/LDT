@@ -27,7 +27,7 @@ services:
       - WATCHPACK_POLLING=true
       - FRONTEND_PORT=5173
     expose:
-      - "5173"
+      - "${FRONTEND_PORT}"
     depends_on:
       - backend
     networks:
@@ -44,7 +44,7 @@ services:
       dockerfile: Dockerfile
     environment:
       - DB_HOST=${DB_HOST}
-      - DB_PORT=${DB_PORT}
+      - DB_PORT=5432
       - DB_USER=${DB_USER}
       - DB_PASS=${DB_PASS}
       - DB_NAME=${DB_NAME}
@@ -56,6 +56,11 @@ services:
       - ml
     networks:
       - app-network
+    develop:
+      watch:
+        - action: sync
+          path: ./backend
+          target: /app
 
   ml:
     build:
@@ -74,8 +79,9 @@ services:
       - POSTGRES_USER=${DB_USER}
       - POSTGRES_PASSWORD=${DB_PASS}
       - POSTGRES_DB=${DB_NAME}
+    # Мне кажется, здесь можно просто expose поставить
     ports:
-      - "${DB_PORT}:${DB_PORT}"
+      - "${DB_PORT}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     networks:

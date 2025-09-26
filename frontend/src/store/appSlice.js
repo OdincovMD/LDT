@@ -55,22 +55,6 @@ const appSlice = createSlice({
       }
     },
 
-    loginSuccess: (state, action) => {
-      state.loading = false
-      state.user = action.payload.user
-      state.error = null
-
-      if (state.rememberMe) {
-        localStorage.setItem('user', JSON.stringify(action.payload.user))
-        localStorage.setItem('rememberMe', 'true')
-      } else {
-        sessionStorage.setItem('user', JSON.stringify(action.payload.user))
-        // Очищаем localStorage, если был запомнен предыдущий пользователь
-        localStorage.removeItem('user')
-        localStorage.setItem('rememberMe', 'false')
-      }
-    },
-
     logout: (state) => {
       state.user = null
       state.rememberMe = false
@@ -79,6 +63,7 @@ const appSlice = createSlice({
       localStorage.removeItem('user')
       localStorage.removeItem('rememberMe')
       sessionStorage.removeItem('user')
+      sessionStorage.removeItem('rememberMe')
     },
 
     clearError: (state) => {

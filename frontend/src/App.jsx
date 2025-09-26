@@ -7,9 +7,10 @@ import Contact from './pages/Contact'
 import Register from './pages/Register'
 import Login from './pages/Login'
 import Dashboard from './pages/Dashboard'
+import Patients from './pages/Patients'
 import { useSelector } from 'react-redux'
 
-import { ENDPOINTS } from "./imports/ENDPOINTS"
+import { FRONTEND_PAGES } from "./imports/ENDPOINTS"
 
 function App() {
 
@@ -18,15 +19,16 @@ function App() {
   return (
     <Layout>
       <Routes>
-        <Route path={ENDPOINTS.LOGIN} element={!user ? <Login /> : <Navigate to={ENDPOINTS.HOME} />} />
-        <Route path={ENDPOINTS.REGISTER} element={!user ? <Register /> : <Navigate to={ENDPOINTS.HOME} />} />
+        <Route path={FRONTEND_PAGES.LOGIN} element={!user ? <Login /> : <Navigate to={FRONTEND_PAGES.HOME} />} />
+        <Route path={FRONTEND_PAGES.REGISTER} element={!user ? <Register /> : <Navigate to={FRONTEND_PAGES.HOME} />} />
 
           <Route index element={<Home />} />
-          <Route path={ENDPOINTS.ABOUT.slice(1)} element={<About />} />
-          <Route path={ENDPOINTS.CONTACT.slice(1)} element={<Contact />} />
-          <Route path={ENDPOINTS.DASHBOARD.slice(1)} element={user ? <Dashboard /> : <Navigate to={ENDPOINTS.HOME} />} />
+          <Route path={FRONTEND_PAGES.ABOUT.slice(1)} element={<About />} />
+          <Route path={FRONTEND_PAGES.CONTACT.slice(1)} element={<Contact />} />
+          <Route path={FRONTEND_PAGES.DASHBOARD.slice(1)} element={user ? <Dashboard /> : <Navigate to={FRONTEND_PAGES.HOME} />} />
+          <Route path={FRONTEND_PAGES.PATIENTS.slice(1)} element={<Patients />} />
 
-        <Route path="*" element={<Navigate to={ENDPOINTS.HOME} />} />
+        <Route path="*" element={<Navigate to={FRONTEND_PAGES.HOME} />} />
       </Routes>
     </Layout>
   )

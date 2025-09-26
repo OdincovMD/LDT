@@ -1,6 +1,7 @@
 import { env } from "../imports/ENV"
 import { createAsyncThunk } from "@reduxjs/toolkit"
 
+import { clearError } from "../store/appSlice"
 import { BACKEND_ENDPOINTS } from "../imports/ENDPOINTS"
 
 export const loginUser = createAsyncThunk(
@@ -22,7 +23,8 @@ export const loginUser = createAsyncThunk(
 
       if (!response_1.ok) {
         const errorData = await response_1.json().catch(() => ({ detail: 'Неизвестная ошибка' }))
-        throw new Error(errorData.detail || `HTTP ошибка: ${response_1.status}`)
+        const errorMessage = errorData.detail.message
+        throw new Error(errorMessage || `HTTP ошибка: ${response_1.status}`)
       }
 
       // Всё прошло без ошибок, значит, можно обратиться к бэку по id пользователя
@@ -40,13 +42,19 @@ export const loginUser = createAsyncThunk(
 
       if (!response_2.ok) {
         const errorData = await response_2.json().catch(() => ({ detail: 'Неизвестная ошибка' }))
-        throw new Error(errorData.detail || `HTTP ошибка: ${response_2.status}`)
+        const errorMessage = errorData.detail.message
+        throw new Error(errorMessage || `HTTP ошибка: ${response_2.status}`)
       }
       
       const data = await response_2.json()
 
       return { 
-        user: data.user,
+        user: {
+          id: data.id,
+          email: data.email,
+          name: data.name,
+          created_at: data.created_at,
+        },
         rememberMe: rememberMe 
       }
     } catch (error) {

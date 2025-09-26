@@ -2,7 +2,7 @@ import { useSelector } from 'react-redux'
 import { Link } from 'react-router-dom'
 import { User, LogIn, Mail, UserPlus } from 'lucide-react'
 
-import { ENDPOINTS, PAGE_NAMES } from "../imports/ENDPOINTS"
+import { FRONTEND_PAGES, PAGE_NAMES } from "../imports/ENDPOINTS"
 
 export default function Home() {
   const user = useSelector(state => state.app.user)
@@ -46,7 +46,7 @@ export default function Home() {
           {/* Кнопки действий */}
           <div className="flex flex-col gap-4">
             <Link
-              to={ENDPOINTS.LOGIN}
+              to={FRONTEND_PAGES.LOGIN}
               className="inline-flex items-center justify-center px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors duration-200"
             >
               <LogIn size={20} className="mr-2" />
@@ -54,7 +54,7 @@ export default function Home() {
             </Link>
             
             <Link
-              to={ENDPOINTS.REGISTER}
+              to={FRONTEND_PAGES.REGISTER}
               className="inline-flex items-center justify-center px-6 py-3 border border-blue-600 text-blue-600 font-medium rounded-lg hover:bg-blue-50 transition-colors duration-200"
             >
               <UserPlus size={20} className="mr-2" />

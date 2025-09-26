@@ -5,8 +5,8 @@ import { useDispatch, useSelector } from 'react-redux'
 import { Mail, Lock, User, Eye, EyeOff, UserPlus, Check, X } from 'lucide-react'
 import { useState, useEffect } from 'react'
 
-import { ENDPOINTS, PAGE_NAMES } from "../imports/ENDPOINTS"
-import { setRememberMe } from '../store/appSlice'
+import { FRONTEND_PAGES, PAGE_NAMES } from "../imports/ENDPOINTS"
+import { setRememberMe, clearError } from '../store/appSlice'
 import { registerUser } from '../asyncActions/registerUser'
 
 const Register = () => {
@@ -21,6 +21,10 @@ const Register = () => {
   const { loading, error, rememberMe } = useSelector(state => state.app)
   const password = watch('password', '')
   const confirmPassword = watch('confirmPassword', '')
+
+  useEffect(() => {
+    dispatch(clearError())
+  }, [dispatch])
 
   useEffect(() => {
     setValue('rememberMe', rememberMe)
@@ -54,7 +58,7 @@ const Register = () => {
       })).unwrap()
       
       // Если успешно, переходим на главную
-      navigate(ENDPOINTS.HOME)
+      navigate(FRONTEND_PAGES.HOME)
 
     } catch (error) {
       // Ошибка уже обработана в extraReducers
@@ -65,7 +69,7 @@ const Register = () => {
   // Функция для отображения силы пароля
   const renderPasswordStrength = () => {
     const strengthText = ['Слабый', 'Средний', 'Отличный']
-    const strengthColors = ['bg-red-500', 'bg-yellow-500', 'bg-green-500']
+    const strengthColors = ['bg-red-500', 'bg-red-500', 'bg-yellow-500', 'bg-green-500']
     
     return (
       <div className="mt-2">
@@ -74,17 +78,18 @@ const Register = () => {
             <div
               key={level}
               className={`h-1 flex-1 rounded-full ${
-                level <= passwordStrength ? strengthColors[passwordStrength - 1] : 'bg-gray-200'
+                level === 1 && password && passwordStrength <= 1 ? 'bg-red-600' :
+                level <= passwordStrength ? strengthColors[passwordStrength] : 'bg-gray-200'
               }`}
             />
           ))}
         </div>
         <p className={`text-xs ${
-          passwordStrength === 0 ? 'text-gray-500' : 
-          passwordStrength < 2 ? 'text-red-600' : 
+          !password ? 'text-gray-500' : 
+          passwordStrength <= 1 ? 'text-red-600' : 
           passwordStrength === 2 ? 'text-yellow-600' : 'text-green-600'
         }`}>
-          {password ? strengthText[passwordStrength - 1] || 'Слабый' : 'Введите пароль'}
+          {password ? strengthText[passwordStrength - 1] || "Слабый" : "Введите пароль" }
         </p>
       </div>
     )
@@ -266,12 +271,10 @@ const Register = () => {
                 <p className={`mt-1 text-sm flex items-center ${
                   passwordsMatch ? 'text-green-600' : 'text-red-600'
                 }`}>
-                  {passwordsMatch ? (
-                    <Check size={14} className="mr-1" />
-                  ) : (
+                  {!passwordsMatch && (
                     <X size={14} className="mr-1" />
                   )}
-                  {passwordsMatch ? 'Пароли совпадают' : 'Пароли не совпадают'}
+                  {!passwordsMatch && 'Пароли не совпадают'}
                 </p>
               )}
               {errors.confirmPassword && (
@@ -327,7 +330,7 @@ const Register = () => {
             {/* Кнопка регистрации */}
             <button
               type="submit"
-              disabled={loading}
+              disabled={loading && !passwordsMatch}
               className="w-full bg-green-600 text-white py-3 px-4 rounded-lg hover:bg-green-700 focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? (
@@ -345,7 +348,7 @@ const Register = () => {
           <div className="mt-6 text-center">
             <p className="text-gray-600">
               Уже есть аккаунт?{' '}
-              <Link to={ENDPOINTS.LOGIN} className="text-green-600 hover:text-green-500 font-medium">
+              <Link to={FRONTEND_PAGES.LOGIN} className="text-green-600 hover:text-green-500 font-medium">
                 Войти в систему
               </Link>
             </p>

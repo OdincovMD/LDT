@@ -18,5 +18,9 @@ def get_user(user_id: int):
     """
     user = SyncOrm.get_user(user_id)
     if not user:
-        raise HTTPException(status_code=404, detail="User not found")
+        raise HTTPException(status_code=404, detail={
+            "error": "USER_NOT_FOUND",
+            "message": "Пользователь не найден",
+            "extra": "User not found"
+        })
     return user

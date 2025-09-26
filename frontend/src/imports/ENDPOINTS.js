@@ -1,29 +1,42 @@
-export const ENDPOINTS = {
+export const FRONTEND_PAGES = {
     HOME: "/",
+    PATIENTS: "/patients",
+    DASHBOARD: "/dashboard",
     CONTACT: "/contact",
     ABOUT: "/about",
     LOGIN: "/login",
     REGISTER: "/register",
-    DASHBOARD: "/dashboard"
+    LOGOUT: "/logout"
 }
 
 export const PAGE_NAMES = {
     HOME: 'home',
+    PATIENTS: 'patients',
+    DASHBOARD: "dashboard",
     CONTACT: 'contact',
     ABOUT: 'about',
     LOGIN: 'login',
     REGISTER: 'register',
-    DASHBOARD: "dashboard"
 }
 
-const BACKEND_ROUTES = {
+const BACKEND_PREFIX = '/api'
+
+const BASE_ROUTES = {
     AUTH: '/auth',
-    CASES: '/cases',
+    CASES: '/cases', 
     PATIENTS: '/patients',
     PREDICTIONS: '/predictions',
     STREAM: '/stream',
     USERS: '/users',
 }
+
+
+export const BACKEND_ROUTES = Object.fromEntries(
+    Object.entries(BASE_ROUTES).map(([key, path]) => [
+        key, 
+        `${BACKEND_PREFIX}${path}`
+    ])
+)
 
 export const BACKEND_ENDPOINTS = {
     AUTH: {
@@ -32,17 +45,17 @@ export const BACKEND_ENDPOINTS = {
     },
     
     CASES: {
-        DEFAULT: `${BACKEND_ROUTES.CASES}`,
+        DEFAULT: `${BACKEND_ROUTES.CASES}/`,
         BY_PATIENT: (patientId) => `${BACKEND_ROUTES.CASES}/by-patient/${patientId}`,
     },
     
     PATIENTS: {
-        DEFAULT: `${BACKEND_ROUTES.PATIENTS}`,
+        DEFAULT: `${BACKEND_ROUTES.PATIENTS}/`,
         BY_USER: (userId) => `${BACKEND_ROUTES.PATIENTS}/by-user/${userId}`,
     },
     
     PREDICTIONS: {
-        DEFAULT: `${BACKEND_ROUTES.PREDICTIONS}`,
+        DEFAULT: `${BACKEND_ROUTES.PREDICTIONS}/`,
         BY_CASE: (caseId) => `${BACKEND_ROUTES.PREDICTIONS}/by-case/${caseId}`,
     },
     

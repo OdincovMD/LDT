@@ -13,7 +13,7 @@ class Settings(BaseSettings):
     Параметры берутся из переменных окружения или файла .env.
     """
     DB_HOST: str
-    DB_PORT: int
+    DB_PORT: int = 5432
     DB_USER: str
     DB_PASS: str
     DB_NAME: str

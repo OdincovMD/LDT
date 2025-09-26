@@ -23,13 +23,19 @@ export const registerUser = createAsyncThunk(
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({ detail: 'Неизвестная ошибка' }))
-        throw new Error(errorData.detail || `HTTP ошибка: ${response.status}`)
+        const errorMessage = errorData.detail.message
+        throw new Error(errorMessage || `HTTP ошибка: ${response.status}`)
       }
 
       const data = await response.json()
       
       return { 
-        user: data.user,
+        user: {
+          id: data.id,
+          email: data.email,
+          name: data.name,
+          created_at: data.created_at,
+        },
         rememberMe: rememberMe 
       }
     } catch (error) {

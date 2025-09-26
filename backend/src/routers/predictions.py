@@ -27,7 +27,11 @@ def insert_prediction(pred: PredictionCreate):
             pred.alert
         )
     except Exception as e:
-        raise HTTPException(status_code=400, detail=f"Failed to insert prediction: {e}")
+        raise HTTPException(status_code=400, detail={
+            "error": "PREDICTION_INSERT_FAILURE",
+            "message": "Не удалось сохранить предсказание",
+            "extra": f"Failed to insert prediction: {e}"
+        })
 
 
 @router.get("/by-case/{case_id}", response_model=List[PredictionRead])
@@ -38,4 +42,8 @@ def list_predictions(case_id: int):
     try:
         return SyncOrm.get_predictions(case_id)
     except Exception as e:
-        raise HTTPException(status_code=400, detail=f"Failed to fetch predictions: {e}")
+        raise HTTPException(status_code=400, detail={
+            "error": "PREDICTION_LIST_FAILURE",
+            "message": "Не удалось сохранить предсказание",
+            "extra": f"Failed to fetch predictions: {e}"
+        })

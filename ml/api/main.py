@@ -22,7 +22,7 @@ cfg = AlarmConfig(
 )
 alarm = AlarmState(cfg, stride_s=1)
 
-@src.post("/predict", response_model=PredictionResponse)
+@app.post("/predict", response_model=PredictionResponse)
 def predict(req: WindowRequest):
     result = model.predict_from_json(req.model_dump())
     proba = float(result["proba"])

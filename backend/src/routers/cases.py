@@ -19,7 +19,11 @@ def create_case(case: CaseCreate):
     try:
         return SyncOrm.create_case(case.patient_id, case.description)
     except Exception as e:
-        raise HTTPException(status_code=400, detail=f"Failed to create case: {e}")
+        raise HTTPException(status_code=400, detail={
+            "error": "CASE_CREATION_FAILURE",
+            "message": "Не удалось добавить запись",
+            "extra": e
+        })
 
 
 @router.get("/by-patient/{patient_id}", response_model=List[CaseRead])

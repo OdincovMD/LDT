@@ -20,7 +20,11 @@ def register(user: UserCreate):
     try:
         return SyncOrm.create_user(user.email, user.password, user.name)
     except ValueError:
-        raise HTTPException(status_code=400, detail="Email already registered")
+        raise HTTPException(status_code=400, detail={
+            "error": "MAIL_IN_USE",
+            "message": "Данная почта уже зарегестрирована",
+            "extra": "Mail is already in use"
+        })
 
 
 @router.post("/login", response_model=Token)
@@ -32,5 +36,9 @@ def login(req: LoginRequest):
     """
     db_user = SyncOrm.get_user_by_email(req.email)
     if not db_user or not SyncOrm.verify_password(req.password, db_user.hashed_password):
-        raise HTTPException(status_code=401, detail="Invalid credentials")
+        raise HTTPException(status_code=401, detail={
+            "error": "INVALID_CRED",
+            "message": "Неверные пароль или почта",
+            "extra": "Invalid credentials"
+        })
     return {"access_token": f"FAKE_TOKEN_{db_user.id}", "token_type": "bearer"}

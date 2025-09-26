@@ -5,8 +5,8 @@ import { useDispatch, useSelector } from 'react-redux'
 import { Mail, Lock, LogIn, Eye, EyeOff, X } from 'lucide-react'
 import { useState, useEffect } from 'react'
 
-import { ENDPOINTS, PAGE_NAMES } from "../imports/ENDPOINTS"
-import { setRememberMe } from '../store/appSlice'
+import { FRONTEND_PAGES, PAGE_NAMES } from "../imports/ENDPOINTS"
+import { setRememberMe, clearError } from '../store/appSlice'
 import { loginUser } from '../asyncActions/loginUser'
 
 const Login = () => {
@@ -16,6 +16,10 @@ const Login = () => {
   const navigate = useNavigate()
 
   const { loading, error, rememberMe } = useSelector(state => state.app)
+
+  useEffect(() => {
+    dispatch(clearError())
+  }, [dispatch])
 
   useEffect(() => {
     setValue('rememberMe', rememberMe)
@@ -37,7 +41,7 @@ const Login = () => {
       })).unwrap()
       
       // Если успешно, перенаправляем
-      navigate(ENDPOINTS.HOME)
+      navigate(FRONTEND_PAGES.HOME)
 
     } catch (error) {
       // Ошибка уже обработана в extraReducers
@@ -109,8 +113,8 @@ const Login = () => {
                   {...register('password', {
                     required: 'Пароль обязателен',
                     minLength: {
-                      value: 6,
-                      message: 'Пароль должен быть не менее 6 символов'
+                      value: 8,
+                      message: 'Пароль должен быть не менее 8 символов'
                     }
                   })}
                   type={showPassword ? 'text' : 'password'}
@@ -168,7 +172,7 @@ const Login = () => {
           <div className="mt-6 text-center">
             <p className="text-gray-600">
               Еще нет аккаунта?{' '}
-              <Link to={ENDPOINTS.REGISTER} className="text-blue-600 hover:text-blue-500 font-medium">
+              <Link to={FRONTEND_PAGES.REGISTER} className="text-blue-600 hover:text-blue-500 font-medium">
                 Зарегистрироваться
               </Link>
             </p>
