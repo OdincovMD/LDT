@@ -1,18 +1,21 @@
 import React, { useEffect, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
-import { Plus, User, Calendar, Clock, Activity } from 'lucide-react'
+import { Plus, User, Search, ArrowUpDown } from 'lucide-react'
 
 import PatientCard from '../components/PatientCard'
 import CreatePatientModal from '../components/CreatePatientModal'
 import { createPatient, getPatients } from '../asyncActions/patients'
-
+import { getCases } from '../asyncActions/cases'
 
 const Patients = () => {
   const dispatch = useDispatch()
-  const user = useSelector(state => state.app)
-  const cases = useSelector(state => state.case)
-  const { patients, loading, error } = useSelector(state => state.patient)
+  const user = useSelector(state => state.app.user)
+  const { patients, loading, error, currentPatient } = useSelector(state => state.patient)
+
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const [expandedPatientId, setExpandedPatientId] = useState(null)
+  const [sortOrder, setSortOrder] = useState('asc')
+  const [searchTerm, setSearchTerm] = useState('')
 
   useEffect(() => {
     if (user) {
@@ -32,6 +35,36 @@ const Patients = () => {
     }
   }
 
+  const handlePatientClick = async (patientId) => {
+    if (expandedPatientId === patientId) {
+      setExpandedPatientId(null)
+      return
+    }
+
+    try {
+      await dispatch(getCases(patientId)).unwrap(),
+      setExpandedPatientId(patientId)
+    } catch (error) {
+      console.error('Не удалось получить список исследований:', error)
+    }
+  }
+
+  // Фильтрация и сортировка пациентов
+  const filteredAndSortedPatients = patients
+    .filter(patient => 
+      patient.name?.toLowerCase().includes(searchTerm.toLowerCase())
+    )
+    .sort((a, b) => {
+      const nameA = a.name?.toLowerCase() || ''
+      const nameB = b.name?.toLowerCase() || ''
+      
+      if (sortOrder === 'asc') {
+        return nameA.localeCompare(nameB)
+      } else {
+        return nameB.localeCompare(nameA)
+      }
+    })
+
   if (!user) {
     return (
       <div className="max-w-4xl mx-auto">
@@ -45,21 +78,15 @@ const Patients = () => {
   }
 
   return (
-    <div className="max-w-6xl mx-auto">
-
-      {/* Пустое состояние */}
-      {!loading && patients.length === 0 && (
-        <div className="text-center py-12">
-          <User size={64} className="mx-auto text-gray-300 mb-4" />
-          <h3 className="text-lg font-medium text-gray-900">Нет пациентов</h3>
+    <div className="max-w-4xl mx-auto p-6">
+      {/* Заголовок и управление */}
+      <div className="flex justify-between items-center mb-6">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Пациенты</h1>
           <p className="text-gray-600 mt-1">
-            Добавьте первого пациента, чтобы начать работу
+            {patients.length} пациент{patients.length % 10 === 1 && patients.length % 100 !== 11 ? '' : 'ов'}
           </p>
         </div>
-      )}
-
-      {/* Кнопка добавления */}
-      <div className="flex justify-between items-center mb-6">
         
         <button
           onClick={() => setIsModalOpen(true)}
@@ -67,6 +94,30 @@ const Patients = () => {
         >
           <Plus size={20} />
           <span>Добавить пациента</span>
+        </button>
+      </div>
+
+      {/* Панель поиска и сортировки */}
+      <div className="flex flex-col sm:flex-row gap-4 mb-6">
+        <div className="relative flex-1">
+          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <Search size={20} className="text-gray-400" />
+          </div>
+          <input
+            type="text"
+            placeholder="Поиск по ФИО..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          />
+        </div>
+        
+        <button
+          onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
+          className="flex items-center space-x-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
+        >
+          <ArrowUpDown size={20} className="text-gray-600" />
+          <span>ФИО {sortOrder === 'asc' ? 'А-Я' : 'Я-А'}</span>
         </button>
       </div>
 
@@ -84,12 +135,35 @@ const Patients = () => {
         </div>
       )}
 
-      {/* Список пациентов */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {patients.map(patient => (
-          <PatientCard key={patient.id} patient={patient} />
-        ))}
-      </div>
+      {/* Пустое состояние */}
+      {!loading && filteredAndSortedPatients.length === 0 && (
+        <div className="text-center py-12 bg-white rounded-lg shadow-sm">
+          <User size={64} className="mx-auto text-gray-300 mb-4" />
+          <h3 className="text-lg font-medium text-gray-900 mb-2">
+            {searchTerm ? 'Пациенты не найдены' : 'Нет пациентов'}
+          </h3>
+          <p className="text-gray-600">
+            {searchTerm 
+              ? 'Попробуйте изменить поисковый запрос'
+              : 'Добавьте первого пациента, чтобы начать работу'
+            }
+          </p>
+        </div>
+      )}
+
+      {/* Вертикальный список пациентов */}
+      {!loading && filteredAndSortedPatients.length > 0 && (
+        <div className="space-y-4">
+          {filteredAndSortedPatients.map(patient => (
+            <PatientCard 
+              key={patient.id}
+              patient={patient}
+              isExpanded={expandedPatientId === patient.id}
+              onClick={() => handlePatientClick(patient.id)}
+            />
+          ))}
+        </div>
+      )}
 
       <CreatePatientModal
         isOpen={isModalOpen}
@@ -97,7 +171,6 @@ const Patients = () => {
         onSubmit={handleCreatePatient}
         loading={loading}
       />
-
     </div>
   )
 }

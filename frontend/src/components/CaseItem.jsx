@@ -1,8 +1,16 @@
 import React from 'react'
+import { useSelector } from 'react-redux'
 import { Link } from 'react-router-dom'
 import { Activity, Calendar, BarChart3, Play } from 'lucide-react'
 
-const CaseItem = ({ caseItem, patientId }) => {
+const CaseItem = ({ caseId }) => {
+
+  const cases = useSelector(state => state.cases)
+
+  const the_case = cases.cases.filter(
+    case_ => case_.id === caseId
+  )[0]
+
   const formatDate = (dateString) => {
     return new Date(dateString).toLocaleDateString('ru-RU', {
       year: 'numeric',
@@ -12,26 +20,6 @@ const CaseItem = ({ caseItem, patientId }) => {
       minute: '2-digit'
     })
   }
-
-  const getCaseStatus = (caseData) => {
-    if (caseData.predictions && caseData.predictions.length > 0) {
-      return 'Завершено'
-    }
-    if (caseData.raw_signals && caseData.raw_signals.length > 0) {
-      return 'В процессе'
-    }
-    return 'Новое'
-  }
-
-  const getStatusColor = (status) => {
-    switch (status) {
-      case 'Завершено': return 'bg-green-100 text-green-800'
-      case 'В процессе': return 'bg-blue-100 text-blue-800'
-      default: return 'bg-gray-100 text-gray-800'
-    }
-  }
-
-  const status = getCaseStatus(caseItem)
 
   return (
     <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100">
@@ -43,22 +31,19 @@ const CaseItem = ({ caseItem, patientId }) => {
         <div>
           <div className="flex items-center space-x-2">
             <span className="font-medium text-gray-900">
-              {caseItem.description || `Исследование #${caseItem.id}`}
-            </span>
-            <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(status)}`}>
-              {status}
+              {the_case.description || `Исследование #${the_case.id}`}
             </span>
           </div>
           
           <div className="flex items-center space-x-4 text-sm text-gray-600 mt-1">
             <div className="flex items-center space-x-1">
               <Calendar size={12} />
-              <span>{formatDate(caseItem.created_at)}</span>
+              <span>{formatDate(the_case.created_at)}</span>
             </div>
-            {caseItem.raw_signals && (
+            {the_case.raw_signals && (
               <div className="flex items-center space-x-1">
                 <BarChart3 size={12} />
-                <span>{caseItem.raw_signals.length} записей</span>
+                <span>{the_case.raw_signals.length} записей</span>
               </div>
             )}
           </div>
@@ -66,7 +51,7 @@ const CaseItem = ({ caseItem, patientId }) => {
       </div>
 
       <Link
-        to={`/dashboard?patientId=${patientId}&caseId=${caseItem.id}`}
+        to={`/dashboard`}
         className="flex items-center space-x-1 text-blue-600 hover:text-blue-800 text-sm"
       >
         <Play size={16} />

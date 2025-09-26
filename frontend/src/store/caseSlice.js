@@ -39,7 +39,7 @@ const caseSlice = createSlice({
       })
       .addCase(createCase.fulfilled, (state, action) => {
         state.loading = false
-        state.cases.push(action.payload)
+        state.cases = action.payload
         state.error = null
       })
       .addCase(createCase.rejected, (state, action) => {

@@ -1,18 +1,16 @@
-import React, { useState } from 'react'
+import React from 'react'
+import { useSelector } from 'react-redux'
 import { Link } from 'react-router-dom'
-import { User, Calendar, Clock, Plus, Activity, Trash2, Edit } from 'lucide-react'
-
-import { useDispatch, useSelector } from 'react-redux'
-import { createCase, getCases } from '../asyncActions/cases'
+import { User, Calendar, Clock, Plus, Activity, ChevronDown, Edit, Trash2 } from 'lucide-react'
 
 import CaseItem from './CaseItem'
 import CreateCaseModal from './CreateCaseModal'
 
-const PatientCard = ({ patient }) => {
-  const dispatch = useDispatch()
+const PatientCard = ({ patient, isExpanded, onClick }) => {
 
-  const [isExpanded, setIsExpanded] = useState(false)
-  const [isCreateCaseModalOpen, setIsCreateCaseModalOpen] = useState(false)
+  const cases = useSelector(state => state.cases)
+
+  const [isCreateCaseModalOpen, setIsCreateCaseModalOpen] = React.useState(false)
 
   const formatDate = (dateString) => {
     return new Date(dateString).toLocaleDateString('ru-RU')
@@ -36,7 +34,7 @@ const PatientCard = ({ patient }) => {
       {/* Заголовок карточки */}
       <div 
         className="p-4 cursor-pointer hover:bg-gray-50"
-        onClick={() => setIsExpanded(!isExpanded)}
+        onClick={onClick}
       >
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3">
@@ -53,15 +51,18 @@ const PatientCard = ({ patient }) => {
             </div>
           </div>
           
-          <div className={`transform transition-transform ${isExpanded ? 'rotate-180' : ''}`}>
-            <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
-              <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
-            </svg>
+          <div className="flex items-center space-x-2">
+            <ChevronDown 
+              size={20} 
+              className={`text-gray-400 transition-transform ${
+                isExpanded ? 'rotate-180' : ''
+              }`}
+            />
           </div>
         </div>
 
         {/* Дополнительная информация */}
-        <div className="mt-3 grid grid-cols-2 gap-2 text-sm text-gray-600">
+        <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm text-gray-600">
           <div className="flex items-center space-x-1">
             <Calendar size={14} />
             <span>Рожд.: {patient.birth_date ? formatDate(patient.birth_date) : 'Не указана'}</span>
@@ -93,10 +94,9 @@ const PatientCard = ({ patient }) => {
 
           {/* Список исследований */}
           <div className="space-y-2">
-            {patient.cases && patient.cases.length > 0 ? (
-              patient.map(patient => (
-                
-                <CaseItem key={caseItem.id} patientId={patient.id} />
+            {cases.cases && cases.cases.length > 0 ? (
+              cases.cases.map(caseItem => (
+                <CaseItem key={caseItem.id} caseId={caseItem.id} />
               ))
             ) : (
               <div className="text-center py-4 text-gray-500 text-sm">

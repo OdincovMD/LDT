@@ -7,7 +7,7 @@ import { caseReducer } from "./caseSlice"
 const rootReducer = combineReducers({
   app: appReducer,
   patient: patientReducer,
-  case: caseReducer
+  cases: caseReducer
 })
 
 const store = configureStore({
