@@ -1,39 +1,42 @@
-import React from 'react'
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Area, ReferenceLine, ResponsiveContainer } from 'recharts'
+import React from 'react';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Area, ReferenceLine, ResponsiveContainer } from 'recharts';
 
 function RealtimeLineChart({ data, timeWindow, series, yDomain, yLabel, areaUnder, referenceLines, height = 200 }) {
   // Форматируем время в реальный формат чч:мм:сс
   const formatTime = (timestamp) => {
-    const date = new Date(timestamp * 1000)
+    const date = new Date(timestamp * 1000);
     return date.toLocaleTimeString('ru-RU', {
       hour12: false,
       hour: '2-digit',
       minute: '2-digit',
       second: '2-digit'
-    })
-  }
+    });
+  };
 
   const chartData = data.map(point => ({
     ...point,
     displayTime: formatTime(point.t)
-  }))
+  }));
 
-  // Создаем деления для оси X с реальным временем
+  // Создаем деления для оси X с реальным временем (каждую минуту)
   const createTimeTicks = () => {
-    const ticks = []
-    const timeRange = timeWindow[1] - timeWindow[0]
-    const step = Math.max(10, Math.floor(timeRange / 6))
+    const ticks = [];
+    const timeRange = timeWindow[1] - timeWindow[0];
 
-    const startTime = Math.ceil(timeWindow[0] / step) * step
+    // Интервал в 60 секунд (1 минута)
+    const step = 60;
+
+    // Начинаем с ближайшей минуты после начала временного окна
+    const startTime = Math.ceil(timeWindow[0] / step) * step;
 
     for (let time = startTime; time <= timeWindow[1]; time += step) {
-      ticks.push(time)
+      ticks.push(time);
     }
 
-    return ticks
-  }
+    return ticks;
+  };
 
-  const timeTicks = createTimeTicks()
+  const timeTicks = createTimeTicks();
 
   return (
     <ResponsiveContainer width="100%" height={height}>
@@ -88,13 +91,6 @@ function RealtimeLineChart({ data, timeWindow, series, yDomain, yLabel, areaUnde
           />
         ))}
 
-        <ReferenceLine
-          x={(timeWindow[0] + timeWindow[1]) / 2}
-          stroke="#FFFFFF"
-          strokeOpacity={0.7}
-          strokeWidth={1.5}
-        />
-
         {series.map((serie) => (
           <Line
             key={serie.dataKey}
@@ -121,7 +117,7 @@ function RealtimeLineChart({ data, timeWindow, series, yDomain, yLabel, areaUnde
         )}
       </LineChart>
     </ResponsiveContainer>
-  )
+  );
 }
 
-export default RealtimeLineChart
+export default RealtimeLineChart;
