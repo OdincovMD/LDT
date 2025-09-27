@@ -1,15 +1,18 @@
 """
-Фоновый воркер для симуляции стриминга сигналов.
-Генерирует bpm/uc, пишет их в БД, вызывает ML и сохраняет предсказания.
+Фоновый воркер для симуляции стриминга сигналов из CSV.
+Формат CSV: t,bpm,uc.
 """
+
 import os
+import csv
 import asyncio
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
+from pathlib import Path
+
 import httpx
 from src.queries.async_orm import AsyncOrm
 
 WINDOW_SECONDS = 300
-
 
 async def call_ml(payload: dict) -> dict:
     async with httpx.AsyncClient(timeout=5.0) as client:
@@ -17,23 +20,38 @@ async def call_ml(payload: dict) -> dict:
         resp.raise_for_status()
         return resp.json()
 
-
-def _next_value(prev: float, base: float, jitter: float, lo: float, hi: float) -> float:
-    val = prev + (base - prev) * 0.05 + (jitter * (2 * asyncio.get_running_loop().time() % 1 - 0.5))
-    return max(lo, min(hi, val))
-
-
 async def start_stream_worker(case_id: int, hz: float):
+    """
+    Читает CSV, на каждом тике берёт следующую строку (t,bpm,uc),
+    timestamp = старт_времени + t секунд.
+    По накоплении 300 с вызывает ML.
+    """
+    csv_path = os.getenv("CSV_PATH")
+    path = Path(csv_path)
+
+    with path.open("r", newline="") as f:
+        sample = f.read(2048)
+        f.seek(0)
+        try:
+            dialect = csv.Sniffer().sniff(sample, delimiters=",;\t ")
+        except Exception:
+            dialect = csv.excel
+        reader = csv.DictReader(f, dialect=dialect)
+        rows = [(float(r["t"]), float(r["bpm"]), float(r["uc"])) for r in reader]
+
+    if not rows:
+        raise ValueError("CSV пустой")
+
     period = 1.0 / hz
-    bpm, uc = 140.0, 10.0
+    start_wall_clock = datetime.now(timezone.utc)
+    i = 0
 
     try:
         while True:
-            now = datetime.now(timezone.utc)
-            bpm = _next_value(bpm, 140.0, jitter=2.0, lo=90.0, hi=200.0)
-            uc = _next_value(uc, 12.0, jitter=1.0, lo=0.0, hi=100.0)
+            t_sec, bpm, uc = rows[i]
+            ts = start_wall_clock + timedelta(seconds=t_sec)
 
-            await AsyncOrm.insert_signal(case_id, now, bpm, uc)
+            await AsyncOrm.insert_signal(case_id, ts, bpm, uc)
 
             window = await AsyncOrm.get_window(case_id, limit=WINDOW_SECONDS)
             if len(window) >= WINDOW_SECONDS:
@@ -56,6 +74,10 @@ async def start_stream_worker(case_id: int, hz: float):
                     )
                 except Exception as e:
                     print(f"ML call failed for case {case_id}: {e}")
+
+            i += 1
+            if i >= len(rows):
+                i = 0
 
             await asyncio.sleep(period)
 

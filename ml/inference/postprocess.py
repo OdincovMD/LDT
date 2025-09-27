@@ -6,7 +6,7 @@ from collections import deque
 from dataclasses import dataclass
 import numpy as np
 
-STRIDE_S = 15  # шаг поступления окон, сек
+STRIDE_S = 1  # шаг поступления окон, сек
 
 def minutes_to_frames(minutes: float, stride_s: int = STRIDE_S) -> int:
     return int(np.ceil(minutes * 60.0 / stride_s))
@@ -14,9 +14,9 @@ def minutes_to_frames(minutes: float, stride_s: int = STRIDE_S) -> int:
 @dataclass
 class AlarmConfig:
     on_thr: float = 0.80          # порог включения
-    off_thr: float = 0.60         # порог выключения (гистерезис)
-    on_minutes: float = 10.0      # сколько минут подряд «высоко» для включения
-    off_minutes: float = 5.0      # сколько минут подряд «низко» для выключения
+    off_thr: float = 0.65         # порог выключения (гистерезис)
+    on_minutes: float = 2.0      # сколько минут подряд «высоко» для включения
+    off_minutes: float = 1.0      # сколько минут подряд «низко» для выключения
     on_ratio: float = 0.80        # доля окон выше порога в интервале включения
     off_ratio: float = 1.00       # доля окон ниже порога в интервале выключения
 
