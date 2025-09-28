@@ -3,7 +3,7 @@ import { useForm } from 'react-hook-form'
 import { useDispatch } from 'react-redux'
 import { X, FileText, Save } from 'lucide-react'
 
-import { createCase } from '../asyncActions/cases'
+import { createCase, getCases } from '../asyncActions/cases'
 
 const CreateCaseModal = ({ isOpen, onClose, patientId, patientName }) => {
 
@@ -19,6 +19,7 @@ const CreateCaseModal = ({ isOpen, onClose, patientId, patientName }) => {
     try {
       
       await dispatch(createCase({ patientId, description: data.description }))
+      await dispatch(getCases( patientId ))
       handleClose()
     } catch (error) {
       console.error('Failed to create case:', error)

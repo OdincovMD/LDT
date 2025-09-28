@@ -1,5 +1,6 @@
 import { useSelector, useDispatch } from 'react-redux'
-import { Link, useLocation, Navigate } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
 import { 
   Home,
   LogIn,
@@ -16,7 +17,7 @@ import { logout, toggleSidebar } from '../store/appSlice'
 
 export default function Sidebar({ isOpen }) {
   const dispatch = useDispatch()
-  const navigate = useLocation()
+  const navigate = useNavigate()
   const location = useLocation()
 
   const user = useSelector(state => state.app.user)
@@ -47,9 +48,7 @@ export default function Sidebar({ isOpen }) {
 
   const handleLogout = () => {
     dispatch(logout())
-    return (
-      <Navigate to={FRONTEND_PAGES.LOGIN}/>
-    )
+    navigate(FRONTEND_PAGES.LOGIN)
   }
 
   if (!isOpen) {

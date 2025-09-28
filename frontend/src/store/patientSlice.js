@@ -2,7 +2,7 @@ import { createSlice } from '@reduxjs/toolkit'
 import { createPatient, getPatients  } from '../asyncActions/patients'
 
 const initialState = {
-  patients: [],
+  patient_array: [],
   loading: false,
   error: null,
   currentPatient: null
@@ -28,13 +28,13 @@ const patientSlice = createSlice({
       })
       .addCase(getPatients.fulfilled, (state, action) => {
         state.loading = false
-        state.patients = action.payload
+        state.patient_array = action.payload
         state.error = null
       })
       .addCase(getPatients.rejected, (state, action) => {
         state.loading = false
         state.error = action.payload
-        state.patients = []
+        state.patient_array = []
       })
       // Create patient
       .addCase(createPatient.pending, (state) => {
@@ -43,7 +43,7 @@ const patientSlice = createSlice({
       })
       .addCase(createPatient.fulfilled, (state, action) => {
         state.loading = false
-        state.patients.push(action.payload)
+        state.patient_array.push(action.payload)
         state.error = null
       })
       .addCase(createPatient.rejected, (state, action) => {

@@ -40,7 +40,7 @@ export const rawSignalDummy = {
 export const predicitonDummy = {
     id: null,
     model_name: null,
-    probability: null,
+    probability: 0,
     label: null,
     alert: null,
     created_at: null,

@@ -35,12 +35,12 @@ def insert_prediction(pred: PredictionCreate):
 
 
 @router.get("/by-case/{case_id}", response_model=List[PredictionRead])
-def list_predictions(case_id: int):
+def list_predictions(case_id: int, limit: int = 300):
     """
     Возвращает все предсказания для указанного обследования.
     """
     try:
-        return SyncOrm.get_predictions(case_id)
+        return SyncOrm.get_predictions(case_id, limit)
     except Exception as e:
         raise HTTPException(status_code=400, detail={
             "error": "PREDICTION_LIST_FAILURE",

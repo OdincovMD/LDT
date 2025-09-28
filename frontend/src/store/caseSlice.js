@@ -1,8 +1,9 @@
+// caseSlice.js
 import { createSlice } from '@reduxjs/toolkit'
 import { createCase, getCases } from '../asyncActions/cases'
 
 const initialState = {
-  cases: [],
+  case_array: [],
   loading: false,
   error: null
 }
@@ -13,6 +14,14 @@ const caseSlice = createSlice({
   reducers: {
     clearError: (state) => {
       state.error = null
+    },
+
+    addCase: (state, action) => {
+      state.case_array.push(action.payload)
+    },
+
+    clearCases: (state) => {
+      state.case_array = []
     }
   },
   extraReducers: (builder) => {
@@ -24,13 +33,13 @@ const caseSlice = createSlice({
       })
       .addCase(getCases.fulfilled, (state, action) => {
         state.loading = false
-        state.cases = action.payload
+        state.case_array = action.payload 
         state.error = null
       })
       .addCase(getCases.rejected, (state, action) => {
         state.loading = false
         state.error = action.payload
-        state.cases = []
+        state.case_array = []
       })
       // Create case
       .addCase(createCase.pending, (state) => {
@@ -39,7 +48,7 @@ const caseSlice = createSlice({
       })
       .addCase(createCase.fulfilled, (state, action) => {
         state.loading = false
-        state.cases = action.payload
+        state.case_array.push(action.payload)
         state.error = null
       })
       .addCase(createCase.rejected, (state, action) => {
@@ -49,5 +58,5 @@ const caseSlice = createSlice({
   }
 })
 
-export const { clearError } = caseSlice.actions
+export const { clearCases, clearError, addCase } = caseSlice.actions
 export const caseReducer = caseSlice.reducer

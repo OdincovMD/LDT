@@ -1,3 +1,4 @@
+// imports/ENDPOINTS.js
 export const FRONTEND_PAGES = {
     HOME: "/",
     PATIENTS: "/patients",
@@ -28,6 +29,7 @@ const BASE_ROUTES = {
     PREDICTIONS: '/predictions',
     STREAM: '/stream',
     USERS: '/users',
+    SIM: '/sim',
 }
 
 
@@ -67,4 +69,10 @@ export const BACKEND_ENDPOINTS = {
     USERS: {
         BY_ID: (userId) => `${BACKEND_ROUTES.USERS}/${userId}`,
     },
+    
+    SIM: {
+        START: `${BACKEND_ROUTES.SIM}/start`,
+        STOP: `${BACKEND_ROUTES.SIM}/stop`,
+        STATUS: `${BACKEND_ROUTES.SIM}/status`
+    }
 }

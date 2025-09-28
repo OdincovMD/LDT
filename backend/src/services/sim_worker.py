@@ -26,7 +26,7 @@ async def start_stream_worker(case_id: int, hz: float):
     timestamp = старт_времени + t секунд.
     По накоплении 300 с вызывает ML.
     """
-    csv_path = os.getenv("CSV_PATH")
+    csv_path = "./src/demo.csv"
     path = Path(csv_path)
 
     with path.open("r", newline="") as f:

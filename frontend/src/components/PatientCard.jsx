@@ -1,13 +1,16 @@
 import React from 'react'
-import { useSelector } from 'react-redux'
+import { useSelector, useDispatch } from 'react-redux'
 import { Link } from 'react-router-dom'
 import { User, Calendar, Clock, Plus, Activity, ChevronDown, Edit, Trash2 } from 'lucide-react'
 
+
+import { setCurrentPatient } from '../store/streamSlice'
 import CaseItem from './CaseItem'
 import CreateCaseModal from './CreateCaseModal'
 
 const PatientCard = ({ patient, isExpanded, onClick }) => {
 
+  const dispatch = useDispatch()
   const cases = useSelector(state => state.cases)
 
   const [isCreateCaseModalOpen, setIsCreateCaseModalOpen] = React.useState(false)
@@ -27,6 +30,10 @@ const PatientCard = ({ patient, isExpanded, onClick }) => {
       age--
     }
     return `${age} лет`
+  }
+
+  const handleNavigateToDashboard = () => {
+    dispatch(setCurrentPatient(patient.id))
   }
 
   return (
@@ -94,9 +101,9 @@ const PatientCard = ({ patient, isExpanded, onClick }) => {
 
           {/* Список исследований */}
           <div className="space-y-2">
-            {cases.cases && cases.cases.length > 0 ? (
-              cases.cases.map(caseItem => (
-                <CaseItem key={caseItem.id} caseId={caseItem.id} />
+            {cases.case_array && cases.case_array.length > 0 ? (
+              cases.case_array.map(caseItem => (
+                <CaseItem key={caseItem.id} caseItem={caseItem} />
               ))
             ) : (
               <div className="text-center py-4 text-gray-500 text-sm">
@@ -109,10 +116,11 @@ const PatientCard = ({ patient, isExpanded, onClick }) => {
           {/* Действия с пациентом */}
           <div className="flex space-x-2 mt-4 pt-3 border-t border-gray-100">
             <Link
-              to={`/dashboard?patientId=${patient.id}`}
+              onClick = {handleNavigateToDashboard}
+              to={`/dashboard`}
               className="flex-1 bg-blue-600 text-white text-center py-2 px-3 rounded text-sm hover:bg-blue-700"
             >
-              Открыть в системе
+              Открыть пациента в системе
             </Link>
             <button className="p-2 text-gray-400 hover:text-gray-600">
               <Edit size={16} />

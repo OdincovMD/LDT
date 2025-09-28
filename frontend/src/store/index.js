@@ -3,11 +3,13 @@ import { combineReducers } from "redux"
 import { appReducer } from "./appSlice"
 import { patientReducer } from "./patientSlice"
 import { caseReducer } from "./caseSlice"
+import { streamReducer } from "./streamSlice"
 
 const rootReducer = combineReducers({
   app: appReducer,
   patient: patientReducer,
-  cases: caseReducer
+  cases: caseReducer,
+  stream: streamReducer
 })
 
 const store = configureStore({

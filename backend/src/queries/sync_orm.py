@@ -190,8 +190,13 @@ class SyncOrm:
             return pred
 
     @staticmethod
-    def get_predictions(case_id: int) -> List[models.Prediction]:
-        """Возвращает все предсказания для указанного обследования."""
+    def get_predictions(case_id: int, limit: int = 1) -> List[models.Prediction]:
+        """Возвращает предсказания для указанного обследования."""
         with session_factory() as session:
-            stmt = select(models.Prediction).where(models.Prediction.case_id == case_id)
-            return list(session.scalars(stmt).all())
+            stmt = (
+                select(models.Prediction)
+                .where(models.Prediction.case_id == case_id)
+                .order_by(models.Prediction.created_at.desc())
+                .limit(limit)
+            ) 
+            return list(reversed(session.scalars(stmt).all()))

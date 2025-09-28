@@ -1,42 +1,45 @@
-import React from 'react';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Area, ReferenceLine, ResponsiveContainer } from 'recharts';
+// components/RealtimeLineChart.jsx (обновленная версия)
+import React from 'react'
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Area, ReferenceLine, ResponsiveContainer } from 'recharts'
 
-function RealtimeLineChart({ data, timeWindow, series, yDomain, yLabel, areaUnder, referenceLines, height = 200 }) {
+function RealtimeLineChart({ data, timeWindow, series, yDomain, yLabel, areaUnder, referenceLines, height = 200, isStatic = false }) {
   // Форматируем время в реальный формат чч:мм:сс
   const formatTime = (timestamp) => {
-    const date = new Date(timestamp * 1000);
+    const date = new Date(timestamp * 1000)
     return date.toLocaleTimeString('ru-RU', {
       hour12: false,
       hour: '2-digit',
       minute: '2-digit',
       second: '2-digit'
-    });
-  };
+    })
+  }
 
   const chartData = data.map(point => ({
     ...point,
     displayTime: formatTime(point.t)
-  }));
+  }))
 
-  // Создаем деления для оси X с реальным временем (каждую минуту)
+  // Для статического режима - равномерные деления по всей длине данных
   const createTimeTicks = () => {
-    const ticks = [];
-    const timeRange = timeWindow[1] - timeWindow[0];
-
-    // Интервал в 60 секунд (1 минута)
-    const step = 60;
-
-    // Начинаем с ближайшей минуты после начала временного окна
-    const startTime = Math.ceil(timeWindow[0] / step) * step;
-
-    for (let time = startTime; time <= timeWindow[1]; time += step) {
-      ticks.push(time);
+    if (isStatic || data.length === 0) {
+      return []
     }
 
-    return ticks;
-  };
+    const ticks = []
+    const timeRange = timeWindow[1] - timeWindow[0]
+    
+    // Для статических данных - 5 делений
+    const step = isStatic ? timeRange / 5 : 60
+    const startTime = isStatic ? timeWindow[0] : Math.ceil(timeWindow[0] / step) * step
 
-  const timeTicks = createTimeTicks();
+    for (let time = startTime; time <= timeWindow[1]; time += step) {
+      ticks.push(time)
+    }
+
+    return ticks
+  }
+
+  const timeTicks = createTimeTicks()
 
   return (
     <ResponsiveContainer width="100%" height={height}>
@@ -65,6 +68,7 @@ function RealtimeLineChart({ data, timeWindow, series, yDomain, yLabel, areaUnde
           fontSize={10}
           tick={{ fill: '#9CA3AF' }}
           width={35}
+          label={yLabel ? { value: yLabel, angle: -90, position: 'insideLeft' } : null}
         />
 
         <Tooltip
@@ -98,10 +102,10 @@ function RealtimeLineChart({ data, timeWindow, series, yDomain, yLabel, areaUnde
             dataKey={serie.dataKey}
             stroke={serie.stroke}
             strokeWidth={2}
-            dot={false}
-            activeDot={{ r: 3, strokeWidth: 1 }}
+            dot={isStatic} // Точки только для статических данных
+            activeDot={isStatic ? { r: 4 } : { r: 3, strokeWidth: 1 }}
             name={serie.name}
-            isAnimationActive={false}
+            isAnimationActive={isStatic} // Анимация только для статических данных
             connectNulls={true}
           />
         ))}
@@ -117,7 +121,7 @@ function RealtimeLineChart({ data, timeWindow, series, yDomain, yLabel, areaUnde
         )}
       </LineChart>
     </ResponsiveContainer>
-  );
+  )
 }
 
-export default RealtimeLineChart;
+export default RealtimeLineChart

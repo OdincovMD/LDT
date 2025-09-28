@@ -1,15 +1,17 @@
 import React from 'react'
-import { useSelector } from 'react-redux'
+import { useDispatch } from 'react-redux'
 import { Link } from 'react-router-dom'
 import { Activity, Calendar, BarChart3, Play } from 'lucide-react'
 
-const CaseItem = ({ caseId }) => {
+import { setCurrentCase, setCurrentPatient } from '../store/streamSlice'
 
-  const cases = useSelector(state => state.cases)
+const CaseItem = ({ caseItem }) => {
 
-  const the_case = cases.cases.filter(
-    case_ => case_.id === caseId
-  )[0]
+  const dispatch = useDispatch()
+
+  if (!caseItem) {
+    return <div>Данные исследования недоступны</div>
+  }
 
   const formatDate = (dateString) => {
     return new Date(dateString).toLocaleDateString('ru-RU', {
@@ -19,6 +21,11 @@ const CaseItem = ({ caseId }) => {
       hour: '2-digit',
       minute: '2-digit'
     })
+  }
+
+  const handleNavigateToDashboard = () => {
+    dispatch(setCurrentPatient(caseItem.patient_id))
+    dispatch(setCurrentCase(caseItem))
   }
 
   return (
@@ -31,19 +38,19 @@ const CaseItem = ({ caseId }) => {
         <div>
           <div className="flex items-center space-x-2">
             <span className="font-medium text-gray-900">
-              {the_case.description || `Исследование #${the_case.id}`}
+              {caseItem.description || `Исследование #${caseItem.id}`}
             </span>
           </div>
           
           <div className="flex items-center space-x-4 text-sm text-gray-600 mt-1">
             <div className="flex items-center space-x-1">
               <Calendar size={12} />
-              <span>{formatDate(the_case.created_at)}</span>
+              <span>{formatDate(caseItem.created_at)}</span>
             </div>
-            {the_case.raw_signals && (
+            {caseItem.raw_signals && (
               <div className="flex items-center space-x-1">
                 <BarChart3 size={12} />
-                <span>{the_case.raw_signals.length} записей</span>
+                <span>{caseItem.raw_signals.length} записей</span>
               </div>
             )}
           </div>
@@ -51,6 +58,7 @@ const CaseItem = ({ caseId }) => {
       </div>
 
       <Link
+        onClick={handleNavigateToDashboard}
         to={`/dashboard`}
         className="flex items-center space-x-1 text-blue-600 hover:text-blue-800 text-sm"
       >

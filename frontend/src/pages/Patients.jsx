@@ -4,18 +4,25 @@ import { Plus, User, Search, ArrowUpDown } from 'lucide-react'
 
 import PatientCard from '../components/PatientCard'
 import CreatePatientModal from '../components/CreatePatientModal'
+
+import { setCurrentPatient } from '../store/patientSlice'
 import { createPatient, getPatients } from '../asyncActions/patients'
+import { clearCases } from '../store/caseSlice'
 import { getCases } from '../asyncActions/cases'
 
 const Patients = () => {
   const dispatch = useDispatch()
   const user = useSelector(state => state.app.user)
-  const { patients, loading, error, currentPatient } = useSelector(state => state.patient)
+  const { patient_array, loading, error, currentPatient } = useSelector(state => state.patient)
 
   const [isModalOpen, setIsModalOpen] = useState(false)
-  const [expandedPatientId, setExpandedPatientId] = useState(null)
   const [sortOrder, setSortOrder] = useState('asc')
   const [searchTerm, setSearchTerm] = useState('')
+
+  useEffect(() => {
+    dispatch(clearCases())
+    dispatch(setCurrentPatient(null))
+  }, [dispatch])
 
   useEffect(() => {
     if (user) {
@@ -31,26 +38,28 @@ const Patients = () => {
       })).unwrap()
       setIsModalOpen(false)
     } catch (error) {
-      console.error('Failed to create patient:', error)
+      console.error('Не удалось создать пациента:', error)
     }
   }
 
   const handlePatientClick = async (patientId) => {
-    if (expandedPatientId === patientId) {
-      setExpandedPatientId(null)
+    if (currentPatient === patientId) {
+      await dispatch(setCurrentPatient(null))
+      await dispatch(clearCases())
       return
     }
 
     try {
-      await dispatch(getCases(patientId)).unwrap(),
-      setExpandedPatientId(patientId)
+      await dispatch(setCurrentPatient(null))
+      await dispatch(getCases(patientId)).unwrap()
+      await dispatch(setCurrentPatient(patientId))
     } catch (error) {
       console.error('Не удалось получить список исследований:', error)
     }
   }
 
   // Фильтрация и сортировка пациентов
-  const filteredAndSortedPatients = patients
+  const filteredAndSortedPatients = patient_array
     .filter(patient => 
       patient.name?.toLowerCase().includes(searchTerm.toLowerCase())
     )
@@ -84,7 +93,7 @@ const Patients = () => {
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Пациенты</h1>
           <p className="text-gray-600 mt-1">
-            {patients.length} пациент{patients.length % 10 === 1 && patients.length % 100 !== 11 ? '' : 'ов'}
+            {patient_array.length} пациент{patient_array.length % 10 === 1 && patient_array.length % 100 !== 11 ? '' : 'ов'}
           </p>
         </div>
         
@@ -158,7 +167,7 @@ const Patients = () => {
             <PatientCard 
               key={patient.id}
               patient={patient}
-              isExpanded={expandedPatientId === patient.id}
+              isExpanded={currentPatient === patient.id}
               onClick={() => handlePatientClick(patient.id)}
             />
           ))}
