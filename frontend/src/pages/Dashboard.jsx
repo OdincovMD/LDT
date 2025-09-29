@@ -24,6 +24,8 @@ import {
   setCaseHasData,
 } from "../store/streamSlice"
 
+import Controls from "../components/Controls";
+
 // === Константы ===
 const WINDOW_SECONDS = 60 * 5
 const POLL_MS = 1000
@@ -31,6 +33,8 @@ const RISK_THR = 0.7 // локальный порог подсветки, есл
 
 export default function Dashboard() {
   const dispatch = useDispatch()
+  const [dataMode, setDataMode] = useState("demo");         // "demo" | "ws" | "sse"
+  const [dataConnected, setDataConnected] = useState(false); // индикатор контролов
   const {
     currentCase,
     currentPatient,
@@ -226,24 +230,33 @@ export default function Dashboard() {
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-slate-900 text-white flex items-center justify-center">
+      <div className="min-h-screen bg-white text-gray-900 flex items-center justify-center">
         <div className="text-center">
-          <h2 className="text-xl font-semibold mb-4">Доступ запрещен</h2>
-          <p className="text-slate-400">Для доступа к системе необходимо авторизоваться</p>
+          <h2 className="text-xl font-semibold mb-4 text-gray-900">Доступ запрещен</h2>
+          <p className="text-gray-600">Для доступа к системе необходимо авторизоваться</p>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-slate-900 text-white p-4">
+    <div className="min-h-screen bg-white text-gray-900 p-4">
       <div className="max-w-6xl mx-auto space-y-4">
         <header className="flex items-center justify-between">
-          <h1 className="text-2xl font-semibold">Кардиотокография</h1>
-          <div className="text-sm text-slate-400">
-            {user.name} • {new Date().toLocaleDateString('ru-RU')}
-          </div>
+          <h1 className="text-2xl font-semibold text-gray-900">Кардиотокография</h1>
         </header>
+
+        {/* Источник данных: сейчас доступен только Демо */}
+        <div className="flex items-center justify-between bg-white border border-gray-200 rounded-2xl p-4 shadow-sm">
+          <Controls
+            connected={dataConnected}
+            mode={dataMode}
+            setMode={setDataMode}
+            availableModes={["demo"]}
+            onConnect={() => setDataConnected(true)}
+            onDisconnect={() => setDataConnected(false)}
+          />
+        </div>
 
         <CaseSelector />
 
@@ -259,78 +272,82 @@ export default function Dashboard() {
 
         {currentCase ? (
           <>
-            <section className="bg-slate-800 rounded-2xl p-4 shadow">
-              <div className="flex justify-between items-start mb-2">
-                <h2 className="text-lg">ЧСС (уд/мин)</h2>
-                <span style={{ color: '#60A5FA' }} className="font-semibold text-lg">
-                  {(rawPoints.at(-1)?.bpm ?? 0).toFixed(1)} bpm
-                </span>
-              </div>
-              <RealtimeLineChart
-                data={displayData}
-                timeWindow={timeWindow}
-                series={[{ dataKey: "bpm", name: "ЧСС", type: "monotone", stroke: "#60A5FA" }]}
-                // динамическая ось Y с мягким зажимом
-                yDomain={undefined}
-                yDynamic
-                yClamp={[50, 210]}
-                yLabel="bpm"
-                height={200}
-                isStatic={operationMode === 'playback'}
-                alertKey="alert"
-              />
-            </section>
+          {/* ЧСС */}
+        <section className="bg-white border border-gray-200 rounded-2xl p-4 shadow-sm">
+          <div className="flex justify-between items-start mb-2">
+            <h2 className="text-lg font-medium text-gray-900">ЧСС (уд/мин)</h2>
+            <span className="font-semibold text-lg text-blue-600">
+              {(rawPoints.at(-1)?.bpm ?? 0).toFixed(1)} bpm
+            </span>
+          </div>
+          <div className="bg-slate-900 rounded-lg p-2 mt-2">
+            <RealtimeLineChart
+              data={displayData}
+              timeWindow={timeWindow}
+              series={[{ dataKey: "bpm", name: "ЧСС", type: "monotone", stroke: "#60A5FA" }]}
+              yDynamic
+              yClamp={[50, 210]}
+              yLabel="bpm"
+              height={200}
+              isStatic={operationMode === "playback"}
+              alertKey="alert"
+            />
+          </div>
+        </section>
 
-            <section className="bg-slate-800 rounded-2xl p-4 shadow">
-              <div className="flex justify-between items-start mb-2">
-                <h2 className="text-lg">Маточная активность</h2>
-                <span style={{ color: '#34D399' }} className="font-semibold text-lg">
-                  {(rawPoints.at(-1)?.uc ?? 0).toFixed(1)}
-                </span>
-              </div>
-              <RealtimeLineChart
-                data={displayData}
-                timeWindow={timeWindow}
-                series={[{ dataKey: "uc", name: "UC", type: "monotone", stroke: "#34D399" }]}
-                yDomain={undefined}
-                yDynamic
-                yClamp={[0, 50]}
-                yLabel="UC"
-                height={200}
-                isStatic={operationMode === 'playback'}
-                alertKey="alert"
-              />
-            </section>
+        {/* Маточная активность */}
+        <section className="bg-white border border-gray-200 rounded-2xl p-4 shadow-sm">
+          <div className="flex justify-between items-start mb-2">
+            <h2 className="text-lg font-medium text-gray-900">Маточная активность</h2>
+            <span className="font-semibold text-lg text-green-600">
+              {(rawPoints.at(-1)?.uc ?? 0).toFixed(1)}
+            </span>
+          </div>
+          <div className="bg-slate-900 rounded-lg p-2 mt-2">
+            <RealtimeLineChart
+              data={displayData}
+              timeWindow={timeWindow}
+              series={[{ dataKey: "uc", name: "UC", type: "monotone", stroke: "#34D399" }]}
+              yDynamic
+              yClamp={[0, 50]}
+              yLabel="UC"
+              height={200}
+              isStatic={operationMode === "playback"}
+              alertKey="alert"
+            />
+          </div>
+        </section>
 
-            <section className="bg-slate-800 rounded-2xl p-4 shadow">
-              <div className="flex justify-between items-start mb-2">
-                <h2 className="text-lg">Вероятность осложнений</h2>
-                <span style={{ color: '#F87171' }} className="font-semibold text-lg">
-                  {(rawPoints.at(-1)?.risk ?? 0).toFixed(2)}
-                </span>
-              </div>
-              <RealtimeLineChart
-                data={displayData}
-                timeWindow={timeWindow}
-                series={[{ dataKey: "risk", name: "Риск", type: "monotone", stroke: "#F87171" }]}
-                // риск естественно в [0,1]; автоось с зажимом
-                yDomain={undefined}
-                yDynamic
-                yClamp={[0, 1]}
-                yLabel="prob"
-                referenceLines={[{ y: RISK_THR, stroke: "#FCA5A5" }]}
-                height={200}
-                isStatic={operationMode === 'playback'}
-                alertKey="alert"
-              />
-            </section>
+        {/* Вероятность осложнений */}
+        <section className="bg-white border border-gray-200 rounded-2xl p-4 shadow-sm">
+          <div className="flex justify-between items-start mb-2">
+            <h2 className="text-lg font-medium text-gray-900">Вероятность осложнений</h2>
+            <span className="font-semibold text-lg text-red-600">
+              {(rawPoints.at(-1)?.risk ?? 0).toFixed(2)}
+            </span>
+          </div>
+          <div className="bg-slate-900 rounded-lg p-2 mt-2">
+            <RealtimeLineChart
+              data={displayData}
+              timeWindow={timeWindow}
+              series={[{ dataKey: "risk", name: "Риск", type: "monotone", stroke: "#F87171" }]}
+              yDynamic
+              yClamp={[0, 1]}
+              yLabel="prob"
+              referenceLines={[{ y: RISK_THR, stroke: "#FCA5A5" }]}
+              height={200}
+              isStatic={operationMode === "playback"}
+              alertKey="alert"
+            />
+          </div>
+        </section>
           </>
         ) : (
-          <div className="bg-slate-800 rounded-2xl p-8 text-center">
-            <div className="text-slate-400 text-lg">
+          <div className="bg-white border border-gray-200 rounded-2xl p-8 text-center shadow-sm">
+            <div className="text-gray-600 text-lg">
               Выберите пациента и исследование для начала работы
             </div>
-            <div className="text-slate-500 text-sm mt-2">
+            <div className="text-gray-500 text-sm mt-2">
               Создайте новое исследование для записи данных или выберите существующее для просмотра
             </div>
           </div>

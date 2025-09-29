@@ -1,12 +1,9 @@
-import { useSelector } from 'react-redux'
-import { Link } from 'react-router-dom'
-import { User, LogIn, Mail, UserPlus, Activity, Heart, AlertTriangle, Shield, Cpu, BarChart3 } from 'lucide-react'
-
-import { FRONTEND_PAGES, PAGE_NAMES } from "../imports/ENDPOINTS"
+import { useSelector } from "react-redux"
+import { User, Mail, Activity, Heart, AlertTriangle, Shield, Cpu, BarChart3 } from "lucide-react"
 
 export default function Home() {
-  const user = useSelector(state => state.app.user)
-  const loading = useSelector(state => state.app.loading)
+  const user = useSelector((state) => state.app.user)
+  const loading = useSelector((state) => state.app.loading)
 
   // Если данные еще загружаются
   if (loading) {
@@ -23,87 +20,42 @@ export default function Home() {
     )
   }
 
-  // Если пользователь не авторизован
-  if (!user) {
-    return (
-      <div className="max-w-md mx-auto">
-        <div className="bg-white rounded-lg shadow-xl p-8 text-center">
-          {/* Иконка */}
-          <div className="mx-auto w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center mb-6">
-            <LogIn className="text-blue-600" size={40} />
-          </div>
-
-          {/* Заголовок */}
-          <h2 className="text-2xl font-bold text-gray-900 mb-4">
-            Войдите в аккаунт
-          </h2>
-
-          {/* Описание */}
-          <p className="text-gray-600 mb-8">
-            Для доступа к системе необходимо авторизоваться
-          </p>
-
-          {/* Кнопки действий */}
-          <div className="flex flex-col gap-4">
-            <Link
-              to={FRONTEND_PAGES.LOGIN}
-              className="inline-flex items-center justify-center px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors duration-200"
-            >
-              <LogIn size={20} className="mr-2" />
-              Войти в аккаунт
-            </Link>
-
-            <Link
-              to={FRONTEND_PAGES.REGISTER}
-              className="inline-flex items-center justify-center px-6 py-3 border border-blue-600 text-blue-600 font-medium rounded-lg hover:bg-blue-50 transition-colors duration-200"
-            >
-              <UserPlus size={20} className="mr-2" />
-              Зарегистрироваться
-            </Link>
-          </div>
-        </div>
-      </div>
-    )
-  }
-
-  // Если пользователь авторизован - показываем сначала аккаунт, затем описание системы
   return (
     <div className="max-w-6xl mx-auto space-y-8">
-      {/* Информация о пользователе - ПЕРВЫЙ БЛОК */}
-      <div className="bg-white rounded-lg shadow-xl p-8">
-        <div className="text-center mb-6">
-          <div className="mx-auto w-24 h-24 bg-blue-500 rounded-full flex items-center justify-center mb-4">
-            <User className="text-white" size={40} />
+      {/* Если пользователь авторизован — блок с аккаунтом */}
+      {user && (
+        <div className="bg-white rounded-lg shadow-xl p-8">
+          <div className="text-center mb-6">
+            <div className="mx-auto w-24 h-24 bg-blue-500 rounded-full flex items-center justify-center mb-4">
+              <User className="text-white" size={40} />
+            </div>
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">
+              Добро пожаловать, {user.name}!
+            </h2>
+            <p className="text-gray-600">Ваш профиль в системе мониторинга состояния плода</p>
           </div>
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">
-            Добро пожаловать, {user.name}!
-          </h2>
-          <p className="text-gray-600">Ваш профиль в системе мониторинга состояния плода</p>
-        </div>
 
-        {/* Информация о пользователе */}
-        <div className="space-y-4 max-w-md mx-auto">
-          {/* ФИО */}
-          <div className="flex items-center p-4 bg-blue-50 rounded-lg border border-blue-100">
-            <User size={20} className="text-blue-600 mr-3" />
-            <div>
-              <p className="text-sm text-blue-800 font-medium">ФИО</p>
-              <p className="font-semibold text-gray-900">{user.name}</p>
+          <div className="space-y-4 max-w-md mx-auto">
+            <div className="flex items-center p-4 bg-blue-50 rounded-lg border border-blue-100">
+              <User size={20} className="text-blue-600 mr-3" />
+              <div>
+                <p className="text-sm text-blue-800 font-medium">ФИО</p>
+                <p className="font-semibold text-gray-900">{user.name}</p>
+              </div>
+            </div>
+
+            <div className="flex items-center p-4 bg-blue-50 rounded-lg border border-blue-100">
+              <Mail size={20} className="text-blue-600 mr-3" />
+              <div>
+                <p className="text-sm text-blue-800 font-medium">Email</p>
+                <p className="font-semibold text-gray-900">{user.email}</p>
+              </div>
             </div>
           </div>
-
-          {/* Почта */}
-          <div className="flex items-center p-4 bg-blue-50 rounded-lg border border-blue-100">
-            <Mail size={20} className="text-blue-600 mr-3" />
-            <div>
-              <p className="text-sm text-blue-800 font-medium">Email</p>
-              <p className="font-semibold text-gray-900">{user.email}</p>
-            </div>
-          </div>
         </div>
-      </div>
+      )}
 
-      {/* Информация о системе - ВТОРОЙ БЛОК */}
+      {/* Информация о системе */}
       <div className="bg-white rounded-lg shadow-xl p-8">
         <div className="text-center mb-8">
           <div className="mx-auto w-20 h-20 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center mb-4">
@@ -289,7 +241,7 @@ export default function Home() {
             </p>
             <div className="mt-4 p-4 bg-white rounded-lg border border-green-200">
               <p className="text-sm text-green-800 font-medium">
-                🚀 <strong>Преимущество:</strong> Прогнозирование с упреждением позволяет предотвратить развитие
+                <strong>Преимущество:</strong> Прогнозирование с упреждением позволяет предотвратить развитие
                 критических состояний, а не просто констатировать их наличие.
               </p>
             </div>

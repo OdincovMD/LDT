@@ -7,6 +7,41 @@ import PropTypes from "prop-types";
 
 import { setCurrentCase, setCurrentPatient } from "../store/streamSlice";
 
+const TZ = "Europe/Warsaw";
+
+const formatDateTimeReadable = (v) => {
+  if (!v) return "—";
+  const d = new Date(v);
+  if (Number.isNaN(d.getTime())) return "—";
+  return new Intl.DateTimeFormat("ru-RU", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    timeZone: TZ,
+  }).format(d);
+};
+
+const formatDateTimeForTitle = (v) => {
+  if (!v) return "";
+  const d = new Date(v);
+  if (Number.isNaN(d.getTime())) return "";
+  // Короткий формат для имени по умолчанию
+  const date = new Intl.DateTimeFormat("ru-RU", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    timeZone: TZ,
+  }).format(d);
+  const time = new Intl.DateTimeFormat("ru-RU", {
+    hour: "2-digit",
+    minute: "2-digit",
+    timeZone: TZ,
+  }).format(d);
+  return `${date} ${time}`;
+};
+
 const CaseItem = ({ caseItem }) => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -19,23 +54,21 @@ const CaseItem = ({ caseItem }) => {
     );
   }
 
-  // дата одним объектом, чтобы не пересчитывать на каждый ререндер
-  const createdAtText = useMemo(() => {
-    const v = caseItem.created_at ?? caseItem.createdAt ?? null;
-    if (!v) return "—";
-    const d = new Date(v);
-    if (Number.isNaN(d.getTime())) return "—";
-    return new Intl.DateTimeFormat("ru-RU", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-      timeZone: "Europe/Warsaw",
-    }).format(d);
-  }, [caseItem.created_at, caseItem.createdAt]);
+  const createdRaw = caseItem.created_at ?? caseItem.createdAt ?? null;
 
-  // показываем счётчик только если он есть числом
+  // Читаемая дата для мета-строки
+  const createdAtText = useMemo(() => formatDateTimeReadable(createdRaw), [createdRaw]);
+
+  // Имя по умолчанию: "Исследование DD.MM.YYYY HH:MM"
+  const defaultTitle = useMemo(() => {
+    const when = formatDateTimeForTitle(createdRaw);
+    return when ? `Исследование ${when}` : `Исследование #${caseItem.id}`;
+  }, [createdRaw, caseItem.id]);
+
+  // Заголовок: описание, иначе — имя по умолчанию
+  const titleText = caseItem.description?.trim() ? caseItem.description : defaultTitle;
+
+  // Счётчик записей (если есть)
   const recordsCount =
     typeof caseItem.signals_count === "number"
       ? caseItem.signals_count
@@ -44,12 +77,10 @@ const CaseItem = ({ caseItem }) => {
       : null;
 
   const handleOpen = useCallback(() => {
-    // сохраняем выбранные сущности в стор
     if (caseItem.patient_id) {
       dispatch(setCurrentPatient(caseItem.patient_id));
     }
     dispatch(setCurrentCase(caseItem));
-    // навигация на дашборд
     navigate("/dashboard");
   }, [caseItem, dispatch, navigate]);
 
@@ -58,6 +89,7 @@ const CaseItem = ({ caseItem }) => {
       type="button"
       onClick={handleOpen}
       className="w-full text-left flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+      title={titleText}
     >
       <div className="flex items-center space-x-3">
         <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
@@ -67,7 +99,7 @@ const CaseItem = ({ caseItem }) => {
         <div>
           <div className="flex items-center space-x-2">
             <span className="font-medium text-gray-900">
-              {caseItem.description || `Исследование #${caseItem.id}`}
+              {titleText}
             </span>
           </div>
 

@@ -27,7 +27,6 @@ export default function Sidebar({ isOpen }) {
       { path: FRONTEND_PAGES.DASHBOARD, label: 'Система', icon: Monitor }
     ] : []),
     { path: FRONTEND_PAGES.ABOUT, label: 'О нас', icon: User },
-    { path: FRONTEND_PAGES.CONTACT, label: 'Контакты', icon: Mail },
     user
       ? { path: FRONTEND_PAGES.LOGOUT, label: 'Выйти', icon: LogOut, isLogout: true }
       : { path: FRONTEND_PAGES.LOGIN, label: 'Войти', icon: LogIn }

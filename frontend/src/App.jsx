@@ -3,7 +3,6 @@ import { Routes, Route, Navigate } from 'react-router-dom'
 import Layout from './components/Layout'
 import Home from './pages/Home'
 import About from './pages/About'
-import Contact from './pages/Contact'
 import Register from './pages/Register'
 import Login from './pages/Login'
 import Dashboard from './pages/Dashboard'
@@ -24,7 +23,6 @@ function App() {
 
           <Route index element={<Home />} />
           <Route path={FRONTEND_PAGES.ABOUT.slice(1)} element={<About />} />
-          <Route path={FRONTEND_PAGES.CONTACT.slice(1)} element={<Contact />} />
           <Route path={FRONTEND_PAGES.DASHBOARD.slice(1)} element={user ? <Dashboard /> : <Navigate to={FRONTEND_PAGES.HOME} />} />
           <Route path={FRONTEND_PAGES.PATIENTS.slice(1)} element={<Patients />} />
 
