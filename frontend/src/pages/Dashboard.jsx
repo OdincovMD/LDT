@@ -1,366 +1,228 @@
 // pages/Dashboard.jsx
-import React, { useEffect, useRef, useState } from "react"
+import React, { useEffect, useRef, useState, useMemo } from "react"
 import { useSelector, useDispatch } from "react-redux"
 import { useNavigationGuard } from "../hooks/useNavigationGuard"
 import CaseSelector from "../components/CaseSelector"
 import ModeSelector from "../components/ModeSelector"
 import RecordingControls from "../components/RecordingControls"
 import RealtimeLineChart from "../components/RealtimeLineChart"
-import { 
-  startSimulation, 
-  stopSimulation, 
-  loadHistoricalData, 
-  fetchLatestDataPoint, 
+
+import {
+  startSimulation,        // backend: старт «симуляции» = начало записи
+  stopSimulation,         // backend: стоп «симуляции» = конец записи
+  loadHistoricalData,
+  fetchLatestDataPoint,
   fetchPredictions,
-  checkCaseHasData // ДОБАВЛЕНО
+  checkCaseHasData,
 } from "../asyncActions/stream"
-import { 
-  addDataPoint, 
-  setHistoricalData, 
-  clearData, 
-  setOperationMode, 
-  setSimulationStatus,
-  setCaseHasData // ДОБАВЛЕНО
+
+import {
+  addDataPoint,
+  setHistoricalData,
+  clearData,
+  setOperationMode,
+  setCaseHasData,
 } from "../store/streamSlice"
 
-// Константы
-const MAX_SECONDS = 60 * 5
-const ANIMATION_INTERVAL_MS = 50
+// === Константы ===
+const WINDOW_SECONDS = 60 * 5
+const POLL_MS = 1000
+const RISK_THR = 0.7 // локальный порог подсветки, если бэк не вернул alert
 
-function Dashboard() {
+export default function Dashboard() {
   const dispatch = useDispatch()
-  const { 
-    currentCase, 
-    currentPatient, 
-    operationMode, 
-    recordingMode, 
-    hasUnsavedChanges, 
-    dataPoints, 
+  const {
+    currentCase,
+    currentPatient,
+    operationMode,     // 'playback' | 'record'
+    recordingMode,     // 'idle' | 'recording' | 'reviewing'
+    hasUnsavedChanges,
+    dataPoints,
     historicalData,
-    isSimulating,
-    caseHasData // ДОБАВЛЕНО
-  } = useSelector(state => state.stream)
-  const { user } = useSelector(state => state.app)
-  
+    caseHasData,
+  } = useSelector((s) => s.stream)
+
+  const { user } = useSelector((s) => s.app)
+
+  // Локальное состояние для графиков (не мешаем стору считать несохранённое)
   const [rawPoints, setRawPoints] = useState([])
-  const [interpolatedPoints, setInterpolatedPoints] = useState([])
-  const [currentTimeWindow, setCurrentTimeWindow] = useState([0, MAX_SECONDS])
-  const [initialPhase, setInitialPhase] = useState(true)
+  const [timeWindow, setTimeWindow] = useState([0, WINDOW_SECONDS])
 
-  const timerRef = useRef(null)
-  const animationRef = useRef(null)
-  const startTimeRef = useRef(null)
+  const pollRef = useRef(null)
 
-  // Защита навигации
   useNavigationGuard(hasUnsavedChanges)
 
-  // Функция для парсинга времени
-  const parseTs = (t) => typeof t === 'string' ? new Date(t).getTime() / 1000 : t
+  const parseTs = (t) => (typeof t === "string" ? new Date(t).getTime() / 1000 : t)
 
-  // Линейная интерполяция между двумя точками
-  const interpolatePoints = (pointA, pointB, ratio) => {
-    if (!pointA || !pointB) return pointB || pointA
-
-    return {
-      t: pointA.t + (pointB.t - pointA.t) * ratio,
-      bpm: pointA.bpm + (pointB.bpm - pointA.bpm) * ratio,
-      uc: pointA.uc + (pointB.uc - pointA.uc) * ratio,
-      risk: pointA.risk + (pointB.risk - pointA.risk) * ratio,
-    }
-  }
-
-  // Добавление новой точки данных
-  const pushPoint = (newPoint) => {
-    setRawPoints(prev => {
-      const updated = [...prev, newPoint]
-
-      if (!startTimeRef.current) {
-        startTimeRef.current = newPoint.t
-        setCurrentTimeWindow([startTimeRef.current, startTimeRef.current + MAX_SECONDS])
-      }
-
-      if (operationMode === 'simulation' && recordingMode === 'recording') {
-        dispatch(addDataPoint(newPoint))
-      }
-
-      return updated
-    })
-  }
-
-  // Функция интерполяции и обновления графика
-  const updateInterpolatedData = () => {
-    if (rawPoints.length < 1) {
-      setInterpolatedPoints(rawPoints)
-      return
-    }
-
-    const now = Date.now() / 1000
-    const latestPoint = rawPoints[rawPoints.length - 1]
-
-    let interpolatedPoint = latestPoint
-
-    if (rawPoints.length >= 2 && now - latestPoint.t < 2) {
-      const prevPoint = rawPoints[rawPoints.length - 2]
-      const timeSinceLastPoint = now - latestPoint.t
-      const timeBetweenPoints = latestPoint.t - prevPoint.t
-
-      const ratio = Math.min(1, timeSinceLastPoint / Math.max(0.1, timeBetweenPoints))
-      interpolatedPoint = interpolatePoints(prevPoint, latestPoint, ratio)
-    }
-
-    const basePoints = rawPoints.slice(0, -1)
-    setInterpolatedPoints([...basePoints, interpolatedPoint])
-
-    const currentTime = now
-    
-    if (operationMode === 'simulation' && recordingMode === 'recording') {
-      if (initialPhase) {
-        const elapsedTime = currentTime - startTimeRef.current
-        if (elapsedTime <= MAX_SECONDS) {
-          setCurrentTimeWindow([startTimeRef.current, startTimeRef.current + MAX_SECONDS])
-        } else {
-          setInitialPhase(false)
-          const windowStart = currentTime - MAX_SECONDS
-          setCurrentTimeWindow([windowStart, currentTime])
-        }
-      } else {
-        const windowStart = currentTime - MAX_SECONDS
-        setCurrentTimeWindow([windowStart, currentTime])
-      }
-    }
-  }
-
-  // Очистка данных
-  const clearChartData = () => {
+  // === Хелпер: сброс локальных данных графика ===
+  const resetCharts = () => {
     setRawPoints([])
-    setInterpolatedPoints([])
-    setCurrentTimeWindow([0, MAX_SECONDS])
-    setInitialPhase(true)
-    startTimeRef.current = null
-    dispatch(clearData())
+    setTimeWindow([0, WINDOW_SECONDS])
   }
 
-  // Отслеживание alert
-  useEffect(() => {
-    if (rawPoints.at(-1)?.alert === 1) {
-      alert(`Внимание, обнаружена высокая вероятность гипоксии! Время: ${rawPoints.at(-1)?.timestamp}`)
-    }
-  }, [rawPoints])
+  // === Подсветка тревоги (alert) ===
+  const withAlert = (point, prediction) => {
+    // если бэк вернул alert — используем его, иначе локальный порог
+    const prob = prediction?.probability ?? point?.risk ?? 0
+    const alert = typeof prediction?.alert !== "undefined"
+      ? Number(Boolean(prediction.alert))
+      : Number(prob >= RISK_THR)
+    return { ...point, risk: prob, alert }
+  }
 
-  // Запуск/остановка анимации
+  // === Следим за выбором кейса: узнаём, есть ли данные, и ставим режим ===
   useEffect(() => {
-    if ((operationMode === 'simulation' && recordingMode === 'recording') && rawPoints.length > 0) {
-      animationRef.current = setInterval(updateInterpolatedData, ANIMATION_INTERVAL_MS)
-    } else {
-      if (animationRef.current) {
-        clearInterval(animationRef.current)
-        animationRef.current = null
-      }
-      setInterpolatedPoints(rawPoints)
-    }
-
-    return () => {
-      if (animationRef.current) {
-        clearInterval(animationRef.current)
-        animationRef.current = null
+    const run = async () => {
+      if (!currentCase) return
+      try {
+        const has = await dispatch(checkCaseHasData(currentCase.id)).unwrap()
+        dispatch(setCaseHasData(has))
+        dispatch(setOperationMode(has ? "playback" : "record"))
+      } catch (e) {
+        console.error("Ошибка проверки данных кейса:", e)
       }
     }
-  }, [operationMode, recordingMode, rawPoints.length, initialPhase])
+    run()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentCase?.id])
 
-  // ПРОВЕРКА НАЛИЧИЯ ДАННЫХ В КЕЙСЕ ПРИ ЕГО ВЫБОРЕ
+  // === Загрузка/очистка точек в зависимости от режима ===
   useEffect(() => {
-    const checkData = async () => {
-      if (currentCase) {
+    const load = async () => {
+      if (!currentCase) return
+      if (operationMode === "playback") {
         try {
-          const hasData = await dispatch(checkCaseHasData(currentCase.id)).unwrap()
-          dispatch(setCaseHasData(hasData))
-          
-          // АВТОМАТИЧЕСКИ ВЫБИРАЕМ РЕЖИМ В ЗАВИСИМОСТИ ОТ НАЛИЧИЯ ДАННЫХ
-          if (hasData) {
-            dispatch(setOperationMode('playback')) // Есть данные - только просмотр
-          } else {
-            dispatch(setOperationMode('simulation')) // Нет данных - только запись
-          }
-        } catch (error) {
-          console.error('Ошибка проверки данных кейса:', error)
-        }
-      }
-    }
-
-    checkData()
-  }, [currentCase])
-
-  // Загрузка данных при смене режима или кейса
-  useEffect(() => {
-    const loadData = async () => {
-      if (!currentCase) return;
-      
-      if (operationMode === 'playback') {
-        try {
-          const historicalData = await dispatch(loadHistoricalData(currentCase.id)).unwrap()
-          dispatch(setHistoricalData(historicalData))
-          
-          const points = historicalData.map(item => ({
-            t: parseTs(item.timestamp),
-            bpm: item.bpm,
-            uc: item.uc,
-            risk: item.risk
+          const hist = await dispatch(loadHistoricalData(currentCase.id)).unwrap()
+          dispatch(setHistoricalData(hist))
+          const points = (hist || []).map((it) => ({
+            t: parseTs(it.timestamp),
+            bpm: it.bpm,
+            uc: it.uc,
+            risk: it.risk ?? 0,
+            alert: Number(Boolean(it.alert)),
           }))
-          console.log(points)
-
-
           setRawPoints(points)
-          setInterpolatedPoints(points)
-          
-          if (points.length > 0) {
-            const minTime = points[0].t
-            const maxTime = points[points.length - 1].t
-            setCurrentTimeWindow([minTime, maxTime])
+          if (points.length) {
+            setTimeWindow([points[0].t, points.at(-1).t])
+          } else {
+            setTimeWindow([0, WINDOW_SECONDS])
           }
-        } catch (error) {
-          console.error('Ошибка загрузки исторических данных:', error)
+        } catch (e) {
+          console.error("Ошибка загрузки исторических данных:", e)
+          setRawPoints([])
+          setTimeWindow([0, WINDOW_SECONDS])
         }
-      } else if (operationMode === 'simulation') {
-        clearChartData()
+      } else if (operationMode === "record") {
+        // переходим в запись — чистим графики
+        resetCharts()
       }
     }
+    load()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [operationMode, currentCase?.id])
 
-    loadData()
-  }, [operationMode, currentCase])
-
-  // Управление симуляцией на бэкенде
+  // === Старт/стоп симуляции на бэке при смене recordingMode ===
   useEffect(() => {
-    const handleSimulation = async () => {
-      if (operationMode === 'simulation' && recordingMode === 'recording' && currentCase && !isSimulating) {
+    const apply = async () => {
+      if (!currentCase) return
+
+      // Начали запись
+      if (operationMode === "record" && recordingMode === "recording" && !pollRef.current) {
         try {
           await dispatch(startSimulation({ caseId: currentCase.id, hz: 1 })).unwrap()
-          dispatch(setSimulationStatus(true))
-          console.log('Симуляция запущена на бэкенде')
-        } catch (error) {
-          console.error('Ошибка запуска симуляции:', error)
-        }
-      } else if (isSimulating && (operationMode !== 'simulation' || recordingMode !== 'recording')) {
-        try {
-          if (currentCase) {
-            await dispatch(stopSimulation(currentCase.id)).unwrap()
-          }
-          dispatch(setSimulationStatus(false))
-          console.log('Симуляция остановлена на бэкенде')
-        } catch (error) {
-          console.error('Ошибка остановки симуляции:', error)
-        }
-      }
-    }
-
-    handleSimulation()
-  }, [operationMode, recordingMode, currentCase, isSimulating])
-
-  // Получение данных в режиме симуляции
-  useEffect(() => {
-    const fetchData = async () => {
-      if (operationMode === 'simulation' && recordingMode === 'recording' && currentCase && isSimulating) {
-        try {
-          const [latestPoint, prediction] = await Promise.all([
-            dispatch(fetchLatestDataPoint(currentCase.id)).unwrap(),
-            dispatch(fetchPredictions(currentCase.id)).unwrap()
-          ])
-          
-          if (latestPoint) {
-            const point = {
-              t: parseTs(latestPoint.timestamp),
-              bpm: latestPoint.bpm,
-              uc: latestPoint.uc,
-              risk: prediction ? prediction.probability : 0
+          // Запускаем опрос последней точки + предсказания
+          const tick = async () => {
+            try {
+              const [latest, pred] = await Promise.all([
+                dispatch(fetchLatestDataPoint(currentCase.id)).unwrap(),
+                dispatch(fetchPredictions(currentCase.id)).unwrap(),
+              ])
+              if (latest) {
+                const point = {
+                  t: parseTs(latest.timestamp),
+                  bpm: latest.bpm,
+                  uc: latest.uc,
+                }
+                const enriched = withAlert(point, pred)
+                // в стор — чтобы помечать «несохранённые»
+                dispatch(addDataPoint(enriched))
+                // локально — для графика
+                setRawPoints((prev) => {
+                  const next = [...prev, enriched]
+                  // обновляем окно на последние 5 минут
+                  const tNow = enriched.t
+                  const tStart = Math.max(0, tNow - WINDOW_SECONDS)
+                  setTimeWindow([tStart, tNow])
+                  // можно ограничить длину массива, чтобы не пух
+                  const cutIdx = next.findIndex((p) => p.t >= tStart)
+                  return cutIdx <= 0 ? next : next.slice(cutIdx)
+                })
+              }
+            } catch (e) {
+              console.error("Ошибка получения данных записи:", e)
             }
-            pushPoint(point)
           }
-        } catch (error) {
-          console.error('Ошибка получения данных:', error)
+          // первый тик сразу, далее интервал
+          await tick()
+          pollRef.current = setInterval(tick, POLL_MS)
+        } catch (e) {
+          console.error("Ошибка запуска записи (симуляции):", e)
+        }
+      }
+
+      // Остановили запись или вышли из режима
+      if (!(operationMode === "record" && recordingMode === "recording") && pollRef.current) {
+        clearInterval(pollRef.current)
+        pollRef.current = null
+        try {
+          await dispatch(stopSimulation(currentCase.id)).unwrap()
+        } catch (e) {
+          // если не было активной сессии — просто молчим в лог
+          console.warn("Стоп записи (симуляции) завершился с предупреждением:", e)
         }
       }
     }
+    apply()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [operationMode, recordingMode, currentCase?.id])
 
-    if (operationMode === 'simulation' && recordingMode === 'recording' && currentCase && isSimulating) {
-      if (!timerRef.current) {
-        timerRef.current = setInterval(fetchData, 1000)
-      }
-    } else {
-      if (timerRef.current) {
-        clearInterval(timerRef.current)
-        timerRef.current = null
-      }
-    }
-
-    return () => {
-      if (timerRef.current) {
-        clearInterval(timerRef.current)
-        timerRef.current = null
-      }
-    }
-  }, [operationMode, recordingMode, currentCase, isSimulating])
-
-  useEffect(() => {
-    // Если мы были в режиме записи и она остановилась, но данные не сохранены
-    if (operationMode === 'simulation' && recordingMode === 'idle' && hasUnsavedChanges) {
-      // Предлагаем сохранить или автоматически переключаем?
-      // Пока оставим как есть - пользователь сам решит сохранять или нет
-    }
-    
-    // Если запись завершена и данные сохранены, автоматически переключаемся
-    if (operationMode === 'simulation' && recordingMode === 'idle' && !hasUnsavedChanges && dataPoints.length > 0) {
-      // Данные сохранены - переключаем в режим просмотра
-      dispatch(completeRecording())
-      console.log('Автоматическое переключение в режим просмотра после сохранения')
-    }
-  }, [operationMode, recordingMode, hasUnsavedChanges, dataPoints.length])
-
-  // Очистка при размонтировании
+  // === При размонтировании — подчистим интервал и остановим запись на бэке ===
   useEffect(() => {
     return () => {
-      if (timerRef.current) {
-        clearInterval(timerRef.current)
+      if (pollRef.current) {
+        clearInterval(pollRef.current)
+        pollRef.current = null
       }
-      if (animationRef.current) {
-        clearInterval(animationRef.current)
-      }
-      if (currentCase && isSimulating) {
+      if (currentCase) {
+        // best-effort
         dispatch(stopSimulation(currentCase.id))
       }
     }
-  }, [currentCase, isSimulating])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
-  // Фильтруем данные для отображения
-  const displayData = interpolatedPoints.filter(point =>
-    point.t >= currentTimeWindow[0] && point.t <= currentTimeWindow[1]
-  )
+  // === Видимые данные под текущее окно ===
+  const displayData = useMemo(() => {
+    const [t0, t1] = timeWindow
+    return rawPoints.filter((p) => p.t >= t0 && p.t <= t1)
+  }, [rawPoints, timeWindow])
 
-  // ОПРЕДЕЛЯЕМ ДОСТУПНЫЕ РЕЖИМЫ В ЗАВИСИМОСТИ ОТ НАЛИЧИЯ ДАННЫХ
-  const getAvailableModes = () => {
+  // === Доступные режимы для переключателя ===
+  const availableModes = useMemo(() => {
     if (!currentCase) return []
-    
-    if (caseHasData) {
-      return ['playback'] // Только просмотр если есть данные
-    } else {
-      return ['simulation'] // Запись если пусто
-    }
-  }
+    return caseHasData ? ["playback"] : ["record"]
+  }, [currentCase, caseHasData])
 
-  const getDisplayModeDescription = () => {
+  const modeCaption = useMemo(() => {
     if (!currentPatient) return "Выберите пациента для начала работы"
     if (!currentCase) return "Выберите или создайте исследование"
-    
-    if (operationMode === 'simulation') {
-      if (recordingMode === 'recording') {
-        return `🔴 Запись симуляции: ${currentCase.description || `Исследование #${currentCase.id}`}`
-      } else {
-        return `⏸️ Готов к записи: ${currentCase.description || `Исследование #${currentCase.id}`}`
-      }
-    } else if (operationMode === 'playback') {
-      return `📊 Просмотр данных: ${currentCase.description || `Исследование #${currentCase.id}`}`
+    if (operationMode === "record") {
+      return recordingMode === "recording"
+        ? `🔴 Запись данных: ${currentCase.description || `Исследование #${currentCase.id}`}`
+        : `⏸️ Готов к записи: ${currentCase.description || `Исследование #${currentCase.id}`}`
     }
-    
-    return "Готов к работе"
-}
+    return `📊 Просмотр данных: ${currentCase.description || `Исследование #${currentCase.id}`}`
+  }, [currentPatient, currentCase, operationMode, recordingMode])
 
   if (!user) {
     return (
@@ -385,19 +247,17 @@ function Dashboard() {
 
         <CaseSelector />
 
-        {/* ПЕРЕДАЕМ ДОСТУПНЫЕ РЕЖИМЫ В ModeSelector */}
-        <ModeSelector 
+        <ModeSelector
           currentMode={operationMode}
           onModeChange={(mode) => dispatch(setOperationMode(mode))}
           disabled={!currentCase}
-          availableModes={getAvailableModes()} // ДОБАВЛЕНО
-          caseHasData={caseHasData} // ДОБАВЛЕНО
+          availableModes={availableModes}
+          caseHasData={caseHasData}
         />
 
         <RecordingControls />
 
-        {/* Остальной код без изменений */}
-        {currentCase && (
+        {currentCase ? (
           <>
             <section className="bg-slate-800 rounded-2xl p-4 shadow">
               <div className="flex justify-between items-start mb-2">
@@ -408,12 +268,16 @@ function Dashboard() {
               </div>
               <RealtimeLineChart
                 data={displayData}
-                timeWindow={currentTimeWindow}
+                timeWindow={timeWindow}
                 series={[{ dataKey: "bpm", name: "ЧСС", type: "monotone", stroke: "#60A5FA" }]}
-                yDomain={[50, 210]}
+                // динамическая ось Y с мягким зажимом
+                yDomain={undefined}
+                yDynamic
+                yClamp={[50, 210]}
                 yLabel="bpm"
                 height={200}
                 isStatic={operationMode === 'playback'}
+                alertKey="alert"
               />
             </section>
 
@@ -426,37 +290,42 @@ function Dashboard() {
               </div>
               <RealtimeLineChart
                 data={displayData}
-                timeWindow={currentTimeWindow}
+                timeWindow={timeWindow}
                 series={[{ dataKey: "uc", name: "UC", type: "monotone", stroke: "#34D399" }]}
-                yDomain={[0, 50]}
+                yDomain={undefined}
+                yDynamic
+                yClamp={[0, 50]}
                 yLabel="UC"
                 height={200}
                 isStatic={operationMode === 'playback'}
+                alertKey="alert"
               />
             </section>
 
             <section className="bg-slate-800 rounded-2xl p-4 shadow">
               <div className="flex justify-between items-start mb-2">
-                <h2 className="text-lg">Вероятность развития осложнений</h2>
+                <h2 className="text-lg">Вероятность осложнений</h2>
                 <span style={{ color: '#F87171' }} className="font-semibold text-lg">
                   {(rawPoints.at(-1)?.risk ?? 0).toFixed(2)}
                 </span>
               </div>
               <RealtimeLineChart
                 data={displayData}
-                timeWindow={currentTimeWindow}
+                timeWindow={timeWindow}
                 series={[{ dataKey: "risk", name: "Риск", type: "monotone", stroke: "#F87171" }]}
-                yDomain={[0, 1]}
+                // риск естественно в [0,1]; автоось с зажимом
+                yDomain={undefined}
+                yDynamic
+                yClamp={[0, 1]}
                 yLabel="prob"
-                referenceLines={[{ y: 0.7, stroke: "#FCA5A5" }]}
+                referenceLines={[{ y: RISK_THR, stroke: "#FCA5A5" }]}
                 height={200}
                 isStatic={operationMode === 'playback'}
+                alertKey="alert"
               />
             </section>
           </>
-        )}
-
-        {!currentCase && (
+        ) : (
           <div className="bg-slate-800 rounded-2xl p-8 text-center">
             <div className="text-slate-400 text-lg">
               Выберите пациента и исследование для начала работы
@@ -470,5 +339,3 @@ function Dashboard() {
     </div>
   )
 }
-
-export default Dashboard

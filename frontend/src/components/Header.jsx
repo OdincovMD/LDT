@@ -1,70 +1,88 @@
-import { useDispatch, useSelector } from 'react-redux'
-import { LogOut, UserCircle } from 'lucide-react'
-import { useNavigate, useLocation } from 'react-router-dom'
+// src/components/Header.jsx
+import React, { useMemo, useCallback } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { LogOut, UserCircle } from "lucide-react";
+import { useNavigate, useLocation } from "react-router-dom";
 
-import { FRONTEND_PAGES, PAGE_NAMES } from "../imports/ENDPOINTS"
-import { logout } from '../store/appSlice'
+import { FRONTEND_PAGES, PAGE_NAMES } from "../imports/ENDPOINTS";
+import { logout } from "../store/appSlice";
 
 export default function Header() {
-  const dispatch = useDispatch()
-  const navigate = useLocation()
-  const location = useLocation()
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const location = useLocation();
 
-  const user = useSelector(state => state.app.user)
-  const sidebarOpen = useSelector(state => state.app.sidebarOpen)
+  const user = useSelector((state) => state.app.user);
+  const sidebarOpen = useSelector((state) => state.app.sidebarOpen);
 
   const pageTitles = {
-    [PAGE_NAMES.HOME]: 'Главная',
-    [PAGE_NAMES.PATIENTS]: 'Мои пациенты',
-    [PAGE_NAMES.DASHBOARD]: 'Система мониторинга',
-    [PAGE_NAMES.ABOUT]: 'О нашей компании',
-    [PAGE_NAMES.CONTACT]: 'Контактная информация',
-    [PAGE_NAMES.LOGIN]: 'Вход в систему',
-    [PAGE_NAMES.REGISTER]: 'Регистрация аккаунта'
-  }
+    [PAGE_NAMES.HOME]: "Главная",
+    [PAGE_NAMES.PATIENTS]: "Мои пациенты",
+    [PAGE_NAMES.DASHBOARD]: "Система мониторинга",
+    [PAGE_NAMES.ABOUT]: "О нашей компании",
+    [PAGE_NAMES.CONTACT]: "Контактная информация",
+    [PAGE_NAMES.LOGIN]: "Вход в систему",
+    [PAGE_NAMES.REGISTER]: "Регистрация аккаунта",
+  };
 
   const pageDescriptions = {
-    [PAGE_NAMES.HOME]: 'Личный кабинет пользователя',
-    [PAGE_NAMES.PATIENTS]: 'Управление пациентами и их исследованиями',
-    [PAGE_NAMES.DASHBOARD]: 'Мониторинг в реальном времени',
-    [PAGE_NAMES.ABOUT]: 'Информация о нашем проекте и команде',
-    [PAGE_NAMES.CONTACT]: 'Свяжитесь с нами для сотрудничества',
-    [PAGE_NAMES.LOGIN]: 'Введите ваши учетные данные',
-    [PAGE_NAMES.REGISTER]: 'Создайте новый аккаунт',
-  }
+    [PAGE_NAMES.HOME]: "Личный кабинет пользователя",
+    [PAGE_NAMES.PATIENTS]: "Управление пациентами и их исследованиями",
+    [PAGE_NAMES.DASHBOARD]: "Мониторинг в реальном времени",
+    [PAGE_NAMES.ABOUT]: "Информация о нашем проекте и команде",
+    [PAGE_NAMES.CONTACT]: "Свяжитесь с нами для сотрудничества",
+    [PAGE_NAMES.LOGIN]: "Введите ваши учетные данные",
+    [PAGE_NAMES.REGISTER]: "Создайте новый аккаунт",
+  };
 
-  const getCurrentPageFromPath = () => {
-    const path = location.pathname
-    switch (path) {
-      case (FRONTEND_PAGES.HOME): return PAGE_NAMES.HOME
-      case (FRONTEND_PAGES.PATIENTS): return PAGE_NAMES.PATIENTS
-      case (FRONTEND_PAGES.DASHBOARD): return PAGE_NAMES.DASHBOARD
-      case (FRONTEND_PAGES.ABOUT): return PAGE_NAMES.ABOUT
-      case (FRONTEND_PAGES.CONTACT): return PAGE_NAMES.CONTACT
-      case (FRONTEND_PAGES.LOGIN): return PAGE_NAMES.LOGIN
-      case (FRONTEND_PAGES.REGISTER): return PAGE_NAMES.REGISTER
-      default: return PAGE_NAMES.HOME
-    }
-  }
+  const currentPageName = useMemo(() => {
+    const path = location.pathname;
 
-  const currentPageName = getCurrentPageFromPath()
-  const pageTitle = pageTitles[currentPageName] || 'Мониторинг системы'
-  const pageDescription = pageDescriptions[currentPageName] || ''
+    // точные совпадения
+    const exactMap = new Map([
+      [FRONTEND_PAGES.HOME, PAGE_NAMES.HOME],
+      [FRONTEND_PAGES.PATIENTS, PAGE_NAMES.PATIENTS],
+      [FRONTEND_PAGES.ABOUT, PAGE_NAMES.ABOUT],
+      [FRONTEND_PAGES.CONTACT, PAGE_NAMES.CONTACT],
+      [FRONTEND_PAGES.LOGIN, PAGE_NAMES.LOGIN],
+      [FRONTEND_PAGES.REGISTER, PAGE_NAMES.REGISTER],
+    ]);
+    if (exactMap.has(path)) return exactMap.get(path);
+
+    // вложенные роуты дашборда: /dashboard/*
+    if (path.startsWith(FRONTEND_PAGES.DASHBOARD)) return PAGE_NAMES.DASHBOARD;
+
+    return PAGE_NAMES.HOME;
+  }, [location.pathname]);
+
+  const pageTitle = pageTitles[currentPageName] || "Мониторинг системы";
+  const pageDescription = pageDescriptions[currentPageName] || "";
+
+  const handleLogout = useCallback(() => {
+    dispatch(logout());
+    // на всякий случай чистим локальное хранилище токена, если ты его там кладёшь
+    try {
+      localStorage.removeItem("accessToken");
+    } catch {}
+    navigate(FRONTEND_PAGES.LOGIN, { replace: true });
+  }, [dispatch, navigate]);
 
   return (
     <header className="bg-white shadow-sm border-b border-gray-200">
-       <div className={`transition-all duration-300 ${
-        sidebarOpen ? 'pl-64' : 'pl-16'  // Добавляем padding-left вместо margin
-      }`}>
-      <div className="px-6 py-4">
-        <div className="flex items-center justify-between">
-            {/* Остальной код без изменений */}
+      <div
+        className={`transition-all duration-300 ${sidebarOpen ? "pl-64" : "pl-16"}`}
+      >
+        <div className="px-6 py-4">
+          <div className="flex items-center justify-between">
+            {/* Левая часть — заголовок страницы */}
             <div>
               <h1 className="text-2xl font-bold text-gray-900">{pageTitle}</h1>
-              {pageDescription && <p className="text-gray-600 text-sm mt-1">{pageDescription}</p>}
+              {pageDescription && (
+                <p className="text-gray-600 text-sm mt-1">{pageDescription}</p>
+              )}
             </div>
 
-            {/* Правая часть - действия пользователя */}
+            {/* Правая часть — пользователь и выход */}
             <div className="flex items-center space-x-3">
               {user ? (
                 <div className="flex items-center space-x-3">
@@ -72,23 +90,32 @@ export default function Header() {
                     <p className="text-sm font-medium text-gray-900">{user.name}</p>
                     <p className="text-xs text-gray-600">{user.email}</p>
                   </div>
-                  
-                  <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
+
+                  <div
+                    className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center"
+                    aria-label="Профиль пользователя"
+                    title="Профиль пользователя"
+                  >
                     <UserCircle size={20} className="text-white" />
                   </div>
-                {/*                   
-                  <button 
+
+                  <button
                     onClick={handleLogout}
                     className="flex items-center space-x-1 px-3 py-2 rounded-md hover:bg-red-50 transition-colors duration-200"
                     title="Выйти из системы"
+                    aria-label="Выйти из системы"
                   >
                     <LogOut size={16} className="text-red-600" />
-                    <span className="text-red-600 text-sm font-medium hidden md:inline">Выйти</span>
-                  </button> 
-                */}
+                    <span className="text-red-600 text-sm font-medium hidden md:inline">
+                      Выйти
+                    </span>
+                  </button>
                 </div>
               ) : (
-                <div className="flex items-center space-x-2 text-sm text-gray-600">
+                <div
+                  className="flex items-center space-x-2 text-sm text-gray-600"
+                  aria-label="Гость"
+                >
                   <UserCircle size={20} />
                   <span>Гость</span>
                 </div>
@@ -98,5 +125,5 @@ export default function Header() {
         </div>
       </div>
     </header>
-  )
+  );
 }

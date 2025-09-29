@@ -1,63 +1,36 @@
-import { createAsyncThunk } from "@reduxjs/toolkit"
-import { env } from "../imports/ENV"
-import { BACKEND_ENDPOINTS } from "../imports/ENDPOINTS"
+import { createAsyncThunk } from "@reduxjs/toolkit";
+import { env } from "../imports/ENV";
+import { BACKEND_ENDPOINTS } from "../imports/ENDPOINTS";
+import { apiRequest } from "./apiClient";
 
+// Создание нового кейса
 export const createCase = createAsyncThunk(
-  'patient/createCase',
+  "cases/createCase",
   async ({ patientId, description }, { rejectWithValue }) => {
     try {
-      const response = await fetch(
+      return await apiRequest(
         `${env.BACKEND_URL}${BACKEND_ENDPOINTS.CASES.DEFAULT}`,
         {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json',
-          },
-          body: JSON.stringify({
-            patient_id: patientId,
-            description: description
-          }),
+          method: "POST",
+          body: JSON.stringify({ patient_id: patientId, description }),
         }
-      )
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ detail: 'Ошибка создания исследования' }))
-        throw new Error(errorData.detail?.message || errorData.detail || 'Ошибка создания исследования')
-      }
-
-      const caseData = await response.json()
-      return caseData
+      );
     } catch (error) {
-      return rejectWithValue(error.message)
+      return rejectWithValue(error.message);
     }
   }
-)
+);
 
+// Получение списка кейсов по patientId
 export const getCases = createAsyncThunk(
-  'patient/getCases',
+  "cases/getCases",
   async (patientId, { rejectWithValue }) => {
     try {
-      const response = await fetch(
-        `${env.BACKEND_URL}${BACKEND_ENDPOINTS.CASES.BY_PATIENT(patientId)}`,
-        {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json',
-          },
-        }
-      )
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ detail: 'Ошибка загрузки исследований' }))
-        throw new Error(errorData.detail?.message || errorData.detail || 'Ошибка загрузки исследований')
-      }
-
-      const cases = await response.json()
-      return cases
+      return await apiRequest(
+        `${env.BACKEND_URL}${BACKEND_ENDPOINTS.CASES.BY_PATIENT(patientId)}`
+      );
     } catch (error) {
-      return rejectWithValue(error.message)
+      return rejectWithValue(error.message);
     }
   }
-)
+);

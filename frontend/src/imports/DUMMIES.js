@@ -37,7 +37,7 @@ export const rawSignalDummy = {
     case_id: null
 }
 
-export const predicitonDummy = {
+export const predictionDummy = {
     id: null,
     model_name: null,
     probability: 0,

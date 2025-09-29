@@ -1,64 +1,45 @@
-import { env } from "../imports/ENV"
-import { createAsyncThunk } from "@reduxjs/toolkit"
-
-import { clearError } from "../store/appSlice"
-import { BACKEND_ENDPOINTS } from "../imports/ENDPOINTS"
+import { createAsyncThunk } from "@reduxjs/toolkit";
+import { env } from "../imports/ENV";
+import { BACKEND_ENDPOINTS } from "../imports/ENDPOINTS";
+import { apiRequest } from "./apiClient";
 
 export const loginUser = createAsyncThunk(
-    'app/loginUser',
-    async ({ email, password, rememberMe }, { rejectWithValue }) => {
-
+  "auth/loginUser",
+  async ({ email, password, rememberMe }, { rejectWithValue }) => {
     try {
-      const response_1 = await fetch(`${env.BACKEND_URL}${BACKEND_ENDPOINTS.AUTH.LOGIN}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'accept': 'application/json',
-        },
-        body: JSON.stringify({ 
-          email: email,
-          password: password 
-        }),
-      })
+      // Шаг 1: авторизация
+      const tokenData = await apiRequest(
+        `${env.BACKEND_URL}${BACKEND_ENDPOINTS.AUTH.LOGIN}`,
+        {
+          method: "POST",
+          body: JSON.stringify({ email, password }),
+        }
+      );
 
-      if (!response_1.ok) {
-        const errorData = await response_1.json().catch(() => ({ detail: 'Неизвестная ошибка' }))
-        const errorMessage = errorData.detail.message
-        throw new Error(errorMessage || `HTTP ошибка: ${response_1.status}`)
+      let userId;
+      try {
+        userId = tokenData.access_token.split("_")[2];
+      } catch {
+        throw new Error("Не удалось извлечь user_id из access_token");
       }
 
-      // Всё прошло без ошибок, значит, можно обратиться к бэку по id пользователя
-      const token = await response_1.json()
+      // Шаг 2: запрос информации о пользователе
+      const userData = await apiRequest(
+        `${env.BACKEND_URL}${BACKEND_ENDPOINTS.USERS.BY_ID(userId)}`
+      );
 
-      const user_id = token.access_token.split('_')[2]
-
-      const response_2 = await fetch(`${env.BACKEND_URL}${BACKEND_ENDPOINTS.USERS.BY_ID(user_id)}`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          'accept': 'application/json',
-        },
-      })
-
-      if (!response_2.ok) {
-        const errorData = await response_2.json().catch(() => ({ detail: 'Неизвестная ошибка' }))
-        const errorMessage = errorData.detail.message
-        throw new Error(errorMessage || `HTTP ошибка: ${response_2.status}`)
-      }
-      
-      const data = await response_2.json()
-
-      return { 
+      return {
         user: {
-          id: data.id,
-          email: data.email,
-          name: data.name,
-          created_at: data.created_at,
+          id: userData.id,
+          email: userData.email,
+          name: userData.name,
+          created_at: userData.created_at,
         },
-        rememberMe: rememberMe 
-      }
+        rememberMe,
+        accessToken: tokenData.access_token, // чтобы можно было хранить в state/localStorage
+      };
     } catch (error) {
-      return rejectWithValue(error.message)
+      return rejectWithValue(error.message);
     }
   }
-)
+);
