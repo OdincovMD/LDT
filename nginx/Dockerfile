@@ -2,7 +2,6 @@ FROM nginx:alpine
 
 RUN rm -f /etc/nginx/conf.d/default.conf
 
-COPY nginx.conf /etc/nginx/nginx.conf
+COPY nginx.conf.template /etc/nginx/nginx.conf.template
 
-EXPOSE 90
-CMD ["nginx", "-g", "daemon off;"]
+CMD ["sh", "-c", "envsubst '${BACKEND_PORT} ${FRONTEND_PORT} ${NGINX_PORT}' < /etc/nginx/nginx.conf.template > /etc/nginx/nginx.conf && exec nginx -g 'daemon off;'"]

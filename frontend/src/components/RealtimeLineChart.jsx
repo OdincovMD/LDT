@@ -174,7 +174,7 @@ function RealtimeLineChart({
           fontSize={10}
           tick={{ fill: '#9CA3AF' }}
           width={40}
-          label={yLabel ? { value: yLabel, angle: -90, position: 'insideLeft' } : null}
+          label={yLabel ? { value: yLabel, angle: -90, position: 'insideLeft', offset: -5} : null}
           tickFormatter={(val) => {
             // если дробное значение — округляем до 1 знака, иначе целое
             return Number.isInteger(val) 

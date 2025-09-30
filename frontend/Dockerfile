@@ -1,25 +1,15 @@
 FROM node:24-alpine
-
 WORKDIR /app
 
-
 COPY package*.json ./
-
-RUN apk update && apk add bash && \
-    npm install
-    # npm install react-redux react-router-dom && \
-    # npm install -D tailwindcss postcss autoprefixer && \
-    # npm install lucide-react &&
+RUN apk add --no-cache bash && npm install
 
 COPY . .
 
-RUN npx tailwindcss init -p
-
-EXPOSE 5173
+ENV FRONTEND_PORT=5173
 ARG BACKEND_URL
-RUN echo "export const env = { \
-            BACKEND_URL: '${BACKEND_URL}'\
-            }"\
-          > /app/src/imports/ENV.js
+RUN echo "export const env = { BACKEND_URL: '${BACKEND_URL}' }" > /app/src/imports/ENV.js
 
-CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0", "--port", "5173"]
+EXPOSE ${FRONTEND_PORT}
+
+CMD ["sh", "-c", "npm run dev -- --host 0.0.0.0 --port ${FRONTEND_PORT}"]

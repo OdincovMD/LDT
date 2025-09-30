@@ -5,9 +5,7 @@ export default defineConfig({
   plugins: [react()],
   server: {
     host: true,
-    port: 5173,
-    watch: {
-      usePolling: true
-    }
+    port: Number(process.env.FRONTEND_PORT || 5173),
+    watch: { usePolling: true },
   }
 })
