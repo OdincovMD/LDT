@@ -25,17 +25,17 @@ http {
 
     # upstream'ы внутри docker-сети
     upstream frontend_upstream {
-        server frontend:5173;
+        server frontend:${FRONTEND_PORT};
         keepalive 32;
     }
 
     upstream backend_upstream {
-        server backend:9000;
+        server backend:${BACKEND_PORT};
         keepalive 32;
     }
 
     server {
-        listen 90;
+        listen ${NGINX_PORT};
         server_name _;
 
         # --- API (бекенд) ---

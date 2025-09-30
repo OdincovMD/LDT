@@ -13,6 +13,6 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY src /app/src
 
-EXPOSE 9000
+EXPOSE ${BACKEND_PORT}
 
-CMD ["uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "9000", "--reload"]
+CMD ["sh", "-c", "uvicorn src.main:app --host 0.0.0.0 --port ${BACKEND_PORT} --reload"]
