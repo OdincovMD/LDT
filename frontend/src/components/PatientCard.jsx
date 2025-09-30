@@ -1,3 +1,7 @@
+/**
+ * @component PatientCard
+ * @description Карточка пациента с основной информацией и списком исследований. Позволяет создавать новые исследования и переходить к дашборду пациента.
+ */
 // src/components/PatientCard.jsx
 import React, { useMemo, useCallback, useEffect } from "react";
 import PropTypes from "prop-types";

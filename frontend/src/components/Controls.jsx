@@ -1,3 +1,7 @@
+/**
+ * @component Controls
+ * @description Компонент управления подключением. Позволяет выбирать режим подключения (демо/WebSocket/SSE) и управлять подключением/отключением к источнику данных.
+ */
 // src/components/Controls.jsx
 import React, { useCallback, useMemo } from "react";
 import PropTypes from "prop-types";

@@ -1,4 +1,7 @@
-// Универсальный клиент для запросов к backend
+/**
+ * @file apiClient.js
+ * @description Универсальный клиент для HTTP-запросов к backend API. Обрабатывает заголовки, ошибки и преобразование ответов в JSON.
+ */
 export async function apiRequest(url, options = {}) {
   const response = await fetch(url, {
     headers: {

@@ -1,3 +1,7 @@
+/**
+ * @component About
+ * @description Страница "О нас". Содержит информацию о команде разработчиков и проекте для хакатона "Лидеры Цифровой Трансформации 2025".
+ */
 export default function About() {
   return (
     <div className="max-w-5xl mx-auto">
@@ -6,7 +10,7 @@ export default function About() {
 
         <div className="space-y-4 text-gray-600 mb-8">
           <p className="leading-relaxed">
-            Приложение создано для Хакатона <span className="font-medium">«Лидеры Цифровой Трансформации 2025»</span> (Задача 3).
+            Система создана для Хакатона <span className="font-medium">«Лидеры Цифровой Трансформации 2025»</span> (Задача 3).
           </p>
 
           <p className="leading-relaxed font-semibold text-gray-700">

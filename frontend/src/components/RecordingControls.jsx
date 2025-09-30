@@ -1,3 +1,7 @@
+/**
+ * @component RecordingControls
+ * @description Компонент управления записью данных. Позволяет запускать, останавливать запись и сохранять данные в режиме записи.
+ */
 // components/RecordingControls.jsx
 import React from "react";
 import { useSelector, useDispatch } from "react-redux";

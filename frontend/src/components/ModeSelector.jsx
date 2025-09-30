@@ -1,3 +1,7 @@
+/**
+ * @component ModeSelector
+ * @description Компонент выбора режима работы: запись данных или просмотр существующих данных. Автоматически управляет доступностью режимов в зависимости от наличия данных.
+ */
 // src/components/ModeSelector.jsx
 import React, { useMemo, useCallback, useEffect } from "react";
 import { Play, FileText, Settings, Lock } from "lucide-react";

@@ -1,3 +1,7 @@
+/**
+ * @component RealtimeLineChart
+ * @description Компонент графика для отображения временных рядов в реальном времени. Поддерживает множественные серии, алерты, динамические оси и референсные линии.
+ */
 // components/RealtimeLineChart.jsx
 import React, { useMemo } from 'react'
 import {
@@ -173,9 +177,9 @@ function RealtimeLineChart({
           label={yLabel ? { value: yLabel, angle: -90, position: 'insideLeft' } : null}
           tickFormatter={(val) => {
             // если дробное значение — округляем до 1 знака, иначе целое
-            return Math.abs(val) < 10
-              ? val.toFixed(1)
-              : Math.round(val)
+            return Number.isInteger(val) 
+              ? val.toString() 
+              : val.toFixed(1);
           }}
         />
 

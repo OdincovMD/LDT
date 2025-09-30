@@ -1,3 +1,7 @@
+/**
+ * @file caseSlice.js
+ * @description Redux slice для управления медицинскими исследованиями (cases). Обрабатывает создание и загрузку списка исследований.
+ */
 // caseSlice.js
 import { createSlice } from '@reduxjs/toolkit'
 import { createCase, getCases } from '../asyncActions/cases'

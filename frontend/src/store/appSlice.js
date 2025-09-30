@@ -1,3 +1,7 @@
+/**
+ * @file appSlice.js
+ * @description Redux slice для управления состоянием приложения: пользователь, настройки sidebar, аутентификация и обработка ошибок.
+ */
 import { createSlice } from '@reduxjs/toolkit'
 
 import { loginUser } from "../asyncActions/loginUser"

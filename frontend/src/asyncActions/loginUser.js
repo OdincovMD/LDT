@@ -1,3 +1,7 @@
+/**
+ * @file loginUser.js
+ * @description Async Thunk для авторизации пользователя. Выполняет вход, получает access token и информацию о пользователе.
+ */
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import { env } from "../imports/ENV";
 import { BACKEND_ENDPOINTS } from "../imports/ENDPOINTS";

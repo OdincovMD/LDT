@@ -1,3 +1,7 @@
+/**
+ * @file DUMMIES.js
+ * @description Файл с dummy-объектами для тестирования и разработки. Содержит шаблоны данных пользователей, пациентов, исследований, сигналов и предсказаний.
+ */
 // This file is for reference only.
 
 export const userDummy = {

@@ -1,3 +1,7 @@
+/**
+ * @component CaseSelector
+ * @description Компонент выбора пациента и исследования (кейса). Управляет загрузкой пациентов и исследований, отображает выпадающие списки и модальное окно создания нового исследования.
+ */
 // src/components/CaseSelector.jsx
 import React, { useEffect, useMemo, useRef, useCallback } from "react";
 import { useSelector, useDispatch } from "react-redux";

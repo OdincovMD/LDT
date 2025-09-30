@@ -1,3 +1,7 @@
+/**
+ * @file ENDPOINTS.js
+ * @description Конфигурация всех API endpoints и frontend routes приложения. Содержит пути для аутентификации, пациентов, исследований и потоковых данных.
+ */
 // imports/ENDPOINTS.js
 export const FRONTEND_PAGES = {
     HOME: "/",

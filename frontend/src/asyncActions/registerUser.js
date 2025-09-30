@@ -1,3 +1,7 @@
+/**
+ * @file registerUser.js
+ * @description Async Thunk для регистрации нового пользователя. Создает учетную запись и возвращает данные пользователя.
+ */
 import { env } from "../imports/ENV"
 import { createAsyncThunk } from "@reduxjs/toolkit"
 

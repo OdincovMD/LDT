@@ -1,3 +1,7 @@
+/**
+ * @component Header
+ * @description Шапка приложения. Отображает заголовок текущей страницы, информацию о пользователе и кнопку выхода.
+ */
 // src/components/Header.jsx
 import React, { useMemo, useCallback } from "react";
 import { useDispatch, useSelector } from "react-redux";
@@ -19,13 +23,12 @@ export default function Header() {
     [PAGE_NAMES.HOME]: "Главная",
     [PAGE_NAMES.PATIENTS]: "Мои пациенты",
     [PAGE_NAMES.DASHBOARD]: "Система мониторинга",
-    [PAGE_NAMES.ABOUT]: "О нашей компании",
+    [PAGE_NAMES.ABOUT]: "О нас",
     [PAGE_NAMES.LOGIN]: "Вход в систему",
     [PAGE_NAMES.REGISTER]: "Регистрация аккаунта",
   };
 
   const pageDescriptions = {
-    [PAGE_NAMES.HOME]: "Личный кабинет пользователя",
     [PAGE_NAMES.PATIENTS]: "Управление пациентами и их исследованиями",
     [PAGE_NAMES.DASHBOARD]: "Мониторинг в реальном времени",
     [PAGE_NAMES.ABOUT]: "Информация о нашем проекте и команде",

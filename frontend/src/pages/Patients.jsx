@@ -1,3 +1,7 @@
+/**
+ * @component Patients
+ * @description Страница управления пациентами. Отображает список пациентов, позволяет добавлять новых, осуществлять поиск и сортировку.
+ */
 import React, { useEffect, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { Plus, User, Search, ArrowUpDown } from 'lucide-react'

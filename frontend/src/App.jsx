@@ -1,3 +1,7 @@
+/**
+ * @file App.jsx
+ * @description Главный компонент приложения. Управляет маршрутизацией и защитой роутов, отображает соответствующие страницы в зависимости от состояния аутентификации.
+ */
 import { useEffect } from 'react'
 import { Routes, Route, Navigate } from 'react-router-dom'
 import Layout from './components/Layout'

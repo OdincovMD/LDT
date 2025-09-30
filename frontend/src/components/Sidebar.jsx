@@ -1,3 +1,7 @@
+/**
+ * @component Sidebar
+ * @description Боковая панель навигации приложения. Содержит меню для перехода между страницами и кнопку выхода.
+ */
 import { useSelector, useDispatch } from 'react-redux'
 import { useNavigate, useLocation, Link } from 'react-router-dom'
 import { 

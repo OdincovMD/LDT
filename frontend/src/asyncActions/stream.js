@@ -1,3 +1,7 @@
+/**
+ * @file stream.js
+ * @description Async Thunks для работы с потоковыми данными и симуляцией. Управление симуляцией, загрузка исторических данных, получение предсказаний и проверка наличия данных.
+ */
 // asyncActions/stream.js
 import { createAsyncThunk } from "@reduxjs/toolkit"
 import { env } from "../imports/ENV"

@@ -1,3 +1,7 @@
+/**
+ * @file patientSlice.js
+ * @description Redux slice для управления пациентами. Обрабатывает создание пациентов, загрузку списка и управление текущим выбранным пациентом.
+ */
 import { createSlice } from '@reduxjs/toolkit'
 import { createPatient, getPatients  } from '../asyncActions/patients'
 

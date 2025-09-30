@@ -1,3 +1,7 @@
+/**
+ * @file streamSlice.js
+ * @description Redux slice для управления потоковыми данными и режимами работы. Обрабатывает запись, просмотр данных, состояние подключения и ошибки.
+ */
 // store/streamSlice.js
 import { createSlice } from '@reduxjs/toolkit'
 

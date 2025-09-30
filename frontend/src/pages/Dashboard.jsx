@@ -1,3 +1,7 @@
+/**
+ * @component Dashboard
+ * @description Главная страница системы мониторинга. Отображает графики ЧСС, маточной активности и рисков в реальном времени, управляет режимами записи и просмотра данных.
+ */
 // pages/Dashboard.jsx
 import React, { useEffect, useRef, useState, useMemo } from "react"
 import { useSelector, useDispatch } from "react-redux"

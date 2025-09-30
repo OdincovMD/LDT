@@ -1,3 +1,7 @@
+/**
+ * @file patients.js
+ * @description Async Thunks для работы с пациентами. Создание новых пациентов и получение списка пациентов пользователя.
+ */
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import { env } from "../imports/ENV";
 import { BACKEND_ENDPOINTS } from "../imports/ENDPOINTS";

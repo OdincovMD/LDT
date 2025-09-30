@@ -1,3 +1,7 @@
+/**
+ * @component Register
+ * @description Страница регистрации нового пользователя. Содержит форму с полями имени, email, пароля и подтверждения пароля, включая проверку сложности пароля.
+ */
 import React from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useForm } from 'react-hook-form'

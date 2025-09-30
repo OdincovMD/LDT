@@ -1,3 +1,7 @@
+/**
+ * @file cases.js
+ * @description Async Thunks для работы с медицинскими случаями (cases). Создание новых случаев и получение списка случаев по patientId.
+ */
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import { env } from "../imports/ENV";
 import { BACKEND_ENDPOINTS } from "../imports/ENDPOINTS";
