@@ -133,5 +133,5 @@ docker compose logs -f                         # посмотреть логи
 
 ## 8) Дополнительные материалы
 
-* **Developer Guide** — эндпоинты, форматы, как эмулировать поток: [ссылка](backend/README.md)
-* **ML Guide** — как считаются признаки и валидируется модель: [решение](ml/notebooks/solution.ipynb), [документация](ml/README.md)
+* **Developer Guide** — эндпоинты, форматы, как эмулировать поток: [ссылка](../backend/README.md)
+* **ML Guide** — как считаются признаки и валидируется модель: [решение](../ml/notebooks/solution.ipynb), [документация](../ml/README.md)
