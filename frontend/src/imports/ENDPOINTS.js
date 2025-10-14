@@ -32,6 +32,8 @@ const BASE_ROUTES = {
     STREAM: '/stream',
     USERS: '/users',
     SIM: '/sim',
+    WS_TOKEN: '/ws-token',
+    BRIDGE: '/bridge',
 }
 
 
@@ -43,6 +45,16 @@ export const BACKEND_ROUTES = Object.fromEntries(
 )
 
 export const BACKEND_ENDPOINTS = {
+    WS_TOKEN: {
+        CREATE: `${BACKEND_ROUTES.WS_TOKEN}/create`,
+        EXISTS: (userId, caseId) => `${BACKEND_ROUTES.WS_TOKEN}/exists?user_id=${userId}&case_id=${caseId}`,
+        REVOKE: `${BACKEND_ROUTES.WS_TOKEN}/revoke`,
+    },
+
+    BRIDGE: {
+        PROVISION_WS: `${BACKEND_ROUTES.BRIDGE}/provision/ws`,
+    },
+
     AUTH: {
         REGISTER: `${BACKEND_ROUTES.AUTH}/register`,
         LOGIN: `${BACKEND_ROUTES.AUTH}/login`

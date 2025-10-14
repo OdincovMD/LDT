@@ -4,8 +4,8 @@
 Pydantic для валидации данных.
 """
 
-from pydantic import BaseModel
-from typing import List, Optional
+from pydantic import BaseModel, Field
+from typing import List, Optional, Dict
 
 
 class Window(BaseModel):
@@ -16,9 +16,11 @@ class Window(BaseModel):
 
 class WindowRequest(BaseModel):
     window: Window
+    H: float = Field(5, ge=1, le=15, description="Горизонт прогноза в минутах")
 
 
 class PredictionResponse(BaseModel):
     proba: float
     label: int
     alert: Optional[int] = None
+    features: Optional[Dict[str, Optional[float]]] = None

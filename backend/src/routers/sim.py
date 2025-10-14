@@ -24,9 +24,9 @@ async def sim_start(req: SimStartReq):
     if req.case_id in _sim_tasks and not _sim_tasks[req.case_id].done():
         raise HTTPException(status_code=409, detail=f"Simulation already running for case {req.case_id}")
 
-    task = asyncio.create_task(start_stream_worker(req.case_id, req.hz))
+    task = asyncio.create_task(start_stream_worker(req.case_id, req.hz, req.H, req.stride_s))
     _sim_tasks[req.case_id] = task
-    return {"status": "started", "case_id": req.case_id, "hz": req.hz}
+    return {"status": "started", "case_id": req.case_id, "hz": req.hz, "H": req.H, "stride_s": req.stride_s}
 
 
 @router.post("/stop")

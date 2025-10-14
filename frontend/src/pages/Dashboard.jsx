@@ -4,12 +4,16 @@
  */
 // pages/Dashboard.jsx
 import React, { useEffect, useRef, useState, useMemo } from "react"
+import { Copy } from 'lucide-react'
 import { useSelector, useDispatch } from "react-redux"
 import { useNavigationGuard } from "../hooks/useNavigationGuard"
 import CaseSelector from "../components/CaseSelector"
 import ModeSelector from "../components/ModeSelector"
 import RecordingControls from "../components/RecordingControls"
 import RealtimeLineChart from "../components/RealtimeLineChart"
+import { createWsToken, checkWsTokenExists } from "../asyncActions/wsToken"
+import { loadStoredWsToken, storeWsToken } from "../store/wsTokenStorage"
+import { provisionBridgeWs } from "../asyncActions/bridgeActions"
 
 import {
   startSimulation,        // backend: старт «симуляции» = начало записи
@@ -23,40 +27,183 @@ import {
 import {
   addDataPoint,
   setHistoricalData,
-  clearData,
   setOperationMode,
   setCaseHasData,
+  startRecording,
+  stopRecording
 } from "../store/streamSlice"
 
 import Controls from "../components/Controls";
 
 // === Константы ===
 const WINDOW_SECONDS = 60 * 5
+// Горизонт прогноза для симуляции (мин)
+const H_OPTIONS = [5, 10, 15]
+const STRIDE_OPTIONS = [1, 5, 15, 30]
 const POLL_MS = 1000
 const RISK_THR = 0.7 // локальный порог подсветки, если бэк не вернул alert
+// WS endpoint: VITE_WS_URL имеет приоритет. Фолбэк — текущий хост.
+const WS_BASE = `${location.protocol === "https:" ? "wss" : "ws"}://${location.host}/ws`
+
+function WsSensorUrl({ WS_BASE, caseId, horizonMin, strideSec }) {
+  const dispatch = useDispatch()
+  const [url, setUrl] = useState(null)
+  const [status, setStatus] = useState("idle") // idle | creating | ready | need_manual
+  const runKeyRef = useRef("")
+  const userRaw = localStorage.getItem("user") || sessionStorage.getItem("user")
+  let userObj = null; try { userObj = userRaw ? JSON.parse(userRaw) : null } catch {}
+  const userId = userObj?.id
+
+  const makeUrl = (token) =>
+    `${WS_BASE.replace(/\/$/,"")}/case/${caseId}?token=${encodeURIComponent(token)}&H=${horizonMin}&stride=${strideSec}`
+
+  useEffect(() => {
+    if (!userId || !caseId) return
+
+    // если URL уже есть — просто пересобери его при смене параметров и выйди
+    const storedForRefresh = loadStoredWsToken(userId, caseId)
+    if (url && status === "ready") {
+      if (storedForRefresh) setUrl(makeUrl(storedForRefresh))
+      return
+    }
+
+    // ключ только по паре userId:caseId, без H/stride/WS_BASE
+    const key = `${userId}:${caseId}`
+    runKeyRef.current = key
+
+    if (status === "idle") setStatus("creating")
+
+    // 1) из хранилища
+    const stored = storedForRefresh
+    if (stored) {
+      if (runKeyRef.current === key) {
+        const u = makeUrl(stored)
+        setUrl(u)
+        setStatus("ready")
+      }
+      return
+    }
+
+    // 2) создать
+    dispatch(createWsToken({ userId, caseId }))
+      .unwrap()
+      .then((res) => {
+        if (runKeyRef.current !== key) return
+        if (res.status === "created" && res.token) {
+          storeWsToken(userId, caseId, res.token, "session")
+          const u = makeUrl(res.token)
+          setUrl(u)
+          setStatus("ready")
+          return
+        }
+        // 3) уже есть на бэке, секрета нет
+        dispatch(checkWsTokenExists({ userId, caseId }))
+          .unwrap()
+          .then((r) => {
+            if (runKeyRef.current !== key) return
+            // перед тем как ставить need_manual — ещё раз проверим хранилище
+            const nowStored = loadStoredWsToken(userId, caseId)
+            if (nowStored) {
+              const u2 = makeUrl(nowStored)
+              setUrl(u2)
+              setStatus("ready")
+              return
+            }
+            setStatus(r.exists ? "need_manual" : "creating")
+            if (!r.exists) {
+              // повторная попытка создать
+              dispatch(createWsToken({ userId, caseId }))
+                .unwrap()
+                .then((r2) => {
+                  if (runKeyRef.current !== key) return
+                  if (r2.status === "created" && r2.token) {
+                    storeWsToken(userId, caseId, r2.token, "session")
+                    const u3 = makeUrl(r2.token)
+                    setUrl(u3)
+                    setStatus("ready")
+                  } else {
+                    setStatus("need_manual")
+                  }
+                })
+                .catch(() => { if (runKeyRef.current === key) setStatus("need_manual") })
+            }
+          })
+          .catch(() => { if (runKeyRef.current === key) setStatus("need_manual") })
+      })
+      .catch(() => { if (runKeyRef.current === key) setStatus("need_manual") })
+
+    return () => { runKeyRef.current = "" }
+  }, [userId, caseId, horizonMin, strideSec, WS_BASE, dispatch, url, status])
+
+  if (status === "ready" && url) {
+    return (
+      <div className="mt-4 p-4 bg-white border border-gray-200 rounded-2xl shadow-sm">
+         <div className="flex items-center justify-between">
+           <div className="flex-1">
+             <p className="text-sm text-slate-700 mb-1">Подключите датчик к URL:</p>
+             <code className="text-sm bg-gray-50 px-3 py-2 rounded-lg border border-gray-200 break-all font-mono">
+               {url}
+             </code>
+           </div>
+           <button
+             onClick={() => navigator.clipboard.writeText(url)}
+             className="ml-4 px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2 shrink-0"
+           >
+             <Copy size={16} />
+             <span>Копировать</span>
+           </button>
+         </div>
+       </div>
+    )
+  }
+
+  if (status === "creating") {
+    return (
+       <div className="mt-4 p-4 bg-white border border-gray-200 rounded-2xl shadow-sm">
+         <div className="flex items-center space-x-3">
+           <div className="animate-spin rounded-full h-5 w-5 border-2 border-blue-600 border-t-transparent"></div>
+           <span className="text-sm text-slate-700">Генерируем ключ подключения…</span>
+         </div>
+       </div>
+     )
+  }
+
+  return (
+    <div className="mt-4 p-4 bg-white border border-gray-200 rounded-2xl shadow-sm">
+       <div className="text-sm text-slate-700">
+         Токен для этого кейса уже существует, но на этом клиенте он отсутствует.
+       </div>
+     </div>
+  )
+}
 
 export default function Dashboard() {
   const dispatch = useDispatch()
-  const [dataMode, setDataMode] = useState("demo");         // "demo" | "ws" | "sse"
+  const [figo, setFigo] = useState(null)
+  const [dataMode, setDataMode] = useState("demo");         // "demo" | "ws" | "usb"
   const [dataConnected, setDataConnected] = useState(false); // индикатор контролов
   const {
     currentCase,
-    currentPatient,
     operationMode,     // 'playback' | 'record'
     recordingMode,     // 'idle' | 'recording' | 'reviewing'
     hasUnsavedChanges,
-    dataPoints,
-    historicalData,
-    caseHasData,
+    caseHasData
   } = useSelector((s) => s.stream)
+  const [horizonMin, setHorizonMin] = useState(5)
+  const [strideSec, setStrideSec] = useState(1)
+
 
   const { user } = useSelector((s) => s.app)
+  const connectLocked = !!caseHasData
 
   // Локальное состояние для графиков (не мешаем стору считать несохранённое)
   const [rawPoints, setRawPoints] = useState([])
   const [timeWindow, setTimeWindow] = useState([0, WINDOW_SECONDS])
 
   const pollRef = useRef(null)
+  const pollWsRef = useRef(null)            // <== новый пуллер для режима WS
+  // небольшая плашка-уведомление для USB-моста
+  const [bridgeNotice, setBridgeNotice] = useState(null)
 
   useNavigationGuard(hasUnsavedChanges)
 
@@ -77,6 +224,65 @@ export default function Dashboard() {
       : Number(prob >= RISK_THR)
     return { ...point, risk: prob, alert }
   }
+  // FIGO: извлечь ключевые показатели из features
+   const extractFigo = (pred) => {
+     const f = pred?.features || {}
+     const baseline = Number(f.baseline ?? NaN)
+     const sd = Number(f.bpm_sd ?? NaN)
+     const stv = Number(f.stv ?? NaN)
+     const accel = Number(f.evt_accel_total ?? 0)
+     const decel = Number(f.evt_decel_total ?? 0)
+     const decelEarly = Number(f.evt_decel_early ?? 0)
+     const decelLate = Number(f.evt_decel_late ?? 0)
+     const decelVar = Number(f.evt_decel_variable ?? 0)
+     const decelProl = Number(f.evt_decel_prolonged ?? 0)
+     const tachy = Number(f.evt_tachy_ratio ?? 0) > 0
+     const brady = Number(f.evt_brady_ratio ?? 0) > 0
+     const uc = Number(f.evt_contractions ?? 0)
+ 
+     const baselineClass =
+       isFinite(baseline)
+         ? (baseline < 110 ? "брадикардия" : baseline > 160 ? "тахикардия" : "норма")
+         : "—"
+     const varClass =
+       isFinite(sd)
+         ? (sd < 5 ? "низкая" : sd > 25 ? "повышенная" : "норма")
+         : (isFinite(stv) ? (stv < 3 ? "низкая" : stv > 15 ? "повышенная" : "норма") : "—")
+     const decelClass =
+       decel > 0
+         ? `есть (${[
+             decelEarly ? "ранние" : null,
+             decelLate ? "поздние" : null,
+             decelVar ? "вариаб." : null,
+             decelProl ? "продол." : null,
+           ].filter(Boolean).join(", ") || "без типа"})`
+         : "нет"
+     const accelClass = accel > 0 ? "есть" : "нет"
+ 
+     return {
+       baseline: isFinite(baseline) ? Math.round(baseline) : null,
+       baselineClass,
+       variability: isFinite(sd) ? sd.toFixed(1) : (isFinite(stv) ? stv.toFixed(2) : null),
+       varClass,
+       accelerations: accel,
+       accelerationsClass: accelClass,
+       decelerations: decel,
+       decelerationsClass: decelClass,
+       tachy, brady,
+       contractions: uc,
+     }
+   }
+
+ // Если кейс сохранён — рвём любое подключение (demo/ws) и чистим пуллинг
+ useEffect(() => {
+  if (!connectLocked) return
+  if (dataConnected) setDataConnected(false)
+  if (pollWsRef.current) { clearInterval(pollWsRef.current); pollWsRef.current = null }
+  if (pollRef.current)   { clearInterval(pollRef.current);   pollRef.current = null }
+  if (currentCase?.id) { dispatch(stopSimulation(currentCase.id)).catch(()=>{}) }
+  setDataMode("demo")
+  resetCharts()
+}, [connectLocked])  // намеренно без dataMode/dataConnected
 
   // === Следим за выбором кейса: узнаём, есть ли данные, и ставим режим ===
   useEffect(() => {
@@ -115,6 +321,13 @@ export default function Dashboard() {
           } else {
             setTimeWindow([0, WINDOW_SECONDS])
           }
+          // получить последнее предсказание для FIGO
+          try {
+            const lastPred = await dispatch(fetchPredictions(currentCase.id)).unwrap()
+            if (lastPred) setFigo(extractFigo(lastPred))
+          } catch (e) {
+            console.warn("FIGO unavailable:", e)
+          }
         } catch (e) {
           console.error("Ошибка загрузки исторических данных:", e)
           setRawPoints([])
@@ -129,16 +342,17 @@ export default function Dashboard() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [operationMode, currentCase?.id])
 
-  // === Старт/стоп симуляции на бэке при смене recordingMode ===
+  // === Старт/стоп симуляции на бэке при смене recordingMode (НЕ для ws режима) ===
   useEffect(() => {
     const apply = async () => {
       if (!currentCase) return
+      if (dataMode === "ws") return
 
       // Начали запись
       if (operationMode === "record" && recordingMode === "recording" && !pollRef.current) {
         try {
-          await dispatch(startSimulation({ caseId: currentCase.id, hz: 1 })).unwrap()
-          // Запускаем опрос последней точки + предсказания
+          await dispatch(startSimulation({ caseId: currentCase.id, hz: 1, H: horizonMin, stride_s: strideSec })).unwrap()
+          // Запускаем опрос последней точки   предсказания
           const tick = async () => {
             try {
               const [latest, pred] = await Promise.all([
@@ -155,6 +369,7 @@ export default function Dashboard() {
                 // в стор — чтобы помечать «несохранённые»
                 dispatch(addDataPoint(enriched))
                 // локально — для графика
+                if (pred) setFigo(extractFigo(pred))
                 setRawPoints((prev) => {
                   const next = [...prev, enriched]
                   // обновляем окно на последние 5 минут
@@ -192,23 +407,96 @@ export default function Dashboard() {
     }
     apply()
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [operationMode, recordingMode, currentCase?.id])
+  }, [operationMode, recordingMode, currentCase?.id, dataMode, horizonMin])
 
-  // === При размонтировании — подчистим интервал и остановим запись на бэке ===
+  // === Теневой пуллинг при активном WS: как в симуляции, без лишней логики ===
+  useEffect(() => {
+    const apply = async () => {
+      if (!currentCase) return
+
+      // Запускаем пуллинг только когда активен потоковый источник (WS/USB)
+      const liveActive = (dataMode === "ws" || dataMode === "usb") && dataConnected
+      if (liveActive && !pollWsRef.current) {
+        const tick = async () => {
+          try {
+            const [latest, pred] = await Promise.all([
+              dispatch(fetchLatestDataPoint(currentCase.id)).unwrap(),
+              dispatch(fetchPredictions(currentCase.id)).unwrap(),
+            ])
+
+            if (!latest) return
+
+            const point = {
+              t: parseTs(latest.timestamp),
+              bpm: latest.bpm,
+              uc: latest.uc,
+            }
+            const enriched = withAlert(point, pred)
+
+            // стор
+            dispatch(addDataPoint(enriched))
+
+            // локально для графика
+            if (pred) setFigo(extractFigo(pred))
+            setRawPoints((prev) => {
+              const next = [...prev, enriched]
+              const tNow = enriched.t
+              const tStart = Math.max(0, tNow - WINDOW_SECONDS)
+              setTimeWindow([tStart, tNow])
+              const cutIdx = next.findIndex((p) => p.t >= tStart)
+              return cutIdx <= 0 ? next : next.slice(cutIdx)
+            })
+          } catch (e) {
+            console.error("WS polling error:", e)
+          }
+        }
+
+        await tick()
+        pollWsRef.current = setInterval(tick, POLL_MS)
+      }
+
+      // Остановили пуллинг при выходе из live-состояния
+      if (!((dataMode === "ws" || dataMode === "usb") && dataConnected) && pollWsRef.current) {
+        clearInterval(pollWsRef.current)
+        pollWsRef.current = null
+      }
+    }
+
+    apply()
+    return () => {
+      if (pollWsRef.current) {
+        clearInterval(pollWsRef.current)
+        pollWsRef.current = null
+      }
+    }
+  }, [dataMode, dataConnected, currentCase?.id, dispatch])
+
+  // === WS-подключение: только управление состояниями, без данных ===
+ 
+  // === Очистка при размонтировании ===
   useEffect(() => {
     return () => {
       if (pollRef.current) {
         clearInterval(pollRef.current)
         pollRef.current = null
       }
-      if (currentCase) {
-        // best-effort
+      if (pollWsRef.current) {
+        clearInterval(pollWsRef.current)
+        pollWsRef.current = null
+      }
+      if (
+        currentCase?.id &&
+        dataMode !== "ws" &&
+        operationMode === "record" &&
+        recordingMode === "recording"
+      ) {
         dispatch(stopSimulation(currentCase.id))
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
+  useEffect(() => { setFigo(null) }, [currentCase?.id, operationMode])
   // === Видимые данные под текущее окно ===
   const displayData = useMemo(() => {
     const [t0, t1] = timeWindow
@@ -220,17 +508,6 @@ export default function Dashboard() {
     if (!currentCase) return []
     return caseHasData ? ["playback"] : ["record"]
   }, [currentCase, caseHasData])
-
-  const modeCaption = useMemo(() => {
-    if (!currentPatient) return "Выберите пациента для начала работы"
-    if (!currentCase) return "Выберите или создайте исследование"
-    if (operationMode === "record") {
-      return recordingMode === "recording"
-        ? `🔴 Запись данных: ${currentCase.description || `Исследование #${currentCase.id}`}`
-        : `⏸️ Готов к записи: ${currentCase.description || `Исследование #${currentCase.id}`}`
-    }
-    return `📊 Просмотр данных: ${currentCase.description || `Исследование #${currentCase.id}`}`
-  }, [currentPatient, currentCase, operationMode, recordingMode])
 
   if (!user) {
     return (
@@ -250,17 +527,130 @@ export default function Dashboard() {
           <h1 className="text-2xl font-semibold text-gray-900">Кардиотокография</h1>
         </header>
 
-        {/* Источник данных: сейчас доступен только Демо */}
         <div className="flex items-center justify-between bg-white border border-gray-200 rounded-2xl p-4 shadow-sm">
-          <Controls
-            connected={dataConnected}
-            mode={dataMode}
-            setMode={setDataMode}
-            availableModes={["demo"]}
-            onConnect={() => setDataConnected(true)}
-            onDisconnect={() => setDataConnected(false)}
-          />
+           <Controls
+              connected={dataConnected}
+              mode={dataMode}
+              setMode={setDataMode}
+              availableModes={["demo","ws","usb"]}                      // выбирать можно
+              canConnect={Boolean(currentCase?.id) && !connectLocked}   // подключаться нельзя
+              connectLocked={connectLocked}
+              onConnect={() => {
+                if (!currentCase?.id) return
+
+                if (dataMode === "ws") {
+                  // включаем WS-режим: фронт НЕ открывает сокет, просто начинает пуллинг
+                  setDataConnected(true)
+                  if (operationMode !== "record") dispatch(setOperationMode("record"))
+                  dispatch(startRecording()) // блок «Начать запись»
+                 } else if (dataMode === "usb") {
+                   // USB-мост: 1) убедиться, что WS-токен существует (молча)
+                   //           2) запросить на бэке создание drop-файла для моста
+                   const run = async () => {
+                     try {
+                       // попытка создать токен (если уже есть — backend вернёт exists, это нормально)
+                       await dispatch(createWsToken({ userId: user?.id, caseId: currentCase.id })).unwrap().catch(() => {});
+                       // подстраховка — проверить наличие
+                       await dispatch(checkWsTokenExists({ userId: user?.id, caseId: currentCase.id })).unwrap();
+                       // создать drop-файл
+                       const res = await dispatch(
+                         provisionBridgeWs({
+                           userId: user?.id,
+                           caseId: currentCase.id,
+                           H: horizonMin,
+                           stride: strideSec
+                         })
+                       ).unwrap();
+                       setBridgeNotice(`USB-мост подготовлен: ${res.filename}`);
+                       // включаем "живой" режим так же, как для WS
+                       setDataConnected(true);
+                       if (operationMode !== "record") dispatch(setOperationMode("record"));
+                       dispatch(startRecording());
+                     } catch (e) {
+                       console.error("USB bridge setup failed:", e);
+                       setBridgeNotice("Ошибка подготовки USB-моста");
+                     }
+                   };
+                   run();
+                 } else {
+                  // demo: симуляция через HTTP
+                  setDataConnected(true)
+                  // if (operationMode !== "record") dispatch(setOperationMode("record"))
+                  // dispatch(startRecording())
+                }
+              }}
+              onDisconnect={() => {
+                setDataConnected(false)
+                dispatch(stopRecording())
+                if (dataMode === "demo" && currentCase?.id) {
+                  // безопасно останавливаем только симуляцию
+                  dispatch(stopSimulation(currentCase.id)).catch(() => {})
+                }
+                // WS-режим: ничего не останавливаем на бэке, только перестаем пуллить
+                // USB-режим: аналогично — остановка только фронтового пуллинга
+                setBridgeNotice(null)
+              }}
+            />
         </div>
+        {dataMode === "usb" && bridgeNotice && (
+          <div className="text-sm mt-2 p-2 rounded bg-green-50 border border-green-200 text-green-700">
+            {bridgeNotice}
+          </div>
+        )}
+        {/* Параметры работы модели */}
+        <div className="bg-white border border-gray-200 rounded-2xl shadow-sm p-4 mb-4">
+          <div className="text-sm font-medium text-slate-700 mb-3">Параметры работы модели</div>
+          
+          <div className="flex items-center gap-6">
+            {/* Выбор горизонта */}
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-slate-600">Горизонт, мин:</span>
+              <div className="inline-flex rounded-lg border border-gray-200 overflow-hidden">
+                {H_OPTIONS.map(h => (
+                  <button
+                    key={h}
+                    type="button"
+                    onClick={() => setHorizonMin(h)}
+                    disabled={dataConnected || !currentCase} 
+                    className={`px-3 py-1 text-sm ${
+                      horizonMin === h ? "bg-blue-600 text-white" : "bg-white text-gray-700 hover:bg-gray-50"
+                    } disabled:opacity-50`}
+                    title={dataConnected ? "Отключите источник, чтобы изменить H" : ""}
+                  >
+                    {h}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Выбор шага */}
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-slate-600">Шаг инференса, с:</span>
+              <div className="inline-flex rounded-lg border border-gray-200 overflow-hidden">
+                {STRIDE_OPTIONS.map(s => (
+                  <button 
+                    key={s} 
+                    type="button"
+                    onClick={() => setStrideSec(s)}
+                    disabled={dataConnected || !currentCase}
+                    className={`px-3 py-1 text-sm ${strideSec===s?"bg-blue-600 text-white":"bg-white text-gray-700 hover:bg-gray-50"} disabled:opacity-50`}
+                  >
+                    {s}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {dataMode === "ws" && dataConnected && currentCase?.id && (
+          <WsSensorUrl
+              WS_BASE={WS_BASE}
+              caseId={currentCase.id}
+              horizonMin={horizonMin}
+              strideSec={strideSec}
+            />
+        )}
 
         <CaseSelector />
 
@@ -272,7 +662,16 @@ export default function Dashboard() {
           caseHasData={caseHasData}
         />
 
-        <RecordingControls />
+        <RecordingControls
+          connected={dataConnected}
+          wsActive={dataMode === "ws" && dataConnected}
+          usbActive={dataMode === "usb" && dataConnected}
+          onStopWs={() => {
+            if (pollWsRef.current) { clearInterval(pollWsRef.current); pollWsRef.current = null; }
+            setDataConnected(false);
+            setBridgeNotice(null);
+          }}
+        />
 
         {currentCase ? (
           <>
@@ -345,6 +744,28 @@ export default function Dashboard() {
             />
           </div>
         </section>
+        {/* FIGO показатели */}
+         <section className="bg-white border border-gray-200 rounded-2xl p-4 shadow-sm">
+           <div className="flex justify-between items-start mb-2">
+             <h2 className="text-lg font-medium text-gray-900">Показатели FIGO</h2>
+             <span className="text-sm text-gray-500">
+               из последнего окна модели
+             </span>
+           </div>
+           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+             <FigoStat label="Базальный ритм" value={
+               figo?.baseline != null ? `${figo.baseline} bpm` : "—"
+             } badge={figo?.baselineClass} />
+             <FigoStat label="Вариабельность" value={
+               figo?.variability != null ? figo.variability : "—"
+             } badge={figo?.varClass} />
+             <FigoStat label="Акселерации" value={figo?.accelerations ?? "—"} badge={figo?.accelerationsClass} />
+             <FigoStat label="Децелерации" value={figo?.decelerations ?? "—"} badge={figo?.decelerationsClass} />
+             <FigoStat label="Тахикардия" value={figo?.tachy ? "да" : "нет"} />
+             <FigoStat label="Брадикардия" value={figo?.brady ? "да" : "нет"} />
+             <FigoStat label="Схватки (за окно)" value={figo?.contractions ?? "—"} />
+           </div>
+         </section>
           </>
         ) : (
           <div className="bg-white border border-gray-200 rounded-2xl p-8 text-center shadow-sm">
@@ -357,6 +778,20 @@ export default function Dashboard() {
           </div>
         )}
       </div>
+    </div>
+  )
+}
+
+function FigoStat({ label, value, badge }) {
+  return (
+    <div className="border border-gray-200 rounded-xl p-3">
+      <div className="text-xs text-gray-500">{label}</div>
+      <div className="mt-1 text-base font-semibold text-gray-900">{value}</div>
+      {badge ? (
+        <div className="mt-1 inline-block text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-700">
+          {badge}
+        </div>
+      ) : null}
     </div>
   )
 }

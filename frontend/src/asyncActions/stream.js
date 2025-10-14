@@ -23,7 +23,7 @@ const HISTORY_OFFSET = 300
 
 export const startSimulation = createAsyncThunk(
   'stream/startSimulation',
-  async ({ caseId, hz = 1 }, { rejectWithValue }) => {
+  async ({ caseId, hz = 1, H = 5, stride_s = 1 }, { rejectWithValue }) => {
     try {
       if (controllers.startSimulation) controllers.startSimulation.abort()
       controllers.startSimulation = new AbortController()
@@ -31,7 +31,7 @@ export const startSimulation = createAsyncThunk(
       const response = await fetch(`${env.BACKEND_URL}${BACKEND_ENDPOINTS.SIM.START}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ case_id: caseId, hz }),
+        body: JSON.stringify({ case_id: caseId, hz, H, stride_s }),
         signal: controllers.startSimulation.signal,
       })
 

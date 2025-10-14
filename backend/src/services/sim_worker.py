@@ -13,6 +13,8 @@ import httpx
 from src.queries.async_orm import AsyncOrm
 
 WINDOW_SECONDS = 300
+DEFAULT_H_MIN = 5.0  # мин вперёд
+STRIDE_S = 1.0
 
 async def call_ml(payload: dict) -> dict:
     async with httpx.AsyncClient(timeout=5.0) as client:
@@ -20,7 +22,7 @@ async def call_ml(payload: dict) -> dict:
         resp.raise_for_status()
         return resp.json()
 
-async def start_stream_worker(case_id: int, hz: float):
+async def start_stream_worker(case_id: int, hz: float, H_min: float = DEFAULT_H_MIN, stride_s: float = 1.0):
     """
     Читает CSV, на каждом тике берёт следующую строку (t,bpm,uc),
     timestamp = старт_времени + t секунд.
@@ -47,6 +49,7 @@ async def start_stream_worker(case_id: int, hz: float):
     i = 0
 
     try:
+        last_ml_ts: datetime | None = None
         while True:
             t_sec, bpm, uc = rows[i]
             ts = start_wall_clock + timedelta(seconds=t_sec)
@@ -56,12 +59,18 @@ async def start_stream_worker(case_id: int, hz: float):
             window = await AsyncOrm.get_window(case_id, limit=WINDOW_SECONDS)
             if len(window) >= WINDOW_SECONDS:
                 t0 = window[0].timestamp
+                now_ts = window[-1].timestamp
+                # дергаем ML не чаще stride_s
+                if last_ml_ts and (now_ts - last_ml_ts).total_seconds() < max(1.0, float(stride_s)):
+                    if i >= len(rows): i = 0
+                    continue
                 payload = {
                     "window": {
                         "t": [(s.timestamp - t0).total_seconds() for s in window],
                         "bpm": [float(s.bpm) for s in window],
                         "uc": [float(s.uc) for s in window],
-                    }
+                    },
+                    "H": float(H_min)
                 }
                 try:
                     ml_res = await call_ml(payload)
@@ -71,7 +80,9 @@ async def start_stream_worker(case_id: int, hz: float):
                         float(ml_res.get("proba", 0.0)),
                         int(ml_res.get("label", 0)),
                         bool(ml_res.get("alert", False)),
+                        ml_res.get("features") or {},
                     )
+                    last_ml_ts = now_ts
                 except Exception as e:
                     print(f"ML call failed for case {case_id}: {e}")
 

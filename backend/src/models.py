@@ -13,6 +13,8 @@ from sqlalchemy import (
     Text,
     Float,
     func,
+    UniqueConstraint,
+    Index
 )
 from sqlalchemy.orm import relationship
 from src.database import BaseModel
@@ -107,9 +109,6 @@ class RawSignal(BaseModel):
 
 
 class Prediction(BaseModel):
-    """
-    Результат работы ML-модели для конкретного окна сигнала.
-    """
     __tablename__ = "predictions"
 
     id = Column(Integer, primary_key=True, index=True)
@@ -119,6 +118,53 @@ class Prediction(BaseModel):
     alert = Column(Integer, nullable=False, default=0)  # тревога (0/1)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
-    # внешний ключ: к какому обследованию относится предсказание
     case_id = Column(Integer, ForeignKey("cases.id", ondelete="CASCADE"), nullable=False)
     case = relationship("Case", back_populates="predictions")
+
+    features = relationship(
+        "PredictionFeature",
+        back_populates="prediction",
+        cascade="all, delete-orphan",
+        passive_deletes=True,
+    )
+
+
+class PredictionFeature(BaseModel):
+    """
+    Одна строка = один признак конкретного предсказания.
+    """
+    __tablename__ = "prediction_features"
+
+    id = Column(Integer, primary_key=True)
+    prediction_id = Column(
+        Integer,
+        ForeignKey("predictions.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    key = Column(String, nullable=False)     # имя признака
+    value = Column(Float, nullable=True)     # значение признака (None, если NaN/inf)
+
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+    prediction = relationship("Prediction", back_populates="features")
+
+    __table_args__ = (
+        UniqueConstraint("prediction_id", "key", name="uq_predfeature_pred_key"),
+        Index("ix_predfeature_key", "key"),
+    )
+
+class WSToken(BaseModel):
+    __tablename__ = "ws_static_tokens"
+    id = Column(Integer, primary_key=True)
+    user_id = Column(Integer, ForeignKey("users.id"), index=True, nullable=False)
+    case_id = Column(Integer, ForeignKey("cases.id"), index=True, nullable=False)
+    token_hash = Column(String(128), nullable=False)
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    last_seen_at = Column(DateTime(timezone=True))
+    revoked_at = Column(DateTime(timezone=True))
+
+    __table_args__ = (
+        UniqueConstraint("user_id", "case_id", name="uq_ws_static_token_user_case"),
+        Index("ix_ws_static_token_hash", "token_hash"),
+    )

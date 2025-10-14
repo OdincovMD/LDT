@@ -65,6 +65,8 @@ services:
         - action: sync
           path: ./backend
           target: /app
+    volumes:
+      - /opt/ctg-bridge/drop:/bridge_drop:rw
 
   ml:
     build:

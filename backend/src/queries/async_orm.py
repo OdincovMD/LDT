@@ -9,7 +9,7 @@ AsyncOrm — минимальная асинхронная обёртка над
 
 import asyncio
 from datetime import datetime
-from typing import List
+from typing import List, Optional, Dict
 from src.queries.sync_orm import SyncOrm
 from src import models
 
@@ -36,8 +36,5 @@ class AsyncOrm:
     #        PREDICTIONS
     # =============================
     @staticmethod
-    async def insert_prediction(case_id: int, model_name: str, probability: float, label: int, alert: bool) -> models.Prediction:
-        """
-        Асинхронная вставка предсказания модели в БД.
-        """
-        return await asyncio.to_thread(SyncOrm.insert_prediction, case_id, model_name, probability, label, alert)
+    async def insert_prediction(case_id: int, model_name: str, probability: float, label: int, alert: bool, features: Optional[Dict[str, Optional[float]]] = None, ) -> models.Prediction:
+        return await asyncio.to_thread(SyncOrm.insert_prediction, case_id, model_name, probability, label, int(alert), features or {})

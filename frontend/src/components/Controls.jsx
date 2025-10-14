@@ -1,9 +1,9 @@
 /**
  * @component Controls
- * @description Компонент управления подключением. Позволяет выбирать режим подключения (демо/WebSocket/SSE) и управлять подключением/отключением к источнику данных.
+ * @description Компонент управления подключением. Позволяет выбирать режим подключения (демо/WebSocket/USB) и управлять подключением/отключением к источнику данных.
  */
 // src/components/Controls.jsx
-import React, { useCallback, useMemo } from "react";
+import React, { useCallback, useMemo, useEffect } from "react";
 import PropTypes from "prop-types";
 
 function Controls({
@@ -12,7 +12,9 @@ function Controls({
   onDisconnect,
   mode,
   setMode,
-  availableModes = ["demo"], // по умолчанию доступен только демо
+  availableModes = ["demo","ws","usb"],
+  canConnect = true,
+  connectLocked = false   // запрет ЛЮБОГО подключения после сохранения
 }) {
   const modeLabel = useMemo(() => {
     switch (mode) {
@@ -20,32 +22,39 @@ function Controls({
         return "Демо";
       case "ws":
         return "WebSocket";
-      case "sse":
-        return "SSE";
+      case "usb":
+        return "USB";
       default:
         return "—";
     }
   }, [mode]);
 
   const isDemo = mode === "demo";
-  const isAllowed = (m) => availableModes.includes(m);
+  const isWs = mode === "ws";
+  const isUsb = mode === "usb";
+  const isActive = isDemo || isWs || isUsb; // режимы, где есть кнопки подключения
+  const isAllowed = (m) => availableModes.includes(m); // выбор режима разрешён
+
+  useEffect(() => {
+    if (connectLocked && connected) onDisconnect?.();
+  }, [connectLocked, connected, onDisconnect]);
 
   const handleModeChange = useCallback(
     (e) => {
       const next = e.target.value;
-      // разрешаем переключаться только на разрешённые режимы
-      if (isAllowed(next)) setMode?.(next);
+      if (!isAllowed(next)) return;
+      setMode?.(next);          // только смена режима, без автоконнекта/дисконнекта
     },
     [setMode, availableModes]
   );
 
   const handleConnect = useCallback(() => {
-    if (!connected && isDemo) onConnect?.();
-  }, [connected, isDemo, onConnect]);
+    if (!connected && isActive && !connectLocked) onConnect?.();
+  }, [connected, isActive, connectLocked, onConnect]);
 
   const handleDisconnect = useCallback(() => {
-    if (connected && isDemo) onDisconnect?.();
-  }, [connected, isDemo, onDisconnect]);
+    if (connected && isActive) onDisconnect?.();
+  }, [connected, isActive, onDisconnect]);
 
   return (
     <div className="flex items-center gap-3">
@@ -62,34 +71,41 @@ function Controls({
         <option value="demo" disabled={!isAllowed("demo")}>
           Демо
         </option>
-        <option value="ws" disabled={!isAllowed("ws")}>
-          WebSocket (скоро)
+        <option
+          value="ws"
+          disabled={!isAllowed("ws")}
+          title={connectLocked ? "WS недоступен: кейс сохранён" : ""}
+        >
+          WebSocket
         </option>
-        <option value="sse" disabled={!isAllowed("sse")}>
-          SSE (скоро)
-        </option>
+        <option
+          value="usb"
+          disabled={!isAllowed("usb")}
+          title={connectLocked ? "USB недоступен: кейс сохранён" : ""}
+        >USB</option>
       </select>
 
-      {!connected ? (
+      {isActive && !connected ? (
         <button
           onClick={handleConnect}
-          disabled={!isDemo}
+          disabled={!(isActive && canConnect) || connectLocked}
           className={`px-3 py-1 rounded text-sm text-white focus:outline-none focus:ring-2 ${
-            isDemo
+            isActive && canConnect && !connectLocked
               ? "bg-green-600 hover:bg-green-700 focus:ring-green-400"
               : "bg-gray-300 text-gray-500 cursor-not-allowed"
           }`}
           aria-pressed="false"
           aria-label="Подключиться"
+          title={connectLocked ? "Подключение недоступно: кейс сохранён" : ""}
         >
           Подключить
         </button>
-      ) : (
+      ) : isActive ? (
         <button
           onClick={handleDisconnect}
-          disabled={!isDemo}
+          disabled={!isActive}
           className={`px-3 py-1 rounded text-sm text-white focus:outline-none focus:ring-2 ${
-            isDemo
+            isActive
               ? "bg-red-600 hover:bg-red-700 focus:ring-red-400"
               : "bg-gray-300 text-gray-500 cursor-not-allowed"
           }`}
@@ -98,21 +114,39 @@ function Controls({
         >
           Отключить
         </button>
-      )}
+      ) : null}
 
       <div className="flex items-center gap-2" aria-live="polite">
         <div
           className={`w-2 h-2 rounded-full ${
-            isDemo ? (connected ? "bg-green-500" : "bg-red-500") : "bg-gray-400"
+            isActive ? (connected ? "bg-green-500" : "bg-red-500") : "bg-gray-400"
           }`}
           aria-hidden="true"
         />
         <span className="text-xs text-slate-600">
-          {isDemo
-            ? connected
-              ? "Подключено (демо)"
-              : "Отключено (демо)"
-            : "Недоступно"}
+          {
+            isDemo
+              ? connected
+                ? "Подключено (демо)"
+                : connectLocked
+                  ? "Недоступно: кейс сохранён"
+                  : canConnect
+                    ? "Отключено (демо)"
+                    : "Недоступно: выберите кейс"
+              : isWs
+                ? connected
+                  ? "Подключено (ws)"
+                  : connectLocked
+                    ? "Недоступно: кейс сохранён"
+                    : canConnect
+                      ? "Отключено (ws)"
+                      : "Недоступно: выберите кейс"
+                : isUsb
+                  ? connected
+                    ? "Подключено (usb)"
+                    : connectLocked ? "Недоступно: кейс сохранён" : (canConnect ? "Отключено (usb)" : "Недоступно: выберите кейс")
+                  : "Недоступно"
+          }
         </span>
       </div>
     </div>
@@ -123,9 +157,11 @@ Controls.propTypes = {
   connected: PropTypes.bool.isRequired,
   onConnect: PropTypes.func,
   onDisconnect: PropTypes.func,
-  mode: PropTypes.oneOf(["demo", "ws", "sse"]).isRequired,
+  mode: PropTypes.oneOf(["demo", "ws", "usb"]).isRequired,
   setMode: PropTypes.func,
-  availableModes: PropTypes.arrayOf(PropTypes.oneOf(["demo", "ws", "sse"])),
+  availableModes: PropTypes.arrayOf(PropTypes.oneOf(["demo", "ws", "usb"])),
+  canConnect: PropTypes.bool,
+  connectLocked: PropTypes.bool
 };
 
 export default React.memo(Controls);

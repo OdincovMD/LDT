@@ -5,7 +5,7 @@ Pydantic-схемы для валидации входных данных и ф�
 """
 
 from datetime import datetime
-from typing import Optional
+from typing import Optional, Dict, List, Literal
 
 from pydantic import BaseModel, EmailStr, Field, ConfigDict
 
@@ -125,7 +125,10 @@ class PredictionBase(BaseModel):
     probability: float = Field(ge=0.0, le=1.0)
     label: int
     alert: bool
-
+    features: Optional[Dict[str, Optional[float]]] = Field(
+        default=None,
+        description="Словарь признаков {имя: значение}, значения могут быть None"
+    )
 
 class PredictionCreate(PredictionBase):
     """Запрос на сохранение результата предсказания."""
@@ -145,8 +148,60 @@ class PredictionRead(ORMModel, PredictionBase):
 class SimStartReq(BaseModel):
     case_id: int
     hz: float = Field(1.0, gt=0, le=10, description="Частота генерации сигналов, Гц (0<Hz≤10)")
+    H: float = Field(5, ge=5, le=15)
+    stride_s: float = Field(1.0, ge=1.0, le=300.0)
 
 
 class SimStopReq(BaseModel):
     case_id: int
 
+
+# =========================
+#        WS STREAM
+# =========================
+
+class CurrentUser(BaseModel):
+    id: int
+    email: str = ""
+
+# =========================
+#         WS TOKEN
+# =========================
+
+class WSTokenCreate(BaseModel):
+    user_id: int = Field(..., ge=1)
+    case_id: int = Field(..., ge=1)
+
+
+class WSTokenCreateResp(BaseModel):
+    status: Literal["created", "exists"]
+    token: Optional[str] = None  # plain токен возвращается только при создании
+
+
+class WSTokenExistsResp(BaseModel):
+    exists: bool
+
+
+class WSTokenRevoke(BaseModel):
+    user_id: int = Field(..., ge=1)
+    case_id: int = Field(..., ge=1)
+
+
+class WSTokenRevokeResp(BaseModel):
+    status: Literal["revoked", "not_found"]
+
+# =========================
+#         BRIDGE
+# =========================
+
+class ProvisionWsIn(BaseModel):
+    case_id: int
+    user_id: int
+    H: int = Field(300, ge=1)
+    stride: int = Field(15, ge=1)
+    name_hint: Optional[str] = None 
+
+class ProvisionWsOut(BaseModel):
+    filename: str
+    path_in_container: str
+    ws_url: str

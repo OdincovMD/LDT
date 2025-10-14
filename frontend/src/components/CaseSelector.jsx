@@ -157,7 +157,7 @@ const CaseSelector = () => {
           <label className="block text-sm text-slate-500 mb-2">Пациент</label>
           <button
             onClick={() => setIsPatientDropdownOpen((v) => !v)}
-            className="w-full bg-gray-50 border border-gray-300 rounded-lg px-4 py-3 text-left flex items-center justify-between hover:bg-gray-100 transition-colors"
+            className="w-full bg-gray-50 border border-gray-300 rounded-lg px-4 py-3 text-left flex items-center justify-between hover:bg-gray-100 transition-colors h-[60px]" // Добавлена фиксированная высота
           >
             <div className="flex items-center space-x-3">
               <User size={20} className="text-slate-500" />
@@ -199,8 +199,7 @@ const CaseSelector = () => {
           <button
             onClick={() => currentPatient && setIsCaseDropdownOpen((v) => !v)}
             disabled={!currentPatient}
-              className="w-full bg-gray-50 border border-gray-300 rounded-lg px-4 py-3 text-left flex items-center justify-between hover:bg-gray-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            >
+            className="w-full bg-gray-50 border border-gray-300 rounded-lg px-4 py-3 text-left flex items-center justify-between hover:bg-gray-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed h-[60px]">
             <div className="flex items-center space-x-3 w-full">
               <Clock size={20} className="text-slate-500" />
               <div className="flex-1 min-w-0">

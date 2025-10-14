@@ -33,7 +33,7 @@ class CTGInference:
 
         self.builder = CTGFeatureBuilder(P)
 
-    def predict_from_json(self, payload: dict, threshold: float = 0.7) -> dict:
+    def predict_from_json(self, payload: dict, *, horizon_min: int = 5, threshold: float = 0.7) -> dict:
         """
         Делает предсказание по одному JSON-окну.
 
@@ -46,7 +46,8 @@ class CTGInference:
                     "uc": [...]
                   }
                 }
-            threshold (float): порог классификации (по вероятности).
+            horizon_min (int): горизонт прогноза H в минутах.
+            threshold (float): порог классификации (по вероятности)
 
         Returns:
             dict: результат инференса:
@@ -64,7 +65,7 @@ class CTGInference:
 
         # инференс
         X = pd.DataFrame([feats])
-        X["H"] = 5
+        X["H"] = int(horizon_min)
         proba = float(self.model.predict_proba(X)[:, 1][0])
         label = int(proba > threshold)
 

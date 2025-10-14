@@ -24,12 +24,14 @@ alarm = AlarmState(cfg, stride_s=1)
 
 @app.post("/predict", response_model=PredictionResponse)
 def predict(req: WindowRequest):
-    result = model.predict_from_json(req.model_dump())
+    result = model.predict_from_json(req.model_dump(), horizon_min=req.H)
     proba = float(result["proba"])
     alert = alarm.update(proba)
+    features = result.get("features", {})
 
     return PredictionResponse(
         proba=proba,
         label=int(result["label"]),
-        alert=alert
+        alert=alert,
+        features=features
     )
