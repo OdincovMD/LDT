@@ -10,7 +10,8 @@ export const FRONTEND_PAGES = {
     ABOUT: "/about",
     LOGIN: "/login",
     REGISTER: "/register",
-    LOGOUT: "/logout"
+    LOGOUT: "/logout",
+    SYSTEM_GUIDE: "/system-guide"
 }
 
 export const PAGE_NAMES = {
@@ -20,6 +21,7 @@ export const PAGE_NAMES = {
     ABOUT: 'about',
     LOGIN: 'login',
     REGISTER: 'register',
+    SYSTEM_GUIDE: 'system-guide'
 }
 
 const BACKEND_PREFIX = '/api'

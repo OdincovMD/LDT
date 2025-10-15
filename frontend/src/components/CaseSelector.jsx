@@ -150,7 +150,7 @@ const CaseSelector = () => {
   }, [currentPatient]);
 
   return (
-    <div className="bg-white border border-gray-200 rounded-2xl shadow-sm p-4 mb-4 relative">
+    <div className="bg-white border border-gray-300 rounded-2xl shadow-sm p-4 mb-4 relative">
       <div className="flex flex-col md:flex-row gap-4">
         {/* Пациент */}
         <div className="flex-1" ref={patientDDRef}>
@@ -169,7 +169,7 @@ const CaseSelector = () => {
           </button>
 
           {isPatientDropdownOpen && (
-            <div className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+            <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
               {patient_array.length > 0 ? (
                 patient_array.map((patient) => {
                   const age = ageFromBirthDate(patient.birth_date);
@@ -221,7 +221,7 @@ const CaseSelector = () => {
           </button>
 
             {isCaseDropdownOpen && currentPatient && (
-            <div className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg">
+            <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg">
               {/* Новое исследование */}
               <button
                 onClick={handleOpenCreateCase}
@@ -237,7 +237,7 @@ const CaseSelector = () => {
                   <button
                     key={c.id}
                     onClick={() => handleCaseSelect(c)}
-                    className="w-full px-4 py-3 text-left hover:bg-gray-100 transition-colors border-t border-gray-200 first:border-t-0"
+                    className="w-full px-4 py-3 text-left hover:bg-gray-100 transition-colors border-t border-gray-300 first:border-t-0"
                   >
                     <div className="flex flex-col">
                       <div className="text-slate-800 font-medium truncate">
@@ -252,7 +252,7 @@ const CaseSelector = () => {
                   </button>
                 ))
               ) : (
-                <div className="px-4 py-3 text-slate-500 border-t border-gray-200 text-center">
+                <div className="px-4 py-3 text-slate-500 border-t border-gray-300 text-center">
                   Нет исследований
                 </div>
               )}

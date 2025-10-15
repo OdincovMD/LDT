@@ -78,7 +78,7 @@ export default function Home() {
 
         {/* Основные возможности */}
         <div className="grid md:grid-cols-3 gap-6 mb-12">
-          <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-6 border border-blue-200">
+          <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-6 border border-blue-100">
             <div className="mx-auto w-14 h-14 bg-blue-500 rounded-full flex items-center justify-center mb-4">
               <Activity className="text-white" size={28} />
             </div>
@@ -117,7 +117,7 @@ export default function Home() {
 
         {/* Технические детали */}
         <div className="space-y-8">
-          <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-6 border border-blue-200">
+          <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-6 border border-blue-100">
             <div className="flex items-center mb-4">
               <Shield className="text-blue-600 mr-3" size={28} />
               <h3 className="text-2xl font-bold text-gray-900">Стандарты FIGO в основе системы</h3>
@@ -152,7 +152,7 @@ export default function Home() {
           </div>
 
           <div className="grid lg:grid-cols-2 gap-8">
-            <div className="bg-gray-50 rounded-xl p-6 border border-gray-200">
+            <div className="bg-gray-50 rounded-xl p-6 border border-gray-300">
               <div className="flex items-center mb-4">
                 <Cpu className="text-green-600 mr-3" size={24} />
                 <h4 className="font-bold text-gray-900 text-lg">Продвинутые алгоритмы детекции событий</h4>
@@ -188,7 +188,7 @@ export default function Home() {
               </div>
             </div>
 
-            <div className="bg-gray-50 rounded-xl p-6 border border-gray-200">
+            <div className="bg-gray-50 rounded-xl p-6 border border-gray-300">
               <div className="flex items-center mb-4">
                 <BarChart3 className="text-purple-600 mr-3" size={24} />
                 <h4 className="font-bold text-gray-900 text-lg">Комплексная система оценки рисков</h4>

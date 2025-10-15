@@ -12,7 +12,8 @@ import {
   ChevronLeft,
   Monitor,
   LogOut,
-  Users
+  Users,
+  HelpCircle
 } from 'lucide-react'
 
 import { FRONTEND_PAGES } from "../imports/ENDPOINTS"
@@ -28,7 +29,8 @@ export default function Sidebar({ isOpen }) {
     { path: FRONTEND_PAGES.HOME, label: 'Главная', icon: Home },
     ...(user ? [
       { path: FRONTEND_PAGES.PATIENTS, label: 'Мои пациенты', icon: Users },
-      { path: FRONTEND_PAGES.DASHBOARD, label: 'Система', icon: Monitor }
+      { path: FRONTEND_PAGES.DASHBOARD, label: 'Система', icon: Monitor },
+      { path: FRONTEND_PAGES.SYSTEM_GUIDE, label: 'Инструкция', icon: HelpCircle }
     ] : []),
     { path: FRONTEND_PAGES.ABOUT, label: 'О нас', icon: User },
     user

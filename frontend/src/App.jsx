@@ -11,6 +11,7 @@ import Register from './pages/Register'
 import Login from './pages/Login'
 import Dashboard from './pages/Dashboard'
 import Patients from './pages/Patients'
+import SystemGuide from './pages/SystemGuide'
 import { useSelector } from 'react-redux'
 
 import { FRONTEND_PAGES } from "./imports/ENDPOINTS"
@@ -29,6 +30,7 @@ function App() {
           <Route path={FRONTEND_PAGES.ABOUT.slice(1)} element={<About />} />
           <Route path={FRONTEND_PAGES.DASHBOARD.slice(1)} element={user ? <Dashboard /> : <Navigate to={FRONTEND_PAGES.HOME} />} />
           <Route path={FRONTEND_PAGES.PATIENTS.slice(1)} element={<Patients />} />
+          <Route path={FRONTEND_PAGES.SYSTEM_GUIDE.slice(1)} element={user ? <SystemGuide /> : <Navigate to={FRONTEND_PAGES.HOME} />} />
 
         <Route path="*" element={<Navigate to={FRONTEND_PAGES.HOME} />} />
       </Routes>

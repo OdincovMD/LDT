@@ -4,7 +4,9 @@
  */
 // pages/Dashboard.jsx
 import React, { useEffect, useRef, useState, useMemo } from "react"
+import { useNavigate } from 'react-router-dom'
 import { Copy } from 'lucide-react'
+import { HelpCircle, ChevronDown, ChevronUp } from 'lucide-react'
 import { useSelector, useDispatch } from "react-redux"
 import { useNavigationGuard } from "../hooks/useNavigationGuard"
 import CaseSelector from "../components/CaseSelector"
@@ -33,7 +35,9 @@ import {
   stopRecording
 } from "../store/streamSlice"
 
-import Controls from "../components/Controls";
+import { FRONTEND_PAGES } from "../imports/ENDPOINTS"
+
+import Controls from "../components/Controls"
 
 // === Константы ===
 const WINDOW_SECONDS = 60 * 5
@@ -47,6 +51,7 @@ const WS_BASE = `${location.protocol === "https:" ? "wss" : "ws"}://${location.h
 
 function WsSensorUrl({ WS_BASE, caseId, horizonMin, strideSec }) {
   const dispatch = useDispatch()
+
   const [url, setUrl] = useState(null)
   const [status, setStatus] = useState("idle") // idle | creating | ready | need_manual
   const runKeyRef = useRef("")
@@ -137,11 +142,11 @@ function WsSensorUrl({ WS_BASE, caseId, horizonMin, strideSec }) {
 
   if (status === "ready" && url) {
     return (
-      <div className="mt-4 p-4 bg-white border border-gray-200 rounded-2xl shadow-sm">
+      <div className="mt-4 p-4 bg-white border border-gray-300 rounded-2xl shadow-sm">
          <div className="flex items-center justify-between">
            <div className="flex-1">
              <p className="text-sm text-slate-700 mb-1">Подключите датчик к URL:</p>
-             <code className="text-sm bg-gray-50 px-3 py-2 rounded-lg border border-gray-200 break-all font-mono">
+             <code className="text-sm bg-gray-50 px-3 py-2 rounded-lg border border-gray-300 break-all font-mono">
                {url}
              </code>
            </div>
@@ -159,7 +164,7 @@ function WsSensorUrl({ WS_BASE, caseId, horizonMin, strideSec }) {
 
   if (status === "creating") {
     return (
-       <div className="mt-4 p-4 bg-white border border-gray-200 rounded-2xl shadow-sm">
+       <div className="mt-4 p-4 bg-white border border-gray-300 rounded-2xl shadow-sm">
          <div className="flex items-center space-x-3">
            <div className="animate-spin rounded-full h-5 w-5 border-2 border-blue-600 border-t-transparent"></div>
            <span className="text-sm text-slate-700">Генерируем ключ подключения…</span>
@@ -169,7 +174,7 @@ function WsSensorUrl({ WS_BASE, caseId, horizonMin, strideSec }) {
   }
 
   return (
-    <div className="mt-4 p-4 bg-white border border-gray-200 rounded-2xl shadow-sm">
+    <div className="mt-4 p-4 bg-white border border-gray-300 rounded-2xl shadow-sm">
        <div className="text-sm text-slate-700">
          Токен для этого кейса уже существует, но на этом клиенте он отсутствует.
        </div>
@@ -179,9 +184,12 @@ function WsSensorUrl({ WS_BASE, caseId, horizonMin, strideSec }) {
 
 export default function Dashboard() {
   const dispatch = useDispatch()
+  const navigate = useNavigate()
+
   const [figo, setFigo] = useState(null)
-  const [dataMode, setDataMode] = useState("demo");         // "demo" | "ws" | "usb"
-  const [dataConnected, setDataConnected] = useState(false); // индикатор контролов
+  const [showAdvancedFigo, setShowAdvancedFigo] = useState(false)
+  const [dataMode, setDataMode] = useState("demo")         // "demo" | "ws" | "usb"
+  const [dataConnected, setDataConnected] = useState(false) // индикатор контролов
   const {
     currentCase,
     operationMode,     // 'playback' | 'record'
@@ -224,6 +232,7 @@ export default function Dashboard() {
       : Number(prob >= RISK_THR)
     return { ...point, risk: prob, alert }
   }
+
   // FIGO: извлечь ключевые показатели из features
    const extractFigo = (pred) => {
      const f = pred?.features || {}
@@ -270,6 +279,13 @@ export default function Dashboard() {
        decelerationsClass: decelClass,
        tachy, brady,
        contractions: uc,
+
+       // Новые расширенные параметры
+       decelEarly,
+       decelLate,
+       decelVar,
+       decelProl,
+       stv
      }
    }
 
@@ -527,7 +543,9 @@ export default function Dashboard() {
           <h1 className="text-2xl font-semibold text-gray-900">Кардиотокография</h1>
         </header>
 
-        <div className="flex items-center justify-between bg-white border border-gray-200 rounded-2xl p-4 shadow-sm">
+        <CaseSelector />
+
+        <div className="flex items-center justify-between bg-white border border-gray-300 rounded-2xl p-4 shadow-sm">
            <Controls
               connected={dataConnected}
               mode={dataMode}
@@ -549,9 +567,9 @@ export default function Dashboard() {
                    const run = async () => {
                      try {
                        // попытка создать токен (если уже есть — backend вернёт exists, это нормально)
-                       await dispatch(createWsToken({ userId: user?.id, caseId: currentCase.id })).unwrap().catch(() => {});
+                       await dispatch(createWsToken({ userId: user?.id, caseId: currentCase.id })).unwrap().catch(() => {})
                        // подстраховка — проверить наличие
-                       await dispatch(checkWsTokenExists({ userId: user?.id, caseId: currentCase.id })).unwrap();
+                       await dispatch(checkWsTokenExists({ userId: user?.id, caseId: currentCase.id })).unwrap()
                        // создать drop-файл
                        const res = await dispatch(
                          provisionBridgeWs({
@@ -560,18 +578,18 @@ export default function Dashboard() {
                            H: horizonMin,
                            stride: strideSec
                          })
-                       ).unwrap();
-                       setBridgeNotice(`USB-мост подготовлен: ${res.filename}`);
+                       ).unwrap()
+                       setBridgeNotice(`USB-мост подготовлен: ${res.filename}`)
                        // включаем "живой" режим так же, как для WS
-                       setDataConnected(true);
-                       if (operationMode !== "record") dispatch(setOperationMode("record"));
-                       dispatch(startRecording());
+                       setDataConnected(true)
+                       if (operationMode !== "record") dispatch(setOperationMode("record"))
+                       dispatch(startRecording())
                      } catch (e) {
-                       console.error("USB bridge setup failed:", e);
-                       setBridgeNotice("Ошибка подготовки USB-моста");
+                       console.error("USB bridge setup failed:", e)
+                       setBridgeNotice("Ошибка подготовки USB-моста")
                      }
-                   };
-                   run();
+                   }
+                   run()
                  } else {
                   // demo: симуляция через HTTP
                   setDataConnected(true)
@@ -591,6 +609,16 @@ export default function Dashboard() {
                 setBridgeNotice(null)
               }}
             />
+
+            {/* Кнопка "Как подключиться?" */}
+            <button
+              onClick={() => navigate(FRONTEND_PAGES.SYSTEM_GUIDE)}
+              className="flex items-center space-x-2 px-4 py-2 text-blue-600 hover:text-blue-700 border border-blue-600 hover:bg-blue-50 rounded-lg transition-colors ml-4"
+              title="Инструкция по подключению оборудования"
+            >
+              <HelpCircle size={18} />
+              <span className="whitespace-nowrap">Как подключиться?</span>
+            </button>
         </div>
         {dataMode === "usb" && bridgeNotice && (
           <div className="text-sm mt-2 p-2 rounded bg-green-50 border border-green-200 text-green-700">
@@ -599,43 +627,48 @@ export default function Dashboard() {
         )}
         {/* Параметры работы модели */}
         <div className="bg-white border border-gray-200 rounded-2xl shadow-sm p-4 mb-4">
-          <div className="text-sm font-medium text-slate-700 mb-3">Параметры работы модели</div>
+          <div className="text-sm font-medium text-slate-700 mb-4">Параметры работы модели</div>
           
-          <div className="flex items-center gap-6">
+          <div className="flex flex-col space-y-4 max-w-md">
             {/* Выбор горизонта */}
-            <div className="flex items-center gap-2">
-              <span className="text-sm text-slate-600">Горизонт, мин:</span>
-              <div className="inline-flex rounded-lg border border-gray-200 overflow-hidden">
+            <div className="flex flex-col space-y-2">
+              <label className="text-sm text-slate-600">Временной промежуток прогнозирования</label>
+              <div className="flex space-x-2">
                 {H_OPTIONS.map(h => (
                   <button
                     key={h}
                     type="button"
                     onClick={() => setHorizonMin(h)}
-                    disabled={dataConnected || !currentCase} 
-                    className={`px-3 py-1 text-sm ${
-                      horizonMin === h ? "bg-blue-600 text-white" : "bg-white text-gray-700 hover:bg-gray-50"
-                    } disabled:opacity-50`}
-                    title={dataConnected ? "Отключите источник, чтобы изменить H" : ""}
+                    disabled={dataConnected || !currentCase}
+                    className={`px-3 py-2 text-sm rounded border transition-colors flex-1 ${
+                      horizonMin === h 
+                        ? "bg-blue-600 text-white border-blue-600" 
+                        : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
+                    } disabled:opacity-50 disabled:cursor-not-allowed`}
                   >
-                    {h}
+                    {h} мин
                   </button>
                 ))}
               </div>
             </div>
 
             {/* Выбор шага */}
-            <div className="flex items-center gap-2">
-              <span className="text-sm text-slate-600">Шаг инференса, с:</span>
-              <div className="inline-flex rounded-lg border border-gray-200 overflow-hidden">
+            <div className="flex flex-col space-y-2">
+              <label className="text-sm text-slate-600">Время обновления предсказаний</label>
+              <div className="flex space-x-2">
                 {STRIDE_OPTIONS.map(s => (
                   <button 
                     key={s} 
                     type="button"
                     onClick={() => setStrideSec(s)}
                     disabled={dataConnected || !currentCase}
-                    className={`px-3 py-1 text-sm ${strideSec===s?"bg-blue-600 text-white":"bg-white text-gray-700 hover:bg-gray-50"} disabled:opacity-50`}
+                    className={`px-3 py-2 text-sm rounded border transition-colors flex-1 ${
+                      strideSec === s
+                        ? "bg-blue-600 text-white border-blue-600"
+                        : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
+                    } disabled:opacity-50 disabled:cursor-not-allowed`}
                   >
-                    {s}
+                    {s} сек
                   </button>
                 ))}
               </div>
@@ -652,7 +685,7 @@ export default function Dashboard() {
             />
         )}
 
-        <CaseSelector />
+        
 
         <ModeSelector
           currentMode={operationMode}
@@ -668,15 +701,15 @@ export default function Dashboard() {
           usbActive={dataMode === "usb" && dataConnected}
           onStopWs={() => {
             if (pollWsRef.current) { clearInterval(pollWsRef.current); pollWsRef.current = null; }
-            setDataConnected(false);
-            setBridgeNotice(null);
+            setDataConnected(false)
+            setBridgeNotice(null)
           }}
         />
 
         {currentCase ? (
           <>
           {/* ЧСС */}
-        <section className="bg-white border border-gray-200 rounded-2xl p-4 shadow-sm">
+        <section className="bg-white border border-gray-300 rounded-2xl p-4 shadow-sm">
           <div className="flex justify-between items-start mb-2">
             <h2 className="text-lg font-medium text-gray-900">ЧСС (уд/мин)</h2>
             <span className="font-semibold text-lg text-blue-600">
@@ -690,7 +723,7 @@ export default function Dashboard() {
               series={[{ dataKey: "bpm", name: "ЧСС", type: "monotone", stroke: "#60A5FA" }]}
               yDynamic
               yClamp={[50, 210]}
-              yLabel="bpm"
+              yLabel="ЧСС"
               height={200}
               isStatic={operationMode === "playback"}
               alertKey="alert"
@@ -699,7 +732,7 @@ export default function Dashboard() {
         </section>
 
         {/* Маточная активность */}
-        <section className="bg-white border border-gray-200 rounded-2xl p-4 shadow-sm">
+        <section className="bg-white border border-gray-300 rounded-2xl p-4 shadow-sm">
           <div className="flex justify-between items-start mb-2">
             <h2 className="text-lg font-medium text-gray-900">Маточная активность</h2>
             <span className="font-semibold text-lg text-green-600">
@@ -710,10 +743,10 @@ export default function Dashboard() {
             <RealtimeLineChart
               data={displayData}
               timeWindow={timeWindow}
-              series={[{ dataKey: "uc", name: "UC", type: "monotone", stroke: "#34D399" }]}
+              series={[{ dataKey: "uc", name: "МА", type: "monotone", stroke: "#34D399" }]}
               yDynamic
               yClamp={[0, 50]}
-              yLabel="UC"
+              yLabel="МА"
               height={200}
               isStatic={operationMode === "playback"}
               alertKey="alert"
@@ -722,7 +755,7 @@ export default function Dashboard() {
         </section>
 
         {/* Вероятность осложнений */}
-        <section className="bg-white border border-gray-200 rounded-2xl p-4 shadow-sm">
+        <section className="bg-white border border-gray-300 rounded-2xl p-4 shadow-sm">
           <div className="flex justify-between items-start mb-2">
             <h2 className="text-lg font-medium text-gray-900">Вероятность осложнений</h2>
             <span className="font-semibold text-lg text-red-600">
@@ -736,7 +769,7 @@ export default function Dashboard() {
               series={[{ dataKey: "risk", name: "Риск", type: "monotone", stroke: "#F87171" }]}
               yDynamic
               yClamp={[0, 1]}
-              yLabel="prob"
+              yLabel="Риск"
               referenceLines={[{ y: RISK_THR, stroke: "#FCA5A5" }]}
               height={200}
               isStatic={operationMode === "playback"}
@@ -744,31 +777,76 @@ export default function Dashboard() {
             />
           </div>
         </section>
+
         {/* FIGO показатели */}
-         <section className="bg-white border border-gray-200 rounded-2xl p-4 shadow-sm">
-           <div className="flex justify-between items-start mb-2">
-             <h2 className="text-lg font-medium text-gray-900">Показатели FIGO</h2>
-             <span className="text-sm text-gray-500">
-               из последнего окна модели
-             </span>
-           </div>
-           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
-             <FigoStat label="Базальный ритм" value={
-               figo?.baseline != null ? `${figo.baseline} bpm` : "—"
-             } badge={figo?.baselineClass} />
-             <FigoStat label="Вариабельность" value={
-               figo?.variability != null ? figo.variability : "—"
-             } badge={figo?.varClass} />
-             <FigoStat label="Акселерации" value={figo?.accelerations ?? "—"} badge={figo?.accelerationsClass} />
-             <FigoStat label="Децелерации" value={figo?.decelerations ?? "—"} badge={figo?.decelerationsClass} />
-             <FigoStat label="Тахикардия" value={figo?.tachy ? "да" : "нет"} />
-             <FigoStat label="Брадикардия" value={figo?.brady ? "да" : "нет"} />
-             <FigoStat label="Схватки (за окно)" value={figo?.contractions ?? "—"} />
-           </div>
-         </section>
+        <section className="bg-white border border-gray-300 rounded-2xl p-4 shadow-sm">
+          <div className="flex justify-between items-center mb-2">
+            <h2 className="text-lg font-medium text-gray-900">Показатели FIGO</h2>
+            <button
+              onClick={() => setShowAdvancedFigo(!showAdvancedFigo)}
+              className="flex items-center space-x-1 px-2 py-1 text-xs text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded transition-colors"
+              title={showAdvancedFigo ? 'Скрыть дополнительные параметры' : 'Показать дополнительные параметры'}
+            >
+              {showAdvancedFigo ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+              <span className="text-s">{showAdvancedFigo ? 'Скрыть' : 'Развернуть'}</span>
+            </button>
+          </div>
+          
+          {/* Основные показатели */}
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+            <FigoStat label="Базальный ритм" value={
+              figo?.baseline != null ? `${figo.baseline} bpm` : "—"
+            } badge={figo?.baselineClass} />
+            <FigoStat label="Вариабельность" value={
+              figo?.variability != null ? figo.variability : "—"
+            } badge={figo?.varClass} />
+            <FigoStat label="Акселерации" value={figo?.accelerations ?? "—"} badge={figo?.accelerationsClass} />
+            <FigoStat label="Децелерации" value={figo?.decelerations ?? "—"} badge={figo?.decelerationsClass} />
+            <FigoStat label="Тахикардия" value={figo?.tachy ? "Да" : "Нет"} warning={figo?.tachy} />
+            <FigoStat label="Брадикардия" value={figo?.brady ? "Да" : "Нет"} warning={figo?.brady} />
+          </div>
+
+          {/* Расширенные показатели (появляются при раскрытии) */}
+          {showAdvancedFigo && (
+            <div className="mt-4 pt-4 border-t border-gray-300">
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+                <FigoStat 
+                  label="Схватки (за окно)" 
+                  value={figo?.contractions ?? "—"} 
+                  badge={figo?.contractions > 0 ? "активно" : "отсутствуют"}
+                />
+                <FigoStat 
+                  label="Ранние децелерации" 
+                  value={figo?.decelEarly ?? "—"} 
+                  warning={figo?.decelEarly > 0}
+                />
+                <FigoStat 
+                  label="Поздние децелерации" 
+                  value={figo?.decelLate ?? "—"} 
+                  warning={figo?.decelLate > 0}
+                />
+                <FigoStat 
+                  label="Вариабельные децелерации" 
+                  value={figo?.decelVar ?? "—"} 
+                  warning={figo?.decelVar > 0}
+                />
+                <FigoStat 
+                  label="Продолжительные децелерации" 
+                  value={figo?.decelProl ?? "—"} 
+                  warning={figo?.decelProl > 0}
+                />
+                <FigoStat 
+                  label="STV" 
+                  value={figo?.stv != null ? figo.stv.toFixed(2) : "—"} 
+                  badge={figo?.stvClass}
+                />
+              </div>
+            </div>
+          )}
+        </section>
           </>
         ) : (
-          <div className="bg-white border border-gray-200 rounded-2xl p-8 text-center shadow-sm">
+          <div className="bg-white border border-gray-300 rounded-2xl p-8 text-center shadow-sm">
             <div className="text-gray-600 text-lg">
               Выберите пациента и исследование для начала работы
             </div>
@@ -782,16 +860,17 @@ export default function Dashboard() {
   )
 }
 
-function FigoStat({ label, value, badge }) {
+function FigoStat({ label, value, badge, warning = false }) {
   return (
-    <div className="border border-gray-200 rounded-xl p-3">
+    <div className="border border-gray-300 rounded-xl p-3">
       <div className="text-xs text-gray-500">{label}</div>
       <div className="mt-1 text-base font-semibold text-gray-900">{value}</div>
-      {badge ? (
-        <div className="mt-1 inline-block text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-700">
+      {badge && (
+        <div 
+          className={`mt-1 inline-block text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-700}`}>
           {badge}
         </div>
-      ) : null}
+      )}
     </div>
   )
 }

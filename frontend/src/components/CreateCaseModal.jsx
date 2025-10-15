@@ -120,7 +120,7 @@ const CreateCaseModal = ({ isOpen, onClose, patientId, patientName, onCreated })
         onMouseDown={(e) => e.stopPropagation()}
       >
         {/* Заголовок */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-200">
+        <div className="flex items-center justify-between p-6 border-b border-gray-300">
           <div>
             <h2 id="create-case-title" className="text-xl font-semibold text-gray-900">
               Новое исследование
@@ -196,7 +196,7 @@ const CreateCaseModal = ({ isOpen, onClose, patientId, patientName, onCreated })
             >
               {submitDisabled ? (
                 <>
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b border-white"></div>
                   <span>Создание…</span>
                 </>
               ) : (

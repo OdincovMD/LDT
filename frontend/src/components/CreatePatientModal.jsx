@@ -3,15 +3,15 @@
  * @description Модальное окно создания нового пациента. Позволяет ввести ФИО и дату рождения пациента.
  */
 // src/components/CreatePatientModal.jsx
-import React, { useEffect, useRef, useCallback } from "react";
-import PropTypes from "prop-types";
-import { useForm } from "react-hook-form";
-import { X, User, Calendar, Save } from "lucide-react";
+import React, { useEffect, useRef, useCallback } from "react"
+import PropTypes from "prop-types"
+import { useForm } from "react-hook-form"
+import { X, User, Calendar, Save } from "lucide-react"
 
-const MAX_NAME = 100;
+const MAX_NAME = 100
 
 const CreatePatientModal = ({ isOpen, onClose, onSubmit, loading }) => {
-  const wrapperRef = useRef(null);
+  const wrapperRef = useRef(null)
 
   const {
     register,
@@ -23,66 +23,68 @@ const CreatePatientModal = ({ isOpen, onClose, onSubmit, loading }) => {
   } = useForm({
     defaultValues: { fullName: "", birthDate: "" },
     mode: "onSubmit",
-  });
+  })
 
   const handleClose = useCallback(() => {
-    reset();
-    onClose?.();
-  }, [onClose, reset]);
+    reset()
+    onClose?.()
+  }, [onClose, reset])
 
   // Закрытие по ESC
   useEffect(() => {
-    if (!isOpen) return;
-    const onKey = (e) => e.key === "Escape" && handleClose();
-    document.addEventListener("keydown", onKey);
-    return () => document.removeEventListener("keydown", onKey);
-  }, [isOpen, handleClose]);
+    if (!isOpen) return
+    const onKey = (e) => e.key === "Escape" && handleClose()
+    document.addEventListener("keydown", onKey)
+    return () => document.removeEventListener("keydown", onKey)
+  }, [isOpen, handleClose])
 
   // Клик по подложке — закрыть
   const onBackdropClick = useCallback(
     (e) => {
-      if (e.target === wrapperRef.current) handleClose();
+      if (e.target === wrapperRef.current) handleClose()
     },
     [handleClose]
-  );
+  )
 
   // Автофокус на поле «ФИО» при открытии
   useEffect(() => {
     if (isOpen) {
-      setTimeout(() => setFocus("fullName"), 0);
+      setTimeout(() => setFocus("fullName"), 0)
     }
-  }, [isOpen, setFocus]);
+  }, [isOpen, setFocus])
 
   // Отправка формы → пробрасываем наверх
   const onSubmitForm = useCallback(
     async (data) => {
       // Защитимся от пустого ФИО
       if (!data.fullName?.trim()) {
-        setError("fullName", { message: "ФИО обязательно для заполнения" });
-        return;
+        setError("fullName", { message: "ФИО обязательно для заполнения" })
+        return
       }
 
       // Защитимся от будущей даты
       if (data.birthDate) {
-        const d = new Date(data.birthDate);
-        const todayISO = new Date().toISOString().split("T")[0];
+        const d = new Date(data.birthDate)
+        const todayISO = new Date().toISOString().split("T")[0]
         if (Number.isNaN(d.getTime()) || data.birthDate > todayISO) {
-          setError("birthDate", { message: "Некорректная дата" });
-          return;
+          setError("birthDate", { message: "Некорректная дата" })
+          return
         }
       }
 
       await onSubmit?.({
         name: data.fullName.trim(),
         birth_date: data.birthDate || null,
-      });
+      })
+
+      reset()
     },
     [onSubmit, setError]
-  );
+  )
 
-  if (!isOpen) return null;
+  if (!isOpen) return null
 
-  const submitDisabled = loading || isSubmitting;
+  const submitDisabled = loading || isSubmitting
 
   return (
     <div
@@ -98,7 +100,7 @@ const CreatePatientModal = ({ isOpen, onClose, onSubmit, loading }) => {
         onMouseDown={(e) => e.stopPropagation()}
       >
         {/* Заголовок */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-200">
+        <div className="flex items-center justify-between p-6 border-b border-gray-300">
           <h2 id="create-patient-title" className="text-xl font-semibold text-gray-900">
             Добавить пациента
           </h2>
@@ -185,7 +187,7 @@ const CreatePatientModal = ({ isOpen, onClose, onSubmit, loading }) => {
             >
               {submitDisabled ? (
                 <>
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b border-white"></div>
                   <span>Создание…</span>
                 </>
               ) : (
@@ -199,14 +201,14 @@ const CreatePatientModal = ({ isOpen, onClose, onSubmit, loading }) => {
         </form>
       </div>
     </div>
-  );
-};
+  )
+}
 
 CreatePatientModal.propTypes = {
   isOpen: PropTypes.bool.isRequired,
   onClose: PropTypes.func.isRequired,
   onSubmit: PropTypes.func,   // вызывается с { name, birth_date }
   loading: PropTypes.bool,    // блокирует форму/кнопки
-};
+}
 
-export default React.memo(CreatePatientModal);
+export default React.memo(CreatePatientModal)

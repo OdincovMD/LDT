@@ -21,7 +21,7 @@ function RecordingControls({ connected = false, wsActive = false, usbActive = fa
   // РЕЖИМ ПРОСМОТРА — никаких кнопок записи
   if (operationMode === "playback") {
     return (
-      <div className="bg-white border border-gray-200 rounded-2xl p-4 shadow-sm">
+      <div className="bg-white border border-gray-300 rounded-2xl p-4 shadow-sm">
         <div className="text-center text-slate-600 flex items-center justify-center gap-2">
           <Activity size={18} className="text-blue-500" />
           <span>Режим просмотра — запись недоступна</span>
@@ -46,7 +46,7 @@ function RecordingControls({ connected = false, wsActive = false, usbActive = fa
   // Пока источник не выбран/не подключен — показываем подсказку, без кнопок
   if (!connected) {
     return (
-      <div className="bg-white border border-gray-200 rounded-2xl p-4 shadow-sm">
+      <div className="bg-white border border-gray-300 rounded-2xl p-4 shadow-sm">
         <div className="text-center text-slate-600 flex items-center justify-center gap-2">
           <Activity size={18} className="text-blue-500" />
           <span>Выберите источник и нажмите «Подключить»</span>
@@ -67,7 +67,7 @@ function RecordingControls({ connected = false, wsActive = false, usbActive = fa
   };
 
   return (
-    <div className="bg-white border border-gray-200 rounded-2xl p-4 shadow-sm">
+    <div className="bg-white border border-gray-300 rounded-2xl p-4 shadow-sm">
       <div className="flex flex-wrap items-center justify-center gap-3">
         {/* START — скрыт в WS-режиме */}
         {!liveActive && (

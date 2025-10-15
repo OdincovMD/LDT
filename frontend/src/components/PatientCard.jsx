@@ -85,14 +85,14 @@ const PatientCard = ({ patient, isExpanded, onClick }) => {
 
   if (!patient) {
     return (
-      <div className="bg-white rounded-lg shadow-md border border-gray-200 p-4">
+      <div className="bg-white rounded-lg shadow-md border border-gray-300 p-4">
         <div className="text-gray-600">Данные пациента недоступны</div>
       </div>
     );
   }
 
   return (
-    <div className="bg-white rounded-lg shadow-md border border-gray-200 overflow-hidden">
+    <div className="bg-white rounded-lg shadow-md border border-gray-300 overflow-hidden">
       {/* Заголовок карточки */}
       <div className="p-4 cursor-pointer hover:bg-gray-50" onClick={onClick}>
         <div className="flex items-center justify-between">
@@ -134,7 +134,7 @@ const PatientCard = ({ patient, isExpanded, onClick }) => {
 
       {/* Развёрнутый блок */}
       {isExpanded && (
-        <div className="border-t border-gray-200 p-4" onClick={(e) => e.stopPropagation()}>
+        <div className="border-t border-gray-300 p-4" onClick={(e) => e.stopPropagation()}>
           {/* Заголовок исследований */}
           <div className="flex justify-between items-center mb-3">
             <h4 className="font-medium text-gray-900">Исследования</h4>
@@ -168,20 +168,6 @@ const PatientCard = ({ patient, isExpanded, onClick }) => {
               className="flex-1 bg-blue-600 text-white text-center py-2 px-3 rounded text-sm hover:bg-blue-700"
             >
               Открыть пациента в системе
-            </button>
-            <button
-              className="p-2 text-gray-400 hover:text-gray-600"
-              title="Редактировать данные пациента"
-              aria-label="Редактировать"
-            >
-              <Edit size={16} />
-            </button>
-            <button
-              className="p-2 text-gray-400 hover:text-red-600"
-              title="Удалить пациента"
-              aria-label="Удалить"
-            >
-              <Trash2 size={16} />
             </button>
           </div>
         </div>

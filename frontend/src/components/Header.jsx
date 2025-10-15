@@ -26,6 +26,7 @@ export default function Header() {
     [PAGE_NAMES.ABOUT]: "О нас",
     [PAGE_NAMES.LOGIN]: "Вход в систему",
     [PAGE_NAMES.REGISTER]: "Регистрация аккаунта",
+     [PAGE_NAMES.SYSTEM_GUIDE]: "Инструкция по подключению"
   };
 
   const pageDescriptions = {
@@ -34,6 +35,7 @@ export default function Header() {
     [PAGE_NAMES.ABOUT]: "Информация о нашем проекте и команде",
     [PAGE_NAMES.LOGIN]: "Введите ваши учетные данные",
     [PAGE_NAMES.REGISTER]: "Создайте новый аккаунт",
+    [PAGE_NAMES.SYSTEM_GUIDE]: "Руководство по подключению оборудования"
   };
 
   const currentPageName = useMemo(() => {
@@ -46,6 +48,7 @@ export default function Header() {
       [FRONTEND_PAGES.ABOUT, PAGE_NAMES.ABOUT],
       [FRONTEND_PAGES.LOGIN, PAGE_NAMES.LOGIN],
       [FRONTEND_PAGES.REGISTER, PAGE_NAMES.REGISTER],
+      [FRONTEND_PAGES.SYSTEM_GUIDE, PAGE_NAMES.SYSTEM_GUIDE]
     ]);
     if (exactMap.has(path)) return exactMap.get(path);
 
@@ -68,7 +71,7 @@ export default function Header() {
   }, [dispatch, navigate]);
 
   return (
-    <header className="bg-white shadow-sm border-b border-gray-200">
+    <header className="bg-white shadow-sm border-b border-gray-300">
       <div
         className={`transition-all duration-300 ${sidebarOpen ? "pl-64" : "pl-16"}`}
       >
