@@ -3,8 +3,10 @@
  * @description Компонент управления подключением. Позволяет выбирать режим подключения (демо/WebSocket/USB) и управлять подключением/отключением к источнику данных.
  */
 // src/components/Controls.jsx
-import React, { useCallback, useMemo, useEffect } from "react";
+import React, { useCallback, useMemo, useEffect, useState} from "react";
 import PropTypes from "prop-types";
+import { uploadDemoCsv } from "../asyncActions/upload";
+import { useDispatch } from 'react-redux';
 
 function Controls({
   connected,
@@ -29,11 +31,17 @@ function Controls({
     }
   }, [mode]);
 
+  const dispatch = useDispatch();
+
   const isDemo = mode === "demo";
   const isWs = mode === "ws";
   const isUsb = mode === "usb";
   const isActive = isDemo || isWs || isUsb; // режимы, где есть кнопки подключения
   const isAllowed = (m) => availableModes.includes(m); // выбор режима разрешён
+
+  const [demoFile, setDemoFile] = useState(null);
+  const [uploading, setUploading] = useState(false);
+  const [uploadMsg, setUploadMsg] = useState(null);
 
   useEffect(() => {
     if (connectLocked && connected) onDisconnect?.();
@@ -115,6 +123,53 @@ function Controls({
           Отключить
         </button>
       ) : null}
+
+      {isDemo && (
+        <>
+          <input
+            type="file"
+            accept=".csv,text/csv"
+            onChange={(e) => {
+              setUploadMsg(null);
+              setDemoFile(e.target.files?.[0] || null);
+            }}
+          />
+          <button
+            type="button"
+            disabled={!demoFile || uploading}
+           onClick={async () => {
+            if (!demoFile) return;
+            setUploading(true);
+            setUploadMsg(null);
+            try {
+              const resultAction = await dispatch(uploadDemoCsv({ file: demoFile }));
+              
+              if (uploadDemoCsv.fulfilled.match(resultAction)) {
+                // Успешное выполнение
+                const result = resultAction.payload;
+                if (result?.ok) {
+                  setUploadMsg(" Файл загружен. Нажми «Подключиться»");
+                  setDemoFile(null);
+                } else {
+                  setUploadMsg(` Ответ без ok: ${result?.path || "нет пути"}`);
+                }
+              } else {
+                // Ошибка
+                setUploadMsg(` ${resultAction.payload || resultAction.error.message}`);
+              }
+            } catch (e) {
+              console.error("[uploadDemoCsv] error:", e);
+              setUploadMsg(` ${e.message || e}`);
+            } finally {
+              setUploading(false);
+            }
+          }}
+          >
+            {uploading ? "Загрузка..." : "Загрузить файл"}
+          </button>
+          {uploadMsg && <span style={{ fontSize: 12, opacity: 0.8 }}>{uploadMsg}</span>}
+        </>
+      )}
 
       <div className="flex items-center gap-2" aria-live="polite">
         <div

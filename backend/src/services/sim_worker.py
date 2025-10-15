@@ -29,7 +29,11 @@ async def start_stream_worker(case_id: int, hz: float, H_min: float = DEFAULT_H_
     По накоплении 300 с вызывает ML.
     """
     csv_path = os.getenv("CSV_PATH")
-    path = Path(csv_path)
+    base = Path(csv_path)
+    # Пользовательский файл
+    user_path = base.with_name("demo.user.csv")
+    # Если у пользователя есть загруженный файл и он не пустой — берём его, иначе базовый
+    path = user_path if (user_path.exists() and user_path.stat().st_size > 0) else base
 
     with path.open("r", newline="") as f:
         sample = f.read(2048)

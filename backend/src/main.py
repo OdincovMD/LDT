@@ -6,7 +6,7 @@
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from src.routers import auth, users, patients, cases, stream, predictions, sim, ws, ws_token, bridge
+from src.routers import auth, users, patients, cases, stream, predictions, sim, ws, ws_token, bridge, demo_upload
 from src.queries.sync_orm import SyncOrm
 
 app = FastAPI(title="Backend", version="1.0.0")
@@ -61,3 +61,4 @@ app.include_router(sim.router, prefix="/sim", tags=["sim"])
 app.include_router(ws.router, prefix="/ws", tags=["ws"])
 app.include_router(ws_token.router, prefix="/ws-token", tags=["ws-token"])
 app.include_router(bridge.router, prefix="/bridge", tags=["bridge"])
+app.include_router(demo_upload.router, prefix="/demo", tags=["demo"])

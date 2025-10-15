@@ -34,6 +34,7 @@ const BASE_ROUTES = {
     SIM: '/sim',
     WS_TOKEN: '/ws-token',
     BRIDGE: '/bridge',
+    DEMO: '/demo'
 }
 
 
@@ -53,6 +54,10 @@ export const BACKEND_ENDPOINTS = {
 
     BRIDGE: {
         PROVISION_WS: `${BACKEND_ROUTES.BRIDGE}/provision/ws`,
+    },
+
+    DEMO: {
+        UPLOAD: `${BACKEND_ROUTES.DEMO}/upload`
     },
 
     AUTH: {
