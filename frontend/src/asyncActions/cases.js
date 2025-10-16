@@ -2,10 +2,10 @@
  * @file cases.js
  * @description Async Thunks для работы с медицинскими случаями (cases). Создание новых случаев и получение списка случаев по patientId.
  */
-import { createAsyncThunk } from "@reduxjs/toolkit";
-import { env } from "../imports/ENV";
-import { BACKEND_ENDPOINTS } from "../imports/ENDPOINTS";
-import { apiRequest } from "./apiClient";
+import { createAsyncThunk } from "@reduxjs/toolkit"
+import { env } from "../imports/ENV"
+import { BACKEND_ENDPOINTS } from "../imports/ENDPOINTS"
+import { apiRequest } from "./apiClient"
 
 // Создание нового кейса
 export const createCase = createAsyncThunk(
@@ -18,12 +18,12 @@ export const createCase = createAsyncThunk(
           method: "POST",
           body: JSON.stringify({ patient_id: patientId, description }),
         }
-      );
+      )
     } catch (error) {
-      return rejectWithValue(error.message);
+      return rejectWithValue(error.message)
     }
   }
-);
+)
 
 // Получение списка кейсов по patientId
 export const getCases = createAsyncThunk(
@@ -32,9 +32,9 @@ export const getCases = createAsyncThunk(
     try {
       return await apiRequest(
         `${env.BACKEND_URL}${BACKEND_ENDPOINTS.CASES.BY_PATIENT(patientId)}`
-      );
+      )
     } catch (error) {
-      return rejectWithValue(error.message);
+      return rejectWithValue(error.message)
     }
   }
-);
+)

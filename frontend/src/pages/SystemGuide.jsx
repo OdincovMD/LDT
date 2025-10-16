@@ -43,9 +43,11 @@ export default function SystemGuide() {
             <div>
               <h3 className="text-xl font-semibold text-gray-900">Демо-режим</h3>
               <p className="text-gray-600">
-                Демонстрация работы <span className="font-medium">модели</span> на данных.
-                Можно использовать <span className="font-medium">свой CSV-набор</span> или
-                дефолтный демо-датасет, если файл не загружен.
+                <span className="italic">
+                  Демонстрация работы <span className="font-medium">модели</span> на данных.
+                  <br/>Можно использовать <span className="font-medium">свой CSV-набор</span> или
+                  демонастрационный набор данных по умолчанию, если файл не загружен.
+                </span>
               </p>
             </div>
           </div>
@@ -60,7 +62,7 @@ export default function SystemGuide() {
                 <span>
                   <span className="font-medium">Опционально:</span> нажмите кнопку
                   <span className="font-medium"> «Загрузить файл»</span> (рядом с «Подключиться») и выберите свой CSV.
-                  Если файл не загружать, система использует <span className="font-medium">набор данных по умолчанию</span>.
+                  Если файл не загружен, система использует <span className="font-medium">набор данных по умолчанию</span>.
                 </span>
               </li>
               <li>Нажмите <span className="font-medium">«Подключиться»</span> для старта демо-потока.</li>
@@ -90,7 +92,9 @@ export default function SystemGuide() {
             <div>
               <h3 className="text-xl font-semibold text-gray-900">WebSocket подключение</h3>
               <p className="text-gray-600">
-                Для датчиков с доступом в интернет или в одной локальной сети с системой.
+                <span className="italic">
+                  Для датчиков с доступом в интернет или в одной локальной сети с системой.
+                </span>
               </p>
             </div>
           </div>
@@ -134,7 +138,10 @@ export default function SystemGuide() {
             <div>
               <h3 className="text-xl font-semibold text-gray-900">USB-мост</h3>
               <p className="text-gray-600">
-                Для оборудования без WebSocket. Мост читает прибор по USB-COM и передаёт сигналы напрямую в систему.
+                <span className="italic">
+                  Для оборудования без WebSocket.
+                  <br/> Мост читает прибор по USB-COM и передаёт сигналы напрямую в систему.
+                </span>
               </p>
             </div>
           </div>
@@ -171,7 +178,7 @@ export default function SystemGuide() {
           <div className="mt-4 p-4 bg-violet-50 border border-violet-200 rounded-lg">
             <h4 className="font-medium text-violet-900 mb-2">Полезно знать:</h4>
             <ul className="list-disc list-inside space-y-1 text-violet-800 text-sm">
-              <li><span className="font-medium">Linux:</span> если порт недоступен — добавьте пользователя в группу <code>dialout</code> и пере-войдите.</li>
+              <li><span className="font-medium">Linux:</span> если порт недоступен — добавьте пользователя в группу <code>dialout</code> и войдите заново.</li>
               <li><span className="font-medium">Windows:</span> при первом подключении дождитесь установки драйвера (Диспетчер устройств → Порты (COM & LPT)).</li>
               <li><span className="font-medium">macOS:</span> при запросе безопасности разрешите доступ приложению к USB/серийному порту.</li>
               <li>Если мост видит несколько портов — выберите из списка. При отсутствии списка укажите путь вручную в настройках.</li>
@@ -182,9 +189,9 @@ export default function SystemGuide() {
           <div className="mt-4 bg-gray-50 rounded-lg p-4">
             <h4 className="font-medium text-gray-900 mb-2">Если данных нет:</h4>
             <ul className="list-disc list-inside space-y-1 text-gray-700 text-sm">
-              <li>Проверьте, что прибор включён и выбран верный порт.</li>
-              <li>Попробуйте другой USB-кабель/порт на компьютере.</li>
-              <li>Закройте другие программы, которые могут занять порт (например, терминалы).</li>
+              <li>Проверьте, что прибор включён и выбран верный порт;</li>
+              <li>Попробуйте другой USB-кабель/порт на компьютере;</li>
+              <li>Закройте другие программы, которые могут занять порт (например, терминалы);</li>
               <li>Перезапустите «USB-мост» и нажмите <span className="font-medium">Start</span> ещё раз.</li>
             </ul>
           </div>

@@ -10,37 +10,37 @@ export async function apiRequest(url, options = {}) {
       ...options.headers,
     },
     ...options,
-  });
+  })
 
-  let data = null;
+  let data = null
   try {
-    data = await response.json();
+    data = await response.json()
   } catch {
-    data = null;
+    data = null
   }
 
   if (!response.ok) {
-    let message = "Ошибка запроса";
+    let message = "Ошибка запроса"
 
     if (data?.detail) {
       if (typeof data.detail === "string") {
-        message = data.detail;
+        message = data.detail
       } else if (typeof data.detail === "object") {
         // например { error, message, extra }
-        message = data.detail.message || JSON.stringify(data.detail);
+        message = data.detail.message || JSON.stringify(data.detail)
       }
     } else if (data?.message) {
-      message = data.message;
+      message = data.message
     } else if (typeof data === "string") {
-      message = data;
+      message = data
     } else if (data) {
-      message = JSON.stringify(data);
+      message = JSON.stringify(data)
     } else {
-      message = response.statusText || "Неизвестная ошибка";
+      message = response.statusText || "Неизвестная ошибка"
     }
 
-    throw new Error(message);
+    throw new Error(message)
   }
 
-  return data;
+  return data
 }

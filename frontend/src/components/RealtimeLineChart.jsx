@@ -179,7 +179,7 @@ function RealtimeLineChart({
             // если дробное значение — округляем до 1 знака, иначе целое
             return Number.isInteger(val) 
               ? val.toString() 
-              : val.toFixed(1);
+              : val.toFixed(1)
           }}
         />
 

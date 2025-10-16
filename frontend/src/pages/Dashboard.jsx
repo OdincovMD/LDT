@@ -5,8 +5,7 @@
 // pages/Dashboard.jsx
 import React, { useEffect, useRef, useState, useMemo } from "react"
 import { useNavigate } from 'react-router-dom'
-import { Copy } from 'lucide-react'
-import { HelpCircle, ChevronDown, ChevronUp } from 'lucide-react'
+import { HelpCircle, ChevronDown, ChevronUp, Copy, Check } from 'lucide-react'
 import { useSelector, useDispatch } from "react-redux"
 import { useNavigationGuard } from "../hooks/useNavigationGuard"
 import CaseSelector from "../components/CaseSelector"
@@ -140,25 +139,46 @@ function WsSensorUrl({ WS_BASE, caseId, horizonMin, strideSec }) {
     return () => { runKeyRef.current = "" }
   }, [userId, caseId, horizonMin, strideSec, WS_BASE, dispatch, url, status])
 
+  const [copied, setCopied] = useState(false)
+
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(url)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    } catch (err) {
+      console.error('Failed to copy: ', err)
+    }
+  }
+
   if (status === "ready" && url) {
     return (
       <div className="mt-4 p-4 bg-white border border-gray-300 rounded-2xl shadow-sm">
-         <div className="flex items-center justify-between">
-           <div className="flex-1">
-             <p className="text-sm text-slate-700 mb-1">Подключите датчик к URL:</p>
-             <code className="text-sm bg-gray-50 px-3 py-2 rounded-lg border border-gray-300 break-all font-mono">
-               {url}
-             </code>
-           </div>
-           <button
-             onClick={() => navigator.clipboard.writeText(url)}
-             className="ml-4 px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2 shrink-0"
-           >
-             <Copy size={16} />
-             <span>Копировать</span>
-           </button>
-         </div>
-       </div>
+        <div className="flex items-center justify-between">
+          <div className="flex-1">
+            <p className="text-sm text-slate-700 mb-1">Подключите датчик к URL:</p>
+            <code className="text-sm bg-gray-50 px-3 py-2 rounded-lg border border-gray-300 break-all font-mono">
+              {url}
+            </code>
+          </div>
+          <button
+            onClick={handleCopy}
+            className="ml-4 px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2 shrink-0"
+          >
+            {copied ? (
+              <>
+                <Check size={16} />
+                <span>Скопировано!</span>
+              </>
+            ) : (
+              <>
+                <Copy size={16} />
+                <span>Копировать</span>
+              </>
+            )}
+          </button>
+        </div>
+      </div>
     )
   }
 
@@ -215,6 +235,31 @@ export default function Dashboard() {
 
   useNavigationGuard(hasUnsavedChanges)
 
+  // Основной cleanup при размонтировании
+  useEffect(() => {
+    return () => {
+      if (currentCase?.id && recordingMode === 'recording') {
+        console.log('Dashboard unmounting - stopping simulation')
+        dispatch(stopSimulation(currentCase.id)).catch(error => {
+          console.warn('Stop simulation error:', error)
+        })
+      }
+    }
+  }, [dispatch, currentCase?.id, recordingMode])
+
+  // Защита при закрытии страницы
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      if (currentCase?.id && recordingMode === 'recording') {
+        // Для beforeunload используем синхронную отправку
+        dispatch(stopSimulation(currentCase.id))
+      }
+    }
+
+    window.addEventListener('beforeunload', handleBeforeUnload)
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload)
+  }, [dispatch, currentCase?.id, recordingMode])
+
   const parseTs = (t) => (typeof t === "string" ? new Date(t).getTime() / 1000 : t)
 
   // === Хелпер: сброс локальных данных графика ===
@@ -234,60 +279,88 @@ export default function Dashboard() {
   }
 
   // FIGO: извлечь ключевые показатели из features
-   const extractFigo = (pred) => {
+   const extractFigo = (pred) => { 
      const f = pred?.features || {}
+     // ОСНОВНЫЕ
      const baseline = Number(f.baseline ?? NaN)
-     const sd = Number(f.bpm_sd ?? NaN)
+     const bpm_sd = Number(f.bpm_sd ?? NaN)
      const stv = Number(f.stv ?? NaN)
-     const accel = Number(f.evt_accel_total ?? 0)
-     const decel = Number(f.evt_decel_total ?? 0)
-     const decelEarly = Number(f.evt_decel_early ?? 0)
-     const decelLate = Number(f.evt_decel_late ?? 0)
-     const decelVar = Number(f.evt_decel_variable ?? 0)
-     const decelProl = Number(f.evt_decel_prolonged ?? 0)
-     const tachy = Number(f.evt_tachy_ratio ?? 0) > 0
-     const brady = Number(f.evt_brady_ratio ?? 0) > 0
-     const uc = Number(f.evt_contractions ?? 0)
- 
+     const evtAccelTotal = Number(f.evt_accel_total ?? 0)
+     const evtDecelTotal = Number(f.evt_decel_total ?? 0)
+     const evtDecelEarly = Number(f.evt_decel_early ?? 0)
+     const evtDecelLate = Number(f.evt_decel_late ?? 0)
+     const evtDecelVariable = Number(f.evt_decel_variable ?? 0)
+     const evtDecelProlonged = Number(f.evt_decel_prolonged ?? 0)
+     const evtTachyRatio = Number(f.evt_tachy_ratio ?? 0) > 0
+     const evtBradyRatio = Number(f.evt_brady_ratio ?? 0) > 0
+     const evtContractions = Number(f.evt_contractions ?? 0)
+
+     // ДОПОЛНИТЕЛЬНЫЕ
+     const bpmIQR = Number(f.bpm_iqr ?? NaN)
+     const evtLowVarRatio = Number(f.evt_low_var_ratio ?? 0) > 0
+     const evtLowVarMean = Number(f.evt_low_var_mean ?? NaN)
+     const evtSdOverall = Number(f.evt_sd_overall ?? NaN)
+     const extraRMSSD = Number(f.extra_rmssd ?? NaN)
+     const extraPoincareSD1 = Number(f.extra_poincare_sd1 ?? NaN)
+     const extraPoincareSD2 = Number(f.extra_poincare_sd2 ?? NaN)
+     const extraSD1SD2Ratio = Number(f.extra_sd1_sd2_ratio ?? NaN)
+     const extraAcPeakLag = Number(f.extra_ac_peak_lag ?? NaN)
+     const extraAcDecayTime = Number(f.extra_ac_decay_time ?? NaN)
+
      const baselineClass =
        isFinite(baseline)
          ? (baseline < 110 ? "брадикардия" : baseline > 160 ? "тахикардия" : "норма")
          : "—"
+
      const varClass =
-       isFinite(sd)
-         ? (sd < 5 ? "низкая" : sd > 25 ? "повышенная" : "норма")
+       isFinite(bpm_sd)
+         ? (bpm_sd < 5 ? "низкая" : bpm_sd > 25 ? "повышенная" : "норма")
          : (isFinite(stv) ? (stv < 3 ? "низкая" : stv > 15 ? "повышенная" : "норма") : "—")
+
      const decelClass =
-       decel > 0
+       evtDecelTotal > 0
          ? `есть (${[
-             decelEarly ? "ранние" : null,
-             decelLate ? "поздние" : null,
-             decelVar ? "вариаб." : null,
-             decelProl ? "продол." : null,
+             evtDecelEarly ? "ранние" : null,
+             evtDecelLate ? "поздние" : null,
+             evtDecelVariable ? "вариаб." : null,
+             evtDecelProlonged ? "продол." : null,
            ].filter(Boolean).join(", ") || "без типа"})`
          : "нет"
-     const accelClass = accel > 0 ? "есть" : "нет"
+
+     const accelClass = evtAccelTotal > 0 ? "есть" : "нет"
  
      return {
-       baseline: isFinite(baseline) ? Math.round(baseline) : null,
-       baselineClass,
-       variability: isFinite(sd) ? sd.toFixed(1) : (isFinite(stv) ? stv.toFixed(2) : null),
-       varClass,
-       accelerations: accel,
-       accelerationsClass: accelClass,
-       decelerations: decel,
-       decelerationsClass: decelClass,
-       tachy, brady,
-       contractions: uc,
+      baseline: isFinite(baseline) ? Math.round(baseline) : null,
+      baselineClass: baselineClass,
+      bpm_sd: isFinite(bpm_sd) ? bpm_sd.toFixed(1) : (isFinite(stv) ? stv.toFixed(2) : null),
+      varClass: varClass,
+      stv: stv,
+      evtAccelTotal: evtAccelTotal,
+      accelClass: accelClass,
+      evtDecelTotal: evtDecelTotal,
+      decelerationsClass: decelClass,
+      evtDecelEarly: evtDecelEarly,
+      evtDecelLate: evtDecelLate,
+      evtDecelVariable: evtDecelVariable,
+      evtDecelProlonged: evtDecelProlonged,
+      evtTachyRatio: evtTachyRatio,
+      evtBradyRatio: evtBradyRatio,
+      evtContractions: evtContractions,
 
-       // Новые расширенные параметры
-       decelEarly,
-       decelLate,
-       decelVar,
-       decelProl,
-       stv
-     }
-   }
+      // Новые расширенные параметры
+      bpmIQR: bpmIQR.toFixed(2),
+      evtLowVarRatio: evtLowVarRatio,
+      evtLowVarMean: evtLowVarMean.toFixed(2),
+      evtSdOverall: evtSdOverall.toFixed(2),
+      extraRMSSD: extraRMSSD.toFixed(2),
+      extraPoincareSD1: extraPoincareSD1.toFixed(2),
+      extraPoincareSD2: extraPoincareSD2.toFixed(2),
+      extraSD1SD2Ratio: extraSD1SD2Ratio.toFixed(2),
+      extraAcPeakLag: extraAcPeakLag,
+      extraAcDecayTime: extraAcDecayTime,
+      
+    }
+  }
 
  // Если кейс сохранён — рвём любое подключение (demo/ws) и чистим пуллинг
  useEffect(() => {
@@ -625,8 +698,18 @@ export default function Dashboard() {
             {bridgeNotice}
           </div>
         )}
+
+        {dataMode === "ws" && dataConnected && currentCase?.id && (
+          <WsSensorUrl
+              WS_BASE={WS_BASE}
+              caseId={currentCase.id}
+              horizonMin={horizonMin}
+              strideSec={strideSec}
+            />
+        )}
+
         {/* Параметры работы модели */}
-        <div className="bg-white border border-gray-200 rounded-2xl shadow-sm p-4 mb-4">
+        <div className="flex flex-col items-center justify-center bg-white border border-gray-200 rounded-2xl shadow-sm p-4 mb-4">
           <div className="text-sm font-medium text-slate-700 mb-4">Параметры работы модели</div>
           
           <div className="flex flex-col space-y-4 max-w-md">
@@ -674,18 +757,7 @@ export default function Dashboard() {
               </div>
             </div>
           </div>
-        </div>
-
-        {dataMode === "ws" && dataConnected && currentCase?.id && (
-          <WsSensorUrl
-              WS_BASE={WS_BASE}
-              caseId={currentCase.id}
-              horizonMin={horizonMin}
-              strideSec={strideSec}
-            />
-        )}
-
-        
+        </div>        
 
         <ModeSelector
           currentMode={operationMode}
@@ -700,7 +772,7 @@ export default function Dashboard() {
           wsActive={dataMode === "ws" && dataConnected}
           usbActive={dataMode === "usb" && dataConnected}
           onStopWs={() => {
-            if (pollWsRef.current) { clearInterval(pollWsRef.current); pollWsRef.current = null; }
+            if (pollWsRef.current) { clearInterval(pollWsRef.current); pollWsRef.current = null }
             setDataConnected(false)
             setBridgeNotice(null)
           }}
@@ -794,52 +866,109 @@ export default function Dashboard() {
           
           {/* Основные показатели */}
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
-            <FigoStat label="Базальный ритм" value={
-              figo?.baseline != null ? `${figo.baseline} bpm` : "—"
-            } badge={figo?.baselineClass} />
-            <FigoStat label="Вариабельность" value={
-              figo?.variability != null ? figo.variability : "—"
-            } badge={figo?.varClass} />
-            <FigoStat label="Акселерации" value={figo?.accelerations ?? "—"} badge={figo?.accelerationsClass} />
-            <FigoStat label="Децелерации" value={figo?.decelerations ?? "—"} badge={figo?.decelerationsClass} />
-            <FigoStat label="Тахикардия" value={figo?.tachy ? "Да" : "Нет"} warning={figo?.tachy} />
-            <FigoStat label="Брадикардия" value={figo?.brady ? "Да" : "Нет"} warning={figo?.brady} />
+            <FigoStat 
+              label="Базальный ритм, уд/мин"
+              value={ figo?.baseline != null ? `${figo.baseline} bpm` : "—"}
+              badge={ figo?.baselineClass } 
+            />
+            <FigoStat 
+              label="Вариабельность, уд/мин" 
+              value={ figo?.bpm_sd != null ? figo.bpm_sd  : "—" }
+              badge={ figo?.varClass } 
+            />
+            <FigoStat 
+              label="STV, мс" 
+              value={figo?.stv != null ? figo.stv.toFixed(2) : "—"} 
+              badge={figo?.stvClass}
+            />
+            <FigoStat 
+              label="Акселерации" 
+              value={ figo?.evtAccelTotal ?? "—" }
+              badge={ figo?.accelClass } 
+            />
+            <FigoStat 
+              label="Децелерации" 
+              value={ figo?.evtDecelTotal ?? "—" } 
+              badge={ figo?.decelerationsClass } 
+            />
+            <FigoStat 
+              label="Ранние децелерации" 
+              value={figo?.evtDecelEarly ?? "—"} 
+              warning={figo?.evtDecelEarly > 0}
+            />
+            <FigoStat 
+              label="Поздние децелерации" 
+              value={figo?.evtDecelLate ?? "—"}
+            />
+            <FigoStat 
+              label="Вариабельные децелерации" 
+              value={figo?.evtDecelVariable ?? "—"} 
+            />
+            <FigoStat 
+              label="Продолжительные децелерации" 
+              value={figo?.evtDecelProlonged ?? "—"} 
+            />
+            <FigoStat 
+              label="Тахикардия" 
+              value={ figo?.evtTachyRatio ? "Да" : "Нет" }
+              warning={ figo?.evtTachyRatio }
+            />
+            <FigoStat 
+              label="Брадикардия" 
+              value={ figo?.evtBradyRatio ? "Да" : "Нет" }
+              warning={ figo?.evtBradyRatio } 
+            />
+            <FigoStat 
+              label="Схватки (за окно)" 
+              value={figo?.contractions ?? "—"} 
+              badge={figo?.contractions > 0 ? "Активно" : "Отсутствуют"}
+            />
           </div>
 
           {/* Расширенные показатели (появляются при раскрытии) */}
           {showAdvancedFigo && (
             <div className="mt-4 pt-4 border-t border-gray-300">
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-                <FigoStat 
-                  label="Схватки (за окно)" 
-                  value={figo?.contractions ?? "—"} 
-                  badge={figo?.contractions > 0 ? "активно" : "отсутствуют"}
-                />
-                <FigoStat 
-                  label="Ранние децелерации" 
-                  value={figo?.decelEarly ?? "—"} 
-                  warning={figo?.decelEarly > 0}
-                />
-                <FigoStat 
-                  label="Поздние децелерации" 
-                  value={figo?.decelLate ?? "—"} 
-                  warning={figo?.decelLate > 0}
-                />
-                <FigoStat 
-                  label="Вариабельные децелерации" 
-                  value={figo?.decelVar ?? "—"} 
-                  warning={figo?.decelVar > 0}
-                />
-                <FigoStat 
-                  label="Продолжительные децелерации" 
-                  value={figo?.decelProl ?? "—"} 
-                  warning={figo?.decelProl > 0}
-                />
-                <FigoStat 
-                  label="STV" 
-                  value={figo?.stv != null ? figo.stv.toFixed(2) : "—"} 
-                  badge={figo?.stvClass}
-                />
+              <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-3">
+              <FigoStat 
+                label="IQR ЧСС, уд/мин" 
+                value={figo?.bpmIQR ?? "—"}
+              />
+              <FigoStat 
+                label="Эпизоды низкой вар." 
+                value={figo?.evtLowVarRatio > 0 ? "Да" : "Нет"}
+              />
+              <FigoStat 
+                label="ЧСС при низкой вар., уд/мин" 
+                value={figo?.evtLowVarMean ?? "—"}
+              />
+              <FigoStat 
+                label="SD (общая), уд/мин" 
+                value={figo?.evtSdOverall ?? "—"}
+              />
+              <FigoStat 
+                label="RMSSD, уд/мин" 
+                value={figo?.extraRMSSD ?? "—"}
+              />
+              <FigoStat 
+                label="Poincaré SD1, уд/мин" 
+                value={figo?.extraPoincareSD1 ?? "—"}
+              />
+              <FigoStat 
+                label="Poincaré SD2, уд/мин" 
+                value={figo?.extraPoincareSD2 ?? "—"}
+              />
+              <FigoStat 
+                label="SD1/SD2" 
+                value={figo?.extraSD1SD2Ratio ?? "—"}
+              />
+              <FigoStat 
+                label="АКФ: лаг пика, с" 
+                value={figo?.extraAcPeakLag ?? "—"}
+              />
+              <FigoStat 
+                label="АКФ: время спада, с" 
+                value={figo?.extraAcDecayTime ?? "—"}
+              />
               </div>
             </div>
           )}
@@ -860,7 +989,7 @@ export default function Dashboard() {
   )
 }
 
-function FigoStat({ label, value, badge, warning = false }) {
+function FigoStat({ label, value, badge }) {
   return (
     <div className="border border-gray-300 rounded-xl p-3">
       <div className="text-xs text-gray-500">{label}</div>

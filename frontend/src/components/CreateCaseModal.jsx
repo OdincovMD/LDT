@@ -2,20 +2,20 @@
  * @component CreateCaseModal
  * @description Модальное окно создания нового медицинского исследования (кейса). Позволяет ввести описание исследования для выбранного пациента.
  */
-import React, { useEffect, useRef, useCallback, useState } from "react";
-import PropTypes from "prop-types";
-import { useForm } from "react-hook-form";
-import { useDispatch } from "react-redux";
-import { X, FileText, Save } from "lucide-react";
+import React, { useEffect, useRef, useCallback, useState } from "react"
+import PropTypes from "prop-types"
+import { useForm } from "react-hook-form"
+import { useDispatch } from "react-redux"
+import { X, FileText, Save } from "lucide-react"
 
-import { createCase, getCases } from "../asyncActions/cases";
+import { createCase, getCases } from "../asyncActions/cases"
 
-const MAX_DESCRIPTION = 500;
+const MAX_DESCRIPTION = 500
 
 const CreateCaseModal = ({ isOpen, onClose, patientId, patientName, onCreated }) => {
-  const dispatch = useDispatch();
-  const wrapperRef = useRef(null);
-  const [backendError, setBackendError] = useState("");
+  const dispatch = useDispatch()
+  const wrapperRef = useRef(null)
+  const [backendError, setBackendError] = useState("")
 
   const {
     register,
@@ -27,83 +27,83 @@ const CreateCaseModal = ({ isOpen, onClose, patientId, patientName, onCreated })
   } = useForm({
     defaultValues: { description: "" },
     mode: "onSubmit",
-  });
+  })
 
   const handleClose = useCallback(() => {
-    reset();
-    setBackendError("");
-    onClose?.();
-  }, [onClose, reset]);
+    reset()
+    setBackendError("")
+    onClose?.()
+  }, [onClose, reset])
 
   // ESC
   useEffect(() => {
-    if (!isOpen) return;
-    const onKey = (e) => e.key === "Escape" && handleClose();
-    document.addEventListener("keydown", onKey);
-    return () => document.removeEventListener("keydown", onKey);
-  }, [isOpen, handleClose]);
+    if (!isOpen) return
+    const onKey = (e) => e.key === "Escape" && handleClose()
+    document.addEventListener("keydown", onKey)
+    return () => document.removeEventListener("keydown", onKey)
+  }, [isOpen, handleClose])
 
   // Клик по подложке — закрыть
   const onBackdropClick = useCallback(
     (e) => {
-      if (e.target === wrapperRef.current) handleClose();
+      if (e.target === wrapperRef.current) handleClose()
     },
     [handleClose]
-  );
+  )
 
   // Автофокус без собственного ref — через RHF
   useEffect(() => {
     if (isOpen) {
       // небольшая задержка, чтобы модалка отрендерилась
-      setTimeout(() => setFocus("description"), 0);
+      setTimeout(() => setFocus("description"), 0)
     }
-  }, [isOpen, setFocus]);
+  }, [isOpen, setFocus])
 
   const onSubmitForm = useCallback(
     async (data) => {
-      setBackendError("");
+      setBackendError("")
       if (!patientId) {
-        setBackendError("Не выбран пациент.");
-        return;
+        setBackendError("Не выбран пациент.")
+        return
       }
 
-      const desc = (data.description ?? "").trim();
+      const desc = (data.description ?? "").trim()
 
       try {
         // соответствуем сигнатуре thunk'а: camelCase
         const created = await dispatch(
           createCase({
             patientId,
-            description: desc, // строка; если пустая — уйдёт "", не null
+            description: desc, // строка если пустая — уйдёт "", не null
           })
-        ).unwrap();
+        ).unwrap()
 
         // гарантируем описание в выбранном кейсе прямо сейчас
-        const createdWithDesc = { ...created, description: desc };
-        onCreated?.(createdWithDesc);
+        const createdWithDesc = { ...created, description: desc }
+        onCreated?.(createdWithDesc)
 
         // обновим список (если бэк не вернёт описание — в UI оно уже есть через onCreated)
-        await dispatch(getCases(patientId));
+        await dispatch(getCases(patientId))
 
-        handleClose();
+        handleClose()
       } catch (err) {
-        let msg = "Не удалось создать исследование.";
+        let msg = "Не удалось создать исследование."
         if (err && typeof err === "object") {
-          if (err.detail && typeof err.detail === "string") msg = err.detail;
-          else if (err.message) msg = err.message;
+          if (err.detail && typeof err.detail === "string") msg = err.detail
+          else if (err.message) msg = err.message
         }
-        setBackendError(msg);
+        setBackendError(msg)
         if (msg.toLowerCase().includes("description")) {
-          setError("description", { message: msg });
+          setError("description", { message: msg })
         }
       }
     },
     [dispatch, handleClose, onCreated, patientId, setError]
-  );
+  )
 
-  if (!isOpen) return null;
+  if (!isOpen) return null
 
-  const submitDisabled = isSubmitting;
+  const submitDisabled = isSubmitting
 
   return (
     <div
@@ -210,8 +210,8 @@ const CreateCaseModal = ({ isOpen, onClose, patientId, patientName, onCreated })
         </form>
       </div>
     </div>
-  );
-};
+  )
+}
 
 CreateCaseModal.propTypes = {
   isOpen: PropTypes.bool.isRequired,
@@ -219,6 +219,6 @@ CreateCaseModal.propTypes = {
   patientId: PropTypes.oneOfType([PropTypes.number, PropTypes.string]).isRequired,
   patientName: PropTypes.string,
   onCreated: PropTypes.func,
-};
+}
 
-export default React.memo(CreateCaseModal);
+export default React.memo(CreateCaseModal)

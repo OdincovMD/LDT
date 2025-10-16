@@ -3,9 +3,9 @@
  * @description Компонент выбора режима работы: запись данных или просмотр существующих данных. Автоматически управляет доступностью режимов в зависимости от наличия данных.
  */
 // src/components/ModeSelector.jsx
-import React, { useMemo, useCallback, useEffect } from "react";
-import { Play, FileText, Settings, Lock } from "lucide-react";
-import PropTypes from "prop-types";
+import React, { useMemo, useCallback, useEffect } from "react"
+import { Play, FileText, Settings, Lock } from "lucide-react"
+import PropTypes from "prop-types"
 
 // Нормализация id режимов: поддерживаем разные обозначения
 const normalizeModeId = (id) => {
@@ -13,14 +13,14 @@ const normalizeModeId = (id) => {
     case "simulation":
     case "record":
     case "recording":
-      return "recording";
+      return "recording"
     case "playback":
     case "reviewing":
-      return "reviewing";
+      return "reviewing"
     default:
-      return id;
+      return id
   }
-};
+}
 
 const ModeSelector = ({
   currentMode,
@@ -29,42 +29,42 @@ const ModeSelector = ({
   availableModes = null, // если null — вычислим из caseHasData
   caseHasData = null,
 }) => {
-  const normalizedCurrent = normalizeModeId(currentMode);
+  const normalizedCurrent = normalizeModeId(currentMode)
 
   // Итоговый список доступных режимов:
   //  - если передали availableModes → нормализуем и используем его
   //  - иначе выводим из caseHasData
   const available = useMemo(() => {
     if (Array.isArray(availableModes)) {
-      return availableModes.map(normalizeModeId);
+      return availableModes.map(normalizeModeId)
     }
-    if (disabled) return [];
+    if (disabled) return []
     if (caseHasData == null) {
       // неизвестно, есть ли данные → разрешим оба (пусть решит родитель)
-      return ["recording", "reviewing"];
+      return ["recording", "reviewing"]
     }
-    return caseHasData ? ["reviewing"] : ["recording"];
-  }, [availableModes, disabled, caseHasData]);
+    return caseHasData ? ["reviewing"] : ["recording"]
+  }, [availableModes, disabled, caseHasData])
 
   // Авто-переключение наружу, если текущий режим недоступен и есть ровно один доступный
   useEffect(() => {
-    if (disabled) return;
-    if (!normalizedCurrent) return;
+    if (disabled) return
+    if (!normalizedCurrent) return
     if (!available.includes(normalizedCurrent) && available.length === 1) {
-      const nextMode = available[0];
+      const nextMode = available[0]
       if (nextMode && nextMode !== normalizedCurrent) {
-        onModeChange?.(nextMode);
+        onModeChange?.(nextMode)
       }
     }
-  }, [available, disabled, normalizedCurrent, onModeChange]);
+  }, [available, disabled, normalizedCurrent, onModeChange])
 
   // Визуальный fallback: если текущий недоступен — подсветим единственный доступный
-  const hasValidSelection = available.includes(normalizedCurrent);
+  const hasValidSelection = available.includes(normalizedCurrent)
   const visualSelectedId = hasValidSelection
     ? normalizedCurrent
     : available.length === 1
     ? available[0]
-    : null;
+    : null
 
   const modes = useMemo(
     () => [
@@ -84,17 +84,17 @@ const ModeSelector = ({
       },
     ],
     []
-  );
+  )
 
   const handleSelect = useCallback(
     (id) => {
-      const norm = normalizeModeId(id);
+      const norm = normalizeModeId(id)
       if (!disabled && available.includes(norm)) {
-        onModeChange?.(norm);
+        onModeChange?.(norm)
       }
     },
     [available, disabled, onModeChange]
-  );
+  )
 
   return (
       <div className="bg-white rounded-2xl p-4 mb-4 shadow">
@@ -105,18 +105,18 @@ const ModeSelector = ({
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {modes.map((mode) => {
-          const Icon = mode.icon;
-          const isAvailable = available.includes(mode.id);
-          const isDisabled = disabled || !isAvailable;
-          const isVisuallySelected = visualSelectedId === mode.id && isAvailable;
+          const Icon = mode.icon
+          const isAvailable = available.includes(mode.id)
+          const isDisabled = disabled || !isAvailable
+          const isVisuallySelected = visualSelectedId === mode.id && isAvailable
 
           const base =
-            "p-4 rounded-lg border-2 transition-all duration-200 text-left";
+            "p-4 rounded-lg border-2 transition-all duration-200 text-left"
           const stateClass = isVisuallySelected
             ? "border-green-500 bg-green-50"
             : isAvailable
             ? "border-slate-300 bg-slate-100 hover:border-slate-400"
-            : "border-slate-200 bg-slate-100 opacity-50";
+            : "border-slate-200 bg-slate-100 opacity-50"
 
           return (
             <button
@@ -176,7 +176,7 @@ const ModeSelector = ({
                 </div>
               </div>
             </button>
-          );
+          )
         })}
       </div>
 
@@ -186,8 +186,8 @@ const ModeSelector = ({
         </div>
       )}
     </div>
-  );
-};
+  )
+}
 
 ModeSelector.propTypes = {
   currentMode: PropTypes.string, // 'record'/'playback' или 'recording'/'reviewing'
@@ -195,6 +195,6 @@ ModeSelector.propTypes = {
   disabled: PropTypes.bool,
   availableModes: PropTypes.arrayOf(PropTypes.string), // если не задан — вычислим из caseHasData
   caseHasData: PropTypes.bool, // влияет на доступность, когда availableModes не задан
-};
+}
 
-export default React.memo(ModeSelector);
+export default React.memo(ModeSelector)

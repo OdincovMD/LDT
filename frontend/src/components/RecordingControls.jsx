@@ -3,20 +3,20 @@
  * @description Компонент управления записью данных. Позволяет запускать, останавливать запись и сохранять данные в режиме записи.
  */
 // components/RecordingControls.jsx
-import React from "react";
-import { useSelector, useDispatch } from "react-redux";
-import { startRecording, stopRecording, saveRecording } from "../store/streamSlice";
-import { Play, Square, Save, Activity } from "lucide-react";
+import React from "react"
+import { useSelector, useDispatch } from "react-redux"
+import { startRecording, stopRecording, saveRecording } from "../store/streamSlice"
+import { Play, Square, Save, Activity } from "lucide-react"
 
 function RecordingControls({ connected = false, wsActive = false, usbActive = false, onStopWs = () => {} }) {
-  const dispatch = useDispatch();
+  const dispatch = useDispatch()
   const {
     operationMode, // 'playback' | 'record'
     recordingMode, // 'idle' | 'recording' | 'reviewing'
     currentCase,
     hasUnsavedChanges,
     dataPoints,
-  } = useSelector((state) => state.stream);
+  } = useSelector((state) => state.stream)
 
   // РЕЖИМ ПРОСМОТРА — никаких кнопок записи
   if (operationMode === "playback") {
@@ -30,14 +30,14 @@ function RecordingControls({ connected = false, wsActive = false, usbActive = fa
           Переключитесь в режим «Запись», чтобы начать приём данных
         </div>
       </div>
-    );
+    )
   }
 
   // РЕЖИМ ЗАПИСИ
-  // При активном потоковом источнике (WS или USB): «Старт» скрыт; «Стоп» всегда доступен для отключения пуллинга.
-  const liveActive = wsActive || usbActive;
-  const canStart = !liveActive && currentCase && recordingMode !== "recording";
-  const canStop = liveActive ? true : recordingMode === "recording";
+  // При активном потоковом источнике (WS или USB): «Старт» скрыт «Стоп» всегда доступен для отключения пуллинга.
+  const liveActive = wsActive || usbActive
+  const canStart = !liveActive && currentCase && recordingMode !== "recording"
+  const canStop = liveActive ? true : recordingMode === "recording"
   // В live-кейсе (WS/USB) кнопки «Стоп записи» нет, поэтому Save активна, если есть данные
   const canSave = liveActive
     ? (dataPoints?.length ?? 0) > 0
@@ -60,11 +60,11 @@ function RecordingControls({ connected = false, wsActive = false, usbActive = fa
 
 
    const handleSave = () => {
-    if (liveActive) onStopWs();  // отключить теневой пуллинг источника (WS/USB)
+    if (liveActive) onStopWs()  // отключить теневой пуллинг источника (WS/USB)
     // Дополнительно выводим из 'recording', чтобы UI не мигал статусом
-    if (recordingMode === "recording") dispatch(stopRecording());
-    dispatch(saveRecording());
-  };
+    if (recordingMode === "recording") dispatch(stopRecording())
+    dispatch(saveRecording())
+  }
 
   return (
     <div className="bg-white border border-gray-300 rounded-2xl p-4 shadow-sm">
@@ -134,7 +134,7 @@ function RecordingControls({ connected = false, wsActive = false, usbActive = fa
         </div>
       )}
     </div>
-  );
+  )
 }
 
-export default RecordingControls;
+export default RecordingControls

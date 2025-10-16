@@ -1,6 +1,6 @@
-import { createAsyncThunk } from "@reduxjs/toolkit";
-import { env } from "../imports/ENV";
-import { BACKEND_ENDPOINTS } from "../imports/ENDPOINTS";
+import { createAsyncThunk } from "@reduxjs/toolkit"
+import { env } from "../imports/ENV"
+import { BACKEND_ENDPOINTS } from "../imports/ENDPOINTS"
 
 /**
  * Создаёт drop-файл для USB-моста (токен берётся на бэке из БД).
@@ -13,7 +13,7 @@ async ({ userId, caseId, H = 300, stride = 15, nameHint }, { rejectWithValue }) 
     try {
     const url = `${env.BACKEND_URL}${BACKEND_ENDPOINTS.BRIDGE.PROVISION_WS}?user_id=${encodeURIComponent(
         userId
-    )}`;
+    )}`
     const r = await fetch(url, {
         method: "POST",
         headers: { "Content-Type": "application/json", Accept: "application/json" },
@@ -24,15 +24,15 @@ async ({ userId, caseId, H = 300, stride = 15, nameHint }, { rejectWithValue }) 
         stride,
         name_hint: nameHint,
         }),
-    });
-    const data = await r.json();
+    })
+    const data = await r.json()
     if (!r.ok) {
-        throw new Error(data?.detail || data?.message || "Bridge provision failed");
+        throw new Error(data?.detail || data?.message || "Bridge provision failed")
     }
     // { filename, path_in_container, ws_url }
-    return { ...data, userId, caseId, H, stride };
+    return { ...data, userId, caseId, H, stride }
     } catch (e) {
-    return rejectWithValue(String(e.message || e));
+    return rejectWithValue(String(e.message || e))
     }
 }
-);
+)

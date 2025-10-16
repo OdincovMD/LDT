@@ -3,13 +3,13 @@
  * @description Основной layout приложения. Управляет расположением Sidebar, Header и основного контента.
  */
 // src/components/Layout.jsx
-import React from "react";
-import { useSelector } from "react-redux";
-import Sidebar from "./Sidebar";
-import Header from "./Header";
+import React from "react"
+import { useSelector } from "react-redux"
+import Sidebar from "./Sidebar"
+import Header from "./Header"
 
 export default function Layout({ children }) {
-  const sidebarOpen = useSelector((state) => state.app.sidebarOpen);
+  const sidebarOpen = useSelector((state) => state.app.sidebarOpen)
 
   return (
     <div className="min-h-screen bg-gray-100">
@@ -28,5 +28,5 @@ export default function Layout({ children }) {
         </main>
       </div>
     </div>
-  );
+  )
 }

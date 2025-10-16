@@ -3,20 +3,20 @@
  * @description Карточка медицинского исследования (кейса). Отображает информацию о случае, дату создания и количество записей. При клике открывает дашборд с данными исследования.
  */
 // src/components/CaseItem.jsx
-import React, { useCallback, useMemo } from "react";
-import { useDispatch } from "react-redux";
-import { useNavigate } from "react-router-dom";
-import { Activity, Calendar, BarChart3, Play } from "lucide-react";
-import PropTypes from "prop-types";
+import React, { useCallback, useMemo } from "react"
+import { useDispatch } from "react-redux"
+import { useNavigate } from "react-router-dom"
+import { Activity, Calendar, BarChart3, Play } from "lucide-react"
+import PropTypes from "prop-types"
 
-import { setCurrentCase, setCurrentPatient } from "../store/streamSlice";
+import { setCurrentCase, setCurrentPatient } from "../store/streamSlice"
 
-const TZ = "Europe/Warsaw";
+const TZ = "Europe/Warsaw"
 
 const formatDateTimeReadable = (v) => {
-  if (!v) return "—";
-  const d = new Date(v);
-  if (Number.isNaN(d.getTime())) return "—";
+  if (!v) return "—"
+  const d = new Date(v)
+  if (Number.isNaN(d.getTime())) return "—"
   return new Intl.DateTimeFormat("ru-RU", {
     year: "numeric",
     month: "long",
@@ -24,53 +24,53 @@ const formatDateTimeReadable = (v) => {
     hour: "2-digit",
     minute: "2-digit",
     timeZone: TZ,
-  }).format(d);
-};
+  }).format(d)
+}
 
 const formatDateTimeForTitle = (v) => {
-  if (!v) return "";
-  const d = new Date(v);
-  if (Number.isNaN(d.getTime())) return "";
+  if (!v) return ""
+  const d = new Date(v)
+  if (Number.isNaN(d.getTime())) return ""
   // Короткий формат для имени по умолчанию
   const date = new Intl.DateTimeFormat("ru-RU", {
     day: "2-digit",
     month: "2-digit",
     year: "numeric",
     timeZone: TZ,
-  }).format(d);
+  }).format(d)
   const time = new Intl.DateTimeFormat("ru-RU", {
     hour: "2-digit",
     minute: "2-digit",
     timeZone: TZ,
-  }).format(d);
-  return `${date} ${time}`;
-};
+  }).format(d)
+  return `${date} ${time}`
+}
 
 const CaseItem = ({ caseItem }) => {
-  const dispatch = useDispatch();
-  const navigate = useNavigate();
+  const dispatch = useDispatch()
+  const navigate = useNavigate()
 
   if (!caseItem) {
     return (
       <div className="p-3 rounded-lg bg-red-50 text-red-700">
         Данные исследования недоступны
       </div>
-    );
+    )
   }
 
-  const createdRaw = caseItem.created_at ?? caseItem.createdAt ?? null;
+  const createdRaw = caseItem.created_at ?? caseItem.createdAt ?? null
 
   // Читаемая дата для мета-строки
-  const createdAtText = useMemo(() => formatDateTimeReadable(createdRaw), [createdRaw]);
+  const createdAtText = useMemo(() => formatDateTimeReadable(createdRaw), [createdRaw])
 
   // Имя по умолчанию: "Исследование DD.MM.YYYY HH:MM"
   const defaultTitle = useMemo(() => {
-    const when = formatDateTimeForTitle(createdRaw);
-    return when ? `Исследование ${when}` : `Исследование #${caseItem.id}`;
-  }, [createdRaw, caseItem.id]);
+    const when = formatDateTimeForTitle(createdRaw)
+    return when ? `Исследование ${when}` : `Исследование #${caseItem.id}`
+  }, [createdRaw, caseItem.id])
 
   // Заголовок: описание, иначе — имя по умолчанию
-  const titleText = caseItem.description?.trim() ? caseItem.description : defaultTitle;
+  const titleText = caseItem.description?.trim() ? caseItem.description : defaultTitle
 
   // Счётчик записей (если есть)
   const recordsCount =
@@ -78,15 +78,15 @@ const CaseItem = ({ caseItem }) => {
       ? caseItem.signals_count
       : typeof caseItem.records_count === "number"
       ? caseItem.records_count
-      : null;
+      : null
 
   const handleOpen = useCallback(() => {
     if (caseItem.patient_id) {
-      dispatch(setCurrentPatient(caseItem.patient_id));
+      dispatch(setCurrentPatient(caseItem.patient_id))
     }
-    dispatch(setCurrentCase(caseItem));
-    navigate("/dashboard");
-  }, [caseItem, dispatch, navigate]);
+    dispatch(setCurrentCase(caseItem))
+    navigate("/dashboard")
+  }, [caseItem, dispatch, navigate])
 
   return (
     <button
@@ -127,8 +127,8 @@ const CaseItem = ({ caseItem }) => {
         <span>Открыть</span>
       </div>
     </button>
-  );
-};
+  )
+}
 
 CaseItem.propTypes = {
   caseItem: PropTypes.shape({
@@ -140,6 +140,6 @@ CaseItem.propTypes = {
     signals_count: PropTypes.number,
     records_count: PropTypes.number,
   }),
-};
+}
 
-export default React.memo(CaseItem);
+export default React.memo(CaseItem)

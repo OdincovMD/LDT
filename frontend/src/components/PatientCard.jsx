@@ -3,10 +3,10 @@
  * @description Карточка пациента с основной информацией и списком исследований. Позволяет создавать новые исследования и переходить к дашборду пациента.
  */
 // src/components/PatientCard.jsx
-import React, { useMemo, useCallback, useEffect } from "react";
-import PropTypes from "prop-types";
-import { useSelector, useDispatch } from "react-redux";
-import { useNavigate } from "react-router-dom";
+import React, { useMemo, useCallback, useEffect } from "react"
+import PropTypes from "prop-types"
+import { useSelector, useDispatch } from "react-redux"
+import { useNavigate } from "react-router-dom"
 import {
   User,
   Calendar,
@@ -16,79 +16,79 @@ import {
   ChevronDown,
   Edit,
   Trash2,
-} from "lucide-react";
+} from "lucide-react"
 
-import { setCurrentPatient } from "../store/streamSlice";
-import { getCases } from "../asyncActions/cases";
-import CaseItem from "./CaseItem";
-import CreateCaseModal from "./CreateCaseModal";
+import { setCurrentPatient } from "../store/streamSlice"
+import { getCases } from "../asyncActions/cases"
+import CaseItem from "./CaseItem"
+import CreateCaseModal from "./CreateCaseModal"
 
-const tz = "Europe/Warsaw";
+const tz = "Europe/Warsaw"
 const fmtDate = (v) => {
-  if (!v) return "Не указана";
-  const d = new Date(v);
-  if (Number.isNaN(d.getTime())) return "Не указана";
+  if (!v) return "Не указана"
+  const d = new Date(v)
+  if (Number.isNaN(d.getTime())) return "Не указана"
   return new Intl.DateTimeFormat("ru-RU", {
     year: "numeric",
     month: "2-digit",
     day: "2-digit",
     timeZone: tz,
-  }).format(d);
-};
+  }).format(d)
+}
 
 const fmtAge = (birth) => {
-  if (!birth) return "Не указан";
-  const b = new Date(birth);
-  if (Number.isNaN(b.getTime())) return "Не указан";
-  const now = new Date();
-  let age = now.getFullYear() - b.getFullYear();
-  const m = now.getMonth() - b.getMonth();
-  if (m < 0 || (m === 0 && now.getDate() < b.getDate())) age--;
-  return `${age} лет`;
-};
+  if (!birth) return "Не указан"
+  const b = new Date(birth)
+  if (Number.isNaN(b.getTime())) return "Не указан"
+  const now = new Date()
+  let age = now.getFullYear() - b.getFullYear()
+  const m = now.getMonth() - b.getMonth()
+  if (m < 0 || (m === 0 && now.getDate() < b.getDate())) age--
+  return `${age} лет`
+}
 
 const PatientCard = ({ patient, isExpanded, onClick }) => {
-  const dispatch = useDispatch();
-  const navigate = useNavigate();
+  const dispatch = useDispatch()
+  const navigate = useNavigate()
 
-  const allCases = useSelector((state) => state.cases.case_array) ?? [];
+  const allCases = useSelector((state) => state.cases.case_array) ?? []
 
   // Фильтруем кейсы конкретного пациента
   const patientCases = useMemo(
     () => allCases.filter((c) => c.patient_id === patient?.id),
     [allCases, patient?.id]
-  );
+  )
 
-  const [isCreateCaseModalOpen, setIsCreateCaseModalOpen] = React.useState(false);
+  const [isCreateCaseModalOpen, setIsCreateCaseModalOpen] = React.useState(false)
 
   // Ленивая загрузка кейсов при развороте
   useEffect(() => {
     if (isExpanded && patient?.id) {
-      dispatch(getCases(patient.id));
+      dispatch(getCases(patient.id))
     }
-  }, [dispatch, isExpanded, patient?.id]);
+  }, [dispatch, isExpanded, patient?.id])
 
   const handleNavigateToDashboard = useCallback(
     (e) => {
-      e.stopPropagation();
-      if (!patient?.id) return;
-      dispatch(setCurrentPatient(patient.id));
-      navigate("/dashboard");
+      e.stopPropagation()
+      if (!patient?.id) return
+      dispatch(setCurrentPatient(patient.id))
+      navigate("/dashboard")
     },
     [dispatch, navigate, patient?.id]
-  );
+  )
 
   const handleOpenCreateCase = useCallback((e) => {
-    e.stopPropagation();
-    setIsCreateCaseModalOpen(true);
-  }, []);
+    e.stopPropagation()
+    setIsCreateCaseModalOpen(true)
+  }, [])
 
   if (!patient) {
     return (
       <div className="bg-white rounded-lg shadow-md border border-gray-300 p-4">
         <div className="text-gray-600">Данные пациента недоступны</div>
       </div>
-    );
+    )
   }
 
   return (
@@ -123,7 +123,7 @@ const PatientCard = ({ patient, isExpanded, onClick }) => {
         <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm text-gray-600">
           <div className="flex items-center space-x-1">
             <Calendar size={14} />
-            <span>Рожд.: {fmtDate(patient.birth_date)}</span>
+            <span>{fmtDate(patient.birth_date)}</span>
           </div>
           <div className="flex items-center space-x-1">
             <Clock size={14} />
@@ -181,8 +181,8 @@ const PatientCard = ({ patient, isExpanded, onClick }) => {
         patientName={patient.name}
       />
     </div>
-  );
-};
+  )
+}
 
 PatientCard.propTypes = {
   patient: PropTypes.shape({
@@ -193,6 +193,6 @@ PatientCard.propTypes = {
   }),
   isExpanded: PropTypes.bool,
   onClick: PropTypes.func,
-};
+}
 
-export default React.memo(PatientCard);
+export default React.memo(PatientCard)

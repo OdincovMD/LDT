@@ -3,151 +3,151 @@
  * @description Компонент выбора пациента и исследования (кейса). Управляет загрузкой пациентов и исследований, отображает выпадающие списки и модальное окно создания нового исследования.
  */
 // src/components/CaseSelector.jsx
-import React, { useEffect, useMemo, useRef, useCallback } from "react";
-import { useSelector, useDispatch } from "react-redux";
-import { ChevronDown, User, FolderPlus, Clock } from "lucide-react";
+import React, { useEffect, useMemo, useRef, useCallback } from "react"
+import { useSelector, useDispatch } from "react-redux"
+import { ChevronDown, User, FolderPlus, Clock } from "lucide-react"
 
-import { setCurrentPatient, setCurrentCase } from "../store/streamSlice";
-import { getCases } from "../asyncActions/cases";
-import { getPatients } from "../asyncActions/patients";
-import { addCase } from "../store/caseSlice";
+import { setCurrentPatient, setCurrentCase } from "../store/streamSlice"
+import { getCases } from "../asyncActions/cases"
+import { getPatients } from "../asyncActions/patients"
+import { addCase } from "../store/caseSlice"
 
-import CreateCaseModal from "./CreateCaseModal";
+import CreateCaseModal from "./CreateCaseModal"
 
-const tz = "Europe/Warsaw";
+const tz = "Europe/Moscow"
 
 // Заголовок: "Исследование DD.MM.YYYY HH:MM"
 const fmtTitleDateTime = (v) => {
-  if (!v) return null;
-  const d = new Date(v);
-  if (Number.isNaN(d.getTime())) return null;
+  if (!v) return null
+  const d = new Date(v)
+  if (Number.isNaN(d.getTime())) return null
   const date = new Intl.DateTimeFormat("ru-RU", {
     day: "2-digit",
     month: "2-digit",
     year: "numeric",
     timeZone: tz,
-  }).format(d);
+  }).format(d)
   const time = new Intl.DateTimeFormat("ru-RU", {
     hour: "2-digit",
     minute: "2-digit",
     timeZone: tz,
-  }).format(d);
-  return `${date} ${time}`;
-};
+  }).format(d)
+  return `${date} ${time}`
+}
 
 const preview = (txt, n = 80) => {
-  if (!txt) return null;
-  const oneLine = String(txt).replace(/\s+/g, " ").trim();
-  if (!oneLine) return null;
-  return oneLine.length > n ? oneLine.slice(0, n) + "…" : oneLine;
-};
+  if (!txt) return null
+  const oneLine = String(txt).replace(/\s+/g, " ").trim()
+  if (!oneLine) return null
+  return oneLine.length > n ? oneLine.slice(0, n) + "…" : oneLine
+}
 
 const ageFromBirthDate = (birth) => {
-  if (!birth) return null;
-  const b = new Date(birth);
-  if (Number.isNaN(b.getTime())) return null;
-  const now = new Date();
-  let age = now.getFullYear() - b.getFullYear();
-  const m = now.getMonth() - b.getMonth();
-  if (m < 0 || (m === 0 && now.getDate() < b.getDate())) age--;
-  return age;
-};
+  if (!birth) return null
+  const b = new Date(birth)
+  if (Number.isNaN(b.getTime())) return null
+  const now = new Date()
+  let age = now.getFullYear() - b.getFullYear()
+  const m = now.getMonth() - b.getMonth()
+  if (m < 0 || (m === 0 && now.getDate() < b.getDate())) age--
+  return age
+}
 
 const CaseSelector = () => {
-  const dispatch = useDispatch();
+  const dispatch = useDispatch()
 
-  const user = useSelector((s) => s.app.user);
-  const patient_array = useSelector((s) => s.patient.patient_array) ?? [];
-  const case_array = useSelector((s) => s.cases.case_array) ?? [];
-  const { currentPatient, currentCase, mode } = useSelector((s) => s.stream);
+  const user = useSelector((s) => s.app.user)
+  const patient_array = useSelector((s) => s.patient.patient_array) ?? []
+  const case_array = useSelector((s) => s.cases.case_array) ?? []
+  const { currentPatient, currentCase, mode } = useSelector((s) => s.stream)
 
   // локальные состояния дропдаунов/модалки
-  const [isPatientDropdownOpen, setIsPatientDropdownOpen] = React.useState(false);
-  const [isCaseDropdownOpen, setIsCaseDropdownOpen] = React.useState(false);
-  const [isCreateCaseOpen, setIsCreateCaseOpen] = React.useState(false);
+  const [isPatientDropdownOpen, setIsPatientDropdownOpen] = React.useState(false)
+  const [isCaseDropdownOpen, setIsCaseDropdownOpen] = React.useState(false)
+  const [isCreateCaseOpen, setIsCreateCaseOpen] = React.useState(false)
 
-  const patientDDRef = useRef(null);
-  const caseDDRef = useRef(null);
+  const patientDDRef = useRef(null)
+  const caseDDRef = useRef(null)
 
   // 1) загрузить пациентов пользователя
   useEffect(() => {
     if (user?.id) {
-      dispatch(getPatients(user.id));
+      dispatch(getPatients(user.id))
     }
-  }, [dispatch, user?.id]);
+  }, [dispatch, user?.id])
 
   // 2) при смене пациента — подтянуть его кейсы
   useEffect(() => {
     if (currentPatient) {
-      dispatch(getCases(currentPatient));
+      dispatch(getCases(currentPatient))
     }
-  }, [dispatch, currentPatient]);
+  }, [dispatch, currentPatient])
 
   // 3) закрытие дропдаунов по клику вне/ESC
   useEffect(() => {
     const onClick = (e) => {
       if (isPatientDropdownOpen && patientDDRef.current && !patientDDRef.current.contains(e.target)) {
-        setIsPatientDropdownOpen(false);
+        setIsPatientDropdownOpen(false)
       }
       if (isCaseDropdownOpen && caseDDRef.current && !caseDDRef.current.contains(e.target)) {
-        setIsCaseDropdownOpen(false);
+        setIsCaseDropdownOpen(false)
       }
-    };
+    }
     const onKey = (e) => {
       if (e.key === "Escape") {
-        setIsPatientDropdownOpen(false);
-        setIsCaseDropdownOpen(false);
-        setIsCreateCaseOpen(false);
+        setIsPatientDropdownOpen(false)
+        setIsCaseDropdownOpen(false)
+        setIsCreateCaseOpen(false)
       }
-    };
-    document.addEventListener("mousedown", onClick);
-    document.addEventListener("keydown", onKey);
+    }
+    document.addEventListener("mousedown", onClick)
+    document.addEventListener("keydown", onKey)
     return () => {
-      document.removeEventListener("mousedown", onClick);
-      document.removeEventListener("keydown", onKey);
-    };
-  }, [isPatientDropdownOpen, isCaseDropdownOpen]);
+      document.removeEventListener("mousedown", onClick)
+      document.removeEventListener("keydown", onKey)
+    }
+  }, [isPatientDropdownOpen, isCaseDropdownOpen])
 
   // выбранный пациент
   const selectedPatient = useMemo(() => {
-    if (!patient_array.length || !currentPatient) return null;
-    return patient_array.find((p) => p.id === currentPatient) || null;
-  }, [patient_array, currentPatient]);
+    if (!patient_array.length || !currentPatient) return null
+    return patient_array.find((p) => p.id === currentPatient) || null
+  }, [patient_array, currentPatient])
 
   // ⬇️ кейсы выбранного пациента — отсортированы по дате (новые первыми) и ограничены 5 шт.
   const patientCases = useMemo(() => {
-    if (!case_array.length || !currentPatient) return [];
-    const list = case_array.filter((c) => c.patient_id === currentPatient);
+    if (!case_array.length || !currentPatient) return []
+    const list = case_array.filter((c) => c.patient_id === currentPatient)
     list.sort((a, b) => {
-      const ba = new Date(b.created_at ?? b.createdAt ?? 0).getTime();
-      const aa = new Date(a.created_at ?? a.createdAt ?? 0).getTime();
-      return ba - aa; // новее выше
-    });
-    return list.slice(0, 5);
-  }, [case_array, currentPatient]);
+      const ba = new Date(b.created_at ?? b.createdAt ?? 0).getTime()
+      const aa = new Date(a.created_at ?? a.createdAt ?? 0).getTime()
+      return ba - aa // новее выше
+    })
+    return list.slice(0, 5)
+  }, [case_array, currentPatient])
 
   const handlePatientSelect = useCallback(
     (patient) => {
-      dispatch(setCurrentPatient(patient.id));
-      setIsPatientDropdownOpen(false);
-      dispatch(setCurrentCase(null));
+      dispatch(setCurrentPatient(patient.id))
+      setIsPatientDropdownOpen(false)
+      dispatch(setCurrentCase(null))
     },
     [dispatch]
-  );
+  )
 
   const handleCaseSelect = useCallback(
     (caseItem) => {
-      dispatch(setCurrentCase(caseItem));
-      setIsCaseDropdownOpen(false);
+      dispatch(setCurrentCase(caseItem))
+      setIsCaseDropdownOpen(false)
     },
     [dispatch]
-  );
+  )
 
   const handleOpenCreateCase = useCallback(() => {
-    if (!currentPatient) return;
-    setIsCaseDropdownOpen(false);
-    setIsCreateCaseOpen(true);
-  }, [currentPatient]);
+    if (!currentPatient) return
+    setIsCaseDropdownOpen(false)
+    setIsCreateCaseOpen(true)
+  }, [currentPatient])
 
   return (
     <div className="bg-white border border-gray-300 rounded-2xl shadow-sm p-4 mb-4 relative">
@@ -172,7 +172,7 @@ const CaseSelector = () => {
             <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
               {patient_array.length > 0 ? (
                 patient_array.map((patient) => {
-                  const age = ageFromBirthDate(patient.birth_date);
+                  const age = ageFromBirthDate(patient.birth_date)
                   return (
                     <button
                       key={patient.id}
@@ -184,7 +184,7 @@ const CaseSelector = () => {
                         <span className="text-sm text-slate-500">{age} лет</span>
                       )}
                     </button>
-                  );
+                  )
                 })
               ) : (
                 <div className="p-4 text-slate-500 text-center">Нет пациентов</div>
@@ -292,15 +292,15 @@ const CaseSelector = () => {
         patientName={selectedPatient?.name || ""}
         onCreated={(created) => {
           if (created?.id != null) {
-            dispatch(addCase(created));
+            dispatch(addCase(created))
           }
-          dispatch(setCurrentCase(created));
-          setIsCreateCaseOpen(false);
-          setIsCaseDropdownOpen(false);
+          dispatch(setCurrentCase(created))
+          setIsCreateCaseOpen(false)
+          setIsCaseDropdownOpen(false)
         }}
       />
     </div>
-  );
-};
+  )
+}
 
-export default React.memo(CaseSelector);
+export default React.memo(CaseSelector)

@@ -3,21 +3,21 @@
  * @description Шапка приложения. Отображает заголовок текущей страницы, информацию о пользователе и кнопку выхода.
  */
 // src/components/Header.jsx
-import React, { useMemo, useCallback } from "react";
-import { useDispatch, useSelector } from "react-redux";
-import { LogOut, UserCircle } from "lucide-react";
-import { useNavigate, useLocation } from "react-router-dom";
+import React, { useMemo, useCallback } from "react"
+import { useDispatch, useSelector } from "react-redux"
+import { LogOut, UserCircle } from "lucide-react"
+import { useNavigate, useLocation } from "react-router-dom"
 
-import { FRONTEND_PAGES, PAGE_NAMES } from "../imports/ENDPOINTS";
-import { logout } from "../store/appSlice";
+import { FRONTEND_PAGES, PAGE_NAMES } from "../imports/ENDPOINTS"
+import { logout } from "../store/appSlice"
 
 export default function Header() {
-  const dispatch = useDispatch();
-  const navigate = useNavigate();
-  const location = useLocation();
+  const dispatch = useDispatch()
+  const navigate = useNavigate()
+  const location = useLocation()
 
-  const user = useSelector((state) => state.app.user);
-  const sidebarOpen = useSelector((state) => state.app.sidebarOpen);
+  const user = useSelector((state) => state.app.user)
+  const sidebarOpen = useSelector((state) => state.app.sidebarOpen)
 
   const pageTitles = {
     [PAGE_NAMES.HOME]: "Главная",
@@ -27,7 +27,7 @@ export default function Header() {
     [PAGE_NAMES.LOGIN]: "Вход в систему",
     [PAGE_NAMES.REGISTER]: "Регистрация аккаунта",
      [PAGE_NAMES.SYSTEM_GUIDE]: "Инструкция по подключению"
-  };
+  }
 
   const pageDescriptions = {
     [PAGE_NAMES.PATIENTS]: "Управление пациентами и их исследованиями",
@@ -36,10 +36,10 @@ export default function Header() {
     [PAGE_NAMES.LOGIN]: "Введите ваши учетные данные",
     [PAGE_NAMES.REGISTER]: "Создайте новый аккаунт",
     [PAGE_NAMES.SYSTEM_GUIDE]: "Руководство по подключению оборудования"
-  };
+  }
 
   const currentPageName = useMemo(() => {
-    const path = location.pathname;
+    const path = location.pathname
 
     // точные совпадения
     const exactMap = new Map([
@@ -49,26 +49,26 @@ export default function Header() {
       [FRONTEND_PAGES.LOGIN, PAGE_NAMES.LOGIN],
       [FRONTEND_PAGES.REGISTER, PAGE_NAMES.REGISTER],
       [FRONTEND_PAGES.SYSTEM_GUIDE, PAGE_NAMES.SYSTEM_GUIDE]
-    ]);
-    if (exactMap.has(path)) return exactMap.get(path);
+    ])
+    if (exactMap.has(path)) return exactMap.get(path)
 
     // вложенные роуты дашборда: /dashboard/*
-    if (path.startsWith(FRONTEND_PAGES.DASHBOARD)) return PAGE_NAMES.DASHBOARD;
+    if (path.startsWith(FRONTEND_PAGES.DASHBOARD)) return PAGE_NAMES.DASHBOARD
 
-    return PAGE_NAMES.HOME;
-  }, [location.pathname]);
+    return PAGE_NAMES.HOME
+  }, [location.pathname])
 
-  const pageTitle = pageTitles[currentPageName] || "Мониторинг системы";
-  const pageDescription = pageDescriptions[currentPageName] || "";
+  const pageTitle = pageTitles[currentPageName] || "Мониторинг системы"
+  const pageDescription = pageDescriptions[currentPageName] || ""
 
   const handleLogout = useCallback(() => {
-    dispatch(logout());
+    dispatch(logout())
     // на всякий случай чистим локальное хранилище токена, если ты его там кладёшь
     try {
-      localStorage.removeItem("accessToken");
+      localStorage.removeItem("accessToken")
     } catch {}
-    navigate(FRONTEND_PAGES.LOGIN, { replace: true });
-  }, [dispatch, navigate]);
+    navigate(FRONTEND_PAGES.LOGIN, { replace: true })
+  }, [dispatch, navigate])
 
   return (
     <header className="bg-white shadow-sm border-b border-gray-300">
@@ -116,5 +116,5 @@ export default function Header() {
         </div>
       </div>
     </header>
-  );
+  )
 }

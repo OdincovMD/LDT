@@ -2,10 +2,10 @@
  * @file patients.js
  * @description Async Thunks для работы с пациентами. Создание новых пациентов и получение списка пациентов пользователя.
  */
-import { createAsyncThunk } from "@reduxjs/toolkit";
-import { env } from "../imports/ENV";
-import { BACKEND_ENDPOINTS } from "../imports/ENDPOINTS";
-import { apiRequest } from "./apiClient";
+import { createAsyncThunk } from "@reduxjs/toolkit"
+import { env } from "../imports/ENV"
+import { BACKEND_ENDPOINTS } from "../imports/ENDPOINTS"
+import { apiRequest } from "./apiClient"
 
 // Создание пациента
 export const createPatient = createAsyncThunk(
@@ -18,12 +18,12 @@ export const createPatient = createAsyncThunk(
           method: "POST",
           body: JSON.stringify({ name, birth_date }),
         }
-      );
+      )
     } catch (error) {
-      return rejectWithValue(error.message);
+      return rejectWithValue(error.message)
     }
   }
-);
+)
 
 // Получение списка пациентов по пользователю
 export const getPatients = createAsyncThunk(
@@ -32,9 +32,9 @@ export const getPatients = createAsyncThunk(
     try {
       return await apiRequest(
         `${env.BACKEND_URL}${BACKEND_ENDPOINTS.PATIENTS.BY_USER(ownerId)}`
-      );
+      )
     } catch (error) {
-      return rejectWithValue(error.message);
+      return rejectWithValue(error.message)
     }
   }
-);
+)

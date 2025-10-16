@@ -78,6 +78,16 @@ const Patients = () => {
       }
     })
 
+  function getPatientEnding(count) {
+    if (count % 10 === 1 && count % 100 !== 11) {
+      return 'пациент'
+    } else if ([2, 3, 4].includes(count % 10) && ![12, 13, 14].includes(count % 100)) {
+      return 'пациента'
+    } else {
+      return 'пациентов'
+    }
+  }
+
   if (!user) {
     return (
       <div className="max-w-4xl mx-auto">
@@ -97,7 +107,7 @@ const Patients = () => {
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Пациенты</h1>
           <p className="text-gray-600 mt-1">
-            {patient_array.length} пациент{patient_array.length % 10 === 1 && patient_array.length % 100 !== 11 ? '' : 'ов'}
+            {patient_array.length} {getPatientEnding(patient_array.length)}
           </p>
         </div>
         
