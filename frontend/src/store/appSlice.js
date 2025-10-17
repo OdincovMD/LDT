@@ -30,7 +30,7 @@ const loadInitialState = () => {
 }
 
 const initialState = {
-  sidebarOpen: true,
+  sidebarOpen: false,
   loading: false,
   error: null,
   ...loadInitialState()

@@ -24,7 +24,6 @@ const normalizeModeId = (id) => {
 
 const ModeSelector = ({
   currentMode,
-  onModeChange,
   disabled = false,
   availableModes = null, // если null — вычислим из caseHasData
   caseHasData = null,
@@ -45,18 +44,6 @@ const ModeSelector = ({
     }
     return caseHasData ? ["reviewing"] : ["recording"]
   }, [availableModes, disabled, caseHasData])
-
-  // Авто-переключение наружу, если текущий режим недоступен и есть ровно один доступный
-  useEffect(() => {
-    if (disabled) return
-    if (!normalizedCurrent) return
-    if (!available.includes(normalizedCurrent) && available.length === 1) {
-      const nextMode = available[0]
-      if (nextMode && nextMode !== normalizedCurrent) {
-        onModeChange?.(nextMode)
-      }
-    }
-  }, [available, disabled, normalizedCurrent, onModeChange])
 
   // Визуальный fallback: если текущий недоступен — подсветим единственный доступный
   const hasValidSelection = available.includes(normalizedCurrent)
@@ -84,16 +71,6 @@ const ModeSelector = ({
       },
     ],
     []
-  )
-
-  const handleSelect = useCallback(
-    (id) => {
-      const norm = normalizeModeId(id)
-      if (!disabled && available.includes(norm)) {
-        onModeChange?.(norm)
-      }
-    },
-    [available, disabled, onModeChange]
   )
 
   return (
@@ -191,7 +168,6 @@ const ModeSelector = ({
 
 ModeSelector.propTypes = {
   currentMode: PropTypes.string, // 'record'/'playback' или 'recording'/'reviewing'
-  onModeChange: PropTypes.func,
   disabled: PropTypes.bool,
   availableModes: PropTypes.arrayOf(PropTypes.string), // если не задан — вычислим из caseHasData
   caseHasData: PropTypes.bool, // влияет на доступность, когда availableModes не задан

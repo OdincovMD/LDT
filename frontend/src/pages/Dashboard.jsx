@@ -5,16 +5,18 @@
 // pages/Dashboard.jsx
 import React, { useEffect, useRef, useState, useMemo } from "react"
 import { useNavigate } from 'react-router-dom'
-import { HelpCircle, ChevronDown, ChevronUp, Copy, Check } from 'lucide-react'
+import { HelpCircle, ChevronDown, ChevronUp, Copy, Check, Download } from 'lucide-react'
 import { useSelector, useDispatch } from "react-redux"
 import { useNavigationGuard } from "../hooks/useNavigationGuard"
 import CaseSelector from "../components/CaseSelector"
 import ModeSelector from "../components/ModeSelector"
 import RecordingControls from "../components/RecordingControls"
 import RealtimeLineChart from "../components/RealtimeLineChart"
+import PlotlyHistoryChart from "../components/PlotlyHistoryChart"
 import { createWsToken, checkWsTokenExists } from "../asyncActions/wsToken"
 import { loadStoredWsToken, storeWsToken } from "../store/wsTokenStorage"
 import { provisionBridgeWs } from "../asyncActions/bridgeActions"
+import { exportPlotlyToHtml, collectChartsData } from "../utils/plotlyExport"
 
 import {
   startSimulation,        // backend: старт «симуляции» = начало записи
@@ -31,7 +33,8 @@ import {
   setOperationMode,
   setCaseHasData,
   startRecording,
-  stopRecording
+  stopRecording,
+  setCurrentPatient
 } from "../store/streamSlice"
 
 import { FRONTEND_PAGES } from "../imports/ENDPOINTS"
@@ -206,17 +209,23 @@ export default function Dashboard() {
   const dispatch = useDispatch()
   const navigate = useNavigate()
 
+  const bpmChartRef = useRef(null)
+  const ucChartRef = useRef(null)
+  const riskChartRef = useRef(null)
+
   const [figo, setFigo] = useState(null)
   const [showAdvancedFigo, setShowAdvancedFigo] = useState(false)
   const [dataMode, setDataMode] = useState("demo")         // "demo" | "ws" | "usb"
   const [dataConnected, setDataConnected] = useState(false) // индикатор контролов
   const {
     currentCase,
+    currentPatient,
     operationMode,     // 'playback' | 'record'
     recordingMode,     // 'idle' | 'recording' | 'reviewing'
     hasUnsavedChanges,
     caseHasData
   } = useSelector((s) => s.stream)
+  const { patient_array } = useSelector(s => s.patient)
   const [horizonMin, setHorizonMin] = useState(5)
   const [strideSec, setStrideSec] = useState(1)
 
@@ -264,6 +273,7 @@ export default function Dashboard() {
 
   // === Хелпер: сброс локальных данных графика ===
   const resetCharts = () => {
+    console.log('Вызов reset')
     setRawPoints([])
     setTimeWindow([0, WINDOW_SECONDS])
   }
@@ -276,6 +286,32 @@ export default function Dashboard() {
       ? Number(Boolean(prediction.alert))
       : Number(prob >= RISK_THR)
     return { ...point, risk: prob, alert }
+  }
+
+  const handleExportCharts = () => {
+    if (!currentCase || rawPoints.length === 0) {
+      console.warn('No data available for export')
+      return
+    }
+    
+    console.log('Exporting charts with points:', rawPoints.length)
+
+    const currentPatientData = patient_array.find((p) => p.id === currentPatient)
+    
+    const chartsData = collectChartsData(
+      null, // plotlyComponents не используется в новой версии
+      rawPoints, 
+      currentCase,
+      currentPatientData, 
+      operationMode
+    )
+    
+    if (chartsData && chartsData.charts && chartsData.charts.length > 0) {
+      console.log('Charts data collected successfully:', chartsData.charts.length, 'charts');
+      exportPlotlyToHtml(chartsData, chartsData.metadata.filename)
+    } else {
+      console.error('Failed to collect charts data')
+    }
   }
 
   // FIGO: извлечь ключевые показатели из features
@@ -370,10 +406,11 @@ export default function Dashboard() {
   if (pollRef.current)   { clearInterval(pollRef.current);   pollRef.current = null }
   if (currentCase?.id) { dispatch(stopSimulation(currentCase.id)).catch(()=>{}) }
   setDataMode("demo")
-  resetCharts()
+  // resetCharts()
 }, [connectLocked])  // намеренно без dataMode/dataConnected
 
   // === Следим за выбором кейса: узнаём, есть ли данные, и ставим режим ===
+  // === А также загружаем/удаляем точки в зависимости от содержимого кейса
   useEffect(() => {
     const run = async () => {
       if (!currentCase) return
@@ -381,55 +418,47 @@ export default function Dashboard() {
         const has = await dispatch(checkCaseHasData(currentCase.id)).unwrap()
         dispatch(setCaseHasData(has))
         dispatch(setOperationMode(has ? "playback" : "record"))
+
+        if (operationMode === "playback") {
+          try {
+            const hist = await dispatch(loadHistoricalData(currentCase.id)).unwrap()
+            dispatch(setHistoricalData(hist))
+            const points = (hist || []).map((it) => ({
+              t: parseTs(it.timestamp),
+              bpm: it.bpm,
+              uc: it.uc,
+              risk: it.risk ?? 0,
+              alert: Number(Boolean(it.alert)),
+            }))
+            setRawPoints(points)
+            if (points.length) {
+              setTimeWindow([points[0].t, points.at(-1).t])
+            } else {
+              setTimeWindow([0, WINDOW_SECONDS])
+            }
+            // получить последнее предсказание для FIGO
+            try {
+              const lastPred = await dispatch(fetchPredictions(currentCase.id)).unwrap()
+              if (lastPred) setFigo(extractFigo(lastPred))
+            } catch (e) {
+              console.warn("FIGO unavailable:", e)
+            }
+          } catch (e) {
+            console.error("Ошибка загрузки исторических данных:", e)
+            setRawPoints([])
+            setTimeWindow([0, WINDOW_SECONDS])
+          }
+        } else if (operationMode === "record") {
+          // переходим в запись — чистим графики
+          resetCharts()
+        }
       } catch (e) {
         console.error("Ошибка проверки данных кейса:", e)
       }
     }
-    run()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentCase?.id])
 
-  // === Загрузка/очистка точек в зависимости от режима ===
-  useEffect(() => {
-    const load = async () => {
-      if (!currentCase) return
-      if (operationMode === "playback") {
-        try {
-          const hist = await dispatch(loadHistoricalData(currentCase.id)).unwrap()
-          dispatch(setHistoricalData(hist))
-          const points = (hist || []).map((it) => ({
-            t: parseTs(it.timestamp),
-            bpm: it.bpm,
-            uc: it.uc,
-            risk: it.risk ?? 0,
-            alert: Number(Boolean(it.alert)),
-          }))
-          setRawPoints(points)
-          if (points.length) {
-            setTimeWindow([points[0].t, points.at(-1).t])
-          } else {
-            setTimeWindow([0, WINDOW_SECONDS])
-          }
-          // получить последнее предсказание для FIGO
-          try {
-            const lastPred = await dispatch(fetchPredictions(currentCase.id)).unwrap()
-            if (lastPred) setFigo(extractFigo(lastPred))
-          } catch (e) {
-            console.warn("FIGO unavailable:", e)
-          }
-        } catch (e) {
-          console.error("Ошибка загрузки исторических данных:", e)
-          setRawPoints([])
-          setTimeWindow([0, WINDOW_SECONDS])
-        }
-      } else if (operationMode === "record") {
-        // переходим в запись — чистим графики
-        resetCharts()
-      }
-    }
-    load()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [operationMode, currentCase?.id])
+    run()
+  }, [currentCase?.id])
 
   // === Старт/стоп симуляции на бэке при смене recordingMode (НЕ для ws режима) ===
   useEffect(() => {
@@ -761,7 +790,6 @@ export default function Dashboard() {
 
         <ModeSelector
           currentMode={operationMode}
-          onModeChange={(mode) => dispatch(setOperationMode(mode))}
           disabled={!currentCase}
           availableModes={availableModes}
           caseHasData={caseHasData}
@@ -779,74 +807,147 @@ export default function Dashboard() {
         />
 
         {currentCase ? (
-          <>
-          {/* ЧСС */}
-        <section className="bg-white border border-gray-300 rounded-2xl p-4 shadow-sm">
+        <>
+        {/* ЧСС */}
+        <section className="bg-white border border-gray-200 rounded-2xl p-4 shadow-sm">
           <div className="flex justify-between items-start mb-2">
             <h2 className="text-lg font-medium text-gray-900">ЧСС (уд/мин)</h2>
-            <span className="font-semibold text-lg text-blue-600">
-              {(rawPoints.at(-1)?.bpm ?? 0).toFixed(1)} bpm
-            </span>
+            {!(operationMode === 'playback') && 
+              <span className="font-semibold text-lg text-blue-600">
+                {(rawPoints.at(-1)?.bpm ?? 0).toFixed(1)} bpm
+              </span>
+            } 
           </div>
           <div className="bg-slate-900 rounded-lg p-2 mt-2">
+            {operationMode === "playback" ? (
+            <PlotlyHistoryChart
+              ref={bpmChartRef}
+              points={rawPoints}
+              dataKey="bpm"
+              yLabel="ЧСС"
+              height={200}
+              showLegend={false}
+              // useGL={rawPoints.length > 10000}
+              useGL={false}
+              yDynamic
+              yPad={0.08}
+              yClamp={[50, 210]}
+              referenceLines={[{ y: 110, stroke: "#999", dash: "2 2", opacity: 0.7 }]}
+              areaUnder={null} // или "bpm"
+              alertKey="alert"
+              alertFill="#ef4444"
+              alertOpacity={0.12}
+              alertLabel="ALERT"
+            />
+          ) : (
             <RealtimeLineChart
               data={displayData}
               timeWindow={timeWindow}
               series={[{ dataKey: "bpm", name: "ЧСС", type: "monotone", stroke: "#60A5FA" }]}
               yDynamic
               yClamp={[50, 210]}
-              yLabel="ЧСС"
+              yLabel="bpm"
               height={200}
-              isStatic={operationMode === "playback"}
+              isStatic={false}
               alertKey="alert"
             />
+          )}
           </div>
         </section>
 
         {/* Маточная активность */}
-        <section className="bg-white border border-gray-300 rounded-2xl p-4 shadow-sm">
+        <section className="bg-white border border-gray-200 rounded-2xl p-4 shadow-sm">
           <div className="flex justify-between items-start mb-2">
             <h2 className="text-lg font-medium text-gray-900">Маточная активность</h2>
+            {!(operationMode === 'playback') &&
             <span className="font-semibold text-lg text-green-600">
               {(rawPoints.at(-1)?.uc ?? 0).toFixed(1)}
             </span>
+            }
           </div>
           <div className="bg-slate-900 rounded-lg p-2 mt-2">
+            {operationMode === "playback" ? (
+            <PlotlyHistoryChart
+              ref={ucChartRef}
+              points={rawPoints}
+              dataKey="uc"
+              yLabel="МА"
+              height={200}
+              showLegend={false} 
+              // useGL={rawPoints.length > 10000}
+              useGL={false}
+              yDynamic
+              yPad={0.08}
+              referenceLines={[{ y: 25, stroke: "#999", dash: "2 2", opacity: 0.7 }]}
+              areaUnder={null}
+              alertKey="alert"
+              alertFill="#ef4444"
+              alertOpacity={0.12}
+              alertLabel="ALERT"
+              stroke="#34D399" 
+            />
+          ) : (
             <RealtimeLineChart
               data={displayData}
               timeWindow={timeWindow}
-              series={[{ dataKey: "uc", name: "МА", type: "monotone", stroke: "#34D399" }]}
+              series={[{ dataKey: "uc", name: "UC", type: "monotone", stroke: "#34D399" }]}
               yDynamic
               yClamp={[0, 50]}
-              yLabel="МА"
+              yLabel="UC"
               height={200}
-              isStatic={operationMode === "playback"}
+              isStatic={false}
               alertKey="alert"
             />
+          )}
           </div>
         </section>
 
         {/* Вероятность осложнений */}
-        <section className="bg-white border border-gray-300 rounded-2xl p-4 shadow-sm">
+        <section className="bg-white border border-gray-200 rounded-2xl p-4 shadow-sm">
           <div className="flex justify-between items-start mb-2">
             <h2 className="text-lg font-medium text-gray-900">Вероятность осложнений</h2>
-            <span className="font-semibold text-lg text-red-600">
-              {(rawPoints.at(-1)?.risk ?? 0).toFixed(2)}
-            </span>
+            {!(operationMode === 'playback') && 
+              <span className="font-semibold text-lg text-red-600">
+                (`${(rawPoints.at(-1)?.risk ?? 0).toFixed(2) * 100}%`)
+              </span>
+            }
           </div>
           <div className="bg-slate-900 rounded-lg p-2 mt-2">
+            {operationMode === "playback" ? (
+            <PlotlyHistoryChart
+              ref={riskChartRef}
+              points={rawPoints}
+              dataKey="risk"
+              yLabel="Риск"
+              height={200}
+              showLegend={false}
+              // useGL={rawPoints.length > 10000}
+              useGL={false}
+              yDynamic
+              yPad={0.08}
+              yClamp={[0, 1]} 
+              referenceLines={[{ y: RISK_THR, stroke: "#FCA5A5", dash: "2 2", opacity: 0.9 }]} // ← 0.5
+              areaUnder={null}
+              alertKey="alert"
+              alertFill="#ef4444"
+              alertOpacity={0.12}
+              alertLabel="ALERT"
+              stroke="#F87171"
+            />
+            ) : (
             <RealtimeLineChart
               data={displayData}
               timeWindow={timeWindow}
               series={[{ dataKey: "risk", name: "Риск", type: "monotone", stroke: "#F87171" }]}
               yDynamic
               yClamp={[0, 1]}
-              yLabel="Риск"
+              yLabel="prob"
               referenceLines={[{ y: RISK_THR, stroke: "#FCA5A5" }]}
               height={200}
-              isStatic={operationMode === "playback"}
+              // isStatic={false}
               alertKey="alert"
             />
+            )}
           </div>
         </section>
 
@@ -984,6 +1085,17 @@ export default function Dashboard() {
             </div>
           </div>
         )}
+
+         {operationMode === "playback" && rawPoints.length > 0 && (
+            <button
+              onClick={handleExportCharts}
+              className="flex items-center space-x-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors shadow-sm"
+              title="Экспорт графиков в HTML"
+            >
+              <Download size={18} />
+              <span>Экспорт графиков</span>
+            </button>
+          )}
       </div>
     </div>
   )

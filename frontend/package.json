@@ -15,6 +15,7 @@
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
     "react-hook-form": "^7.63.0",
+    "plotly.js": "^3.1.2",
     "react-plotly.js": "^2.6.0",
     "react-redux": "^9.2.0",
     "react-router-dom": "^7.9.1",

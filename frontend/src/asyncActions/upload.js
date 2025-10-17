@@ -18,7 +18,6 @@ export const uploadDemoCsv = createAsyncThunk(
   "demo/uploadCsv",
   async ({ file }, { rejectWithValue }) => {
     try {
-    console.error("я тут")
       if (!file) throw new Error("Файл не выбран")
 
       const url = `${env.BACKEND_URL}${BACKEND_ENDPOINTS.DEMO.UPLOAD}`
@@ -27,7 +26,6 @@ export const uploadDemoCsv = createAsyncThunk(
 
       const fd = new FormData()
       fd.append("file", file)
-      console.error(url)
       const r = await fetch(url, {
         method: "POST",
         body: fd,
