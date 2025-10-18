@@ -13,6 +13,8 @@ import { getPatients } from "../asyncActions/patients"
 import { addCase } from "../store/caseSlice"
 
 import CreateCaseModal from "./CreateCaseModal"
+import { checkCaseHasData } from "../asyncActions/stream"
+import { setCaseHasData } from "../store/streamSlice"
 
 const tz = "Europe/Moscow"
 
@@ -136,8 +138,10 @@ const CaseSelector = () => {
   )
 
   const handleCaseSelect = useCallback(
-    (caseItem) => {
+    async (caseItem) => {
       dispatch(setCurrentCase(caseItem))
+      const has = await dispatch(checkCaseHasData(caseItem.id)).unwrap()
+      dispatch(setCaseHasData(has))
       setIsCaseDropdownOpen(false)
     },
     [dispatch]

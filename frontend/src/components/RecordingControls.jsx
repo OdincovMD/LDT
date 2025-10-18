@@ -26,9 +26,6 @@ function RecordingControls({ connected = false, wsActive = false, usbActive = fa
           <Activity size={18} className="text-blue-500" />
           <span>Режим просмотра — запись недоступна</span>
         </div>
-        <div className="text-center text-sm text-slate-500 mt-1">
-          Переключитесь в режим «Запись», чтобы начать приём данных
-        </div>
       </div>
     )
   }

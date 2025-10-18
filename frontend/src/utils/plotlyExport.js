@@ -17,6 +17,26 @@ export const exportPlotlyToHtml = (chartsData, filename = 'charts_export.html') 
  * Генерирует HTML контент с графиками, идентичными Dashboard
  */
 const generateHtmlContent = (chartsData) => {
+  const figo = chartsData.figo || {}
+  const meta = chartsData.metadata || {}
+  const fv = {
+    baseline: figo.baseline ?? null,
+    bpm_sd: figo.bpm_sd ?? null,
+    stv: figo.stv ?? null,
+    accel: figo.evtAccelTotal ?? null,
+    decel: figo.evtDecelTotal ?? null,
+    decelEarly: figo.evtDecelEarly ?? null,
+    decelLate: figo.evtDecelLate ?? null,
+    decelVar: figo.evtDecelVariable ?? null,
+    decelProl: figo.evtDecelProlonged ?? null,
+    tachy: (figo.evtTachyRatio ?? null) ? 'Да' : 'Нет',
+    brady: (figo.evtBradyRatio ?? null) ? 'Да' : 'Нет',
+    contractions: figo.contractions ?? null,
+    baselineClass: figo.baselineClass ?? null,
+    varClass: figo.varClass ?? null,
+    accelClass: figo.accelerationsClass ?? null,
+    decelClass: figo.decelerationsClass ?? null,
+  }
   const chartsHtml = chartsData.charts.map((chart, index) => `
     <div class="chart-section">
       <div class="chart-header">
@@ -91,6 +111,44 @@ const generateHtmlContent = (chartsData) => {
             margin-bottom: 20px;
             box-shadow: 0 1px 3px rgba(0,0,0,0.1);
         }
+        .figo-grid {
+          display: grid;
+          grid-template-columns: repeat(6, 1fr); /* фикс 6 колонок на десктопе */
+          gap: 12px;
+        }
+        @media (max-width: 1280px) {
+          .figo-grid { grid-template-columns: repeat(4, 1fr); }
+        }
+        @media (max-width: 1024px) {
+          .figo-grid { grid-template-columns: repeat(3, 1fr); }
+        }
+        @media (max-width: 640px) {
+          .figo-grid { grid-template-columns: repeat(2, 1fr); }
+        }
+        .figo-card {
+          border: 1px solid #e5e7eb;
+          border-radius: 12px;
+          padding: 12px;
+          background: #ffffff;
+        }
+        .figo-label {
+          font-size: 12px;
+          color: #6b7280;
+        }
+        .figo-value {
+          margin-top: 4px;
+          font-weight: 600;
+          color: #111827;
+        }
+        .figo-badge {
+          display: inline-block;
+          margin-top: 6px;
+          font-size: 11px;
+          padding: 2px 8px;
+          border-radius: 9999px;
+          background: #f3f4f6;
+          color: #374151;
+        }
         
         .chart-header {
             display: flex;
@@ -158,7 +216,75 @@ const generateHtmlContent = (chartsData) => {
             <div class="info-item">
                 Период записи: <div class="info-value">${chartsData.metadata?.recordingPeriod || 'Не указан'}</div>
             </div>
+            <div class="info-item">
+                Горизонт прогноза: <div class="info-value">${meta.horizonMin != null ? meta.horizonMin + ' мин' : '—'}</div>
+            </div>
+            <div class="info-item">
+                Время обновления предсказаний: <div class="info-value">${meta.strideSec != null ? meta.strideSec + ' сек' : '—'}</div>
+            </div>
         </div>
+    </div>
+
+    <!-- FIGO показатели -->
+    <div class="chart-section">
+      <div class="chart-header">
+        <h3 class="chart-title">Показатели FIGO</h3>
+        <div class="text-sm" style="color:#6b7280">из последнего окна модели</div>
+      </div>
+      <div class="figo-grid">
+        <div class="figo-card">
+          <div class="figo-label">Базальный ритм, уд/мин</div>
+          <div class="figo-value">${fv.baseline != null ? `${fv.baseline} bpm` : '—'}</div>
+          ${fv.baselineClass ? `<div class="figo-badge">${fv.baselineClass}</div>` : ''}
+        </div>
+        <div class="figo-card">
+          <div class="figo-label">Вариабельность, уд/мин</div>
+          <div class="figo-value">${fv.bpm_sd != null ? fv.bpm_sd : '—'}</div>
+          ${fv.varClass ? `<div class="figo-badge">${fv.varClass}</div>` : ''}
+        </div>
+        <div class="figo-card">
+          <div class="figo-label">STV, мс</div>
+          <div class="figo-value">${fv.stv != null ? Number(fv.stv).toFixed(2) : '—'}</div>
+        </div>
+        <div class="figo-card">
+          <div class="figo-label">Акселерации</div>
+          <div class="figo-value">${fv.accel ?? '—'}</div>
+          ${fv.accelClass ? `<div class="figo-badge">${fv.accelClass}</div>` : ''}
+        </div>
+        <div class="figo-card">
+          <div class="figo-label">Децелерации</div>
+          <div class="figo-value">${fv.decel ?? '—'}</div>
+          ${fv.decelClass ? `<div class="figo-badge">${fv.decelClass}</div>` : ''}
+        </div>
+        <div class="figo-card">
+          <div class="figo-label">Ранние децелерации</div>
+          <div class="figo-value">${fv.decelEarly ?? '—'}</div>
+        </div>
+        <div class="figo-card">
+          <div class="figo-label">Поздние децелерации</div>
+          <div class="figo-value">${fv.decelLate ?? '—'}</div>
+        </div>
+        <div class="figo-card">
+          <div class="figo-label">Вариабельные децелерации</div>
+          <div class="figo-value">${fv.decelVar ?? '—'}</div>
+        </div>
+        <div class="figo-card">
+          <div class="figo-label">Продолжительные децелерации</div>
+          <div class="figo-value">${fv.decelProl ?? '—'}</div>
+        </div>
+        <div class="figo-card">
+          <div class="figo-label">Тахикардия</div>
+          <div class="figo-value">${fv.tachy}</div>
+        </div>
+        <div class="figo-card">
+          <div class="figo-label">Брадикардия</div>
+          <div class="figo-value">${fv.brady}</div>
+        </div>
+        <div class="figo-card">
+          <div class="figo-label">Схватки (за окно)</div>
+          <div class="figo-value">${fv.contractions ?? '—'}</div>
+        </div>
+      </div>
     </div>
     
     ${chartsHtml}
@@ -258,7 +384,7 @@ const generateHtmlContent = (chartsData) => {
 /**
  * Сбор данных графиков для экспорта с идентичными настройками
  */
-export const collectChartsData = (plotlyComponents, rawPoints, currentCase, currentPatient, operationMode) => {
+export const collectChartsData = (plotlyComponents, rawPoints, currentCase, currentPatient, operationMode, figo, modelParams) => {
   if (!rawPoints || rawPoints.length === 0) {
     console.warn('No raw points available for export')
     return null
@@ -286,12 +412,15 @@ export const collectChartsData = (plotlyComponents, rawPoints, currentCase, curr
     filename: generateFilename(currentCase, currentPatient),
     recordingPeriod: getRecordingPeriod(rawPoints),
     pointsCount: rawPoints.length,
-    exportDate: new Date().toLocaleString('ru-RU')
+    exportDate: new Date().toLocaleString('ru-RU'),
+    horizonMin: modelParams?.horizonMin ?? null,
+    strideSec: modelParams?.strideSec ?? null
   }
   
   return {
     charts,
-    metadata
+    metadata,
+    figo: figo || null
   }
 }
 

@@ -65,8 +65,15 @@ async def start_stream_worker(case_id: int, hz: float, H_min: float = DEFAULT_H_
                 t0 = window[0].timestamp
                 now_ts = window[-1].timestamp
                 # дергаем ML не чаще stride_s
-                if last_ml_ts and (now_ts - last_ml_ts).total_seconds() < max(1.0, float(stride_s)):
-                    if i >= len(rows): i = 0
+                if last_ml_ts and now_ts <= last_ml_ts:
+                    last_ml_ts = None
+                    
+                if last_ml_ts and (now_ts - last_ml_ts).total_seconds() < float(stride_s):
+                    # пропускаем вызов ML, но двигаем источник и спим, иначе зациклимся на одной точке
+                    i += 1
+                    if i >= len(rows):
+                        i = 0
+                    await asyncio.sleep(period)
                     continue
                 payload = {
                     "window": {

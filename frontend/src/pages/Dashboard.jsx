@@ -17,6 +17,7 @@ import { createWsToken, checkWsTokenExists } from "../asyncActions/wsToken"
 import { loadStoredWsToken, storeWsToken } from "../store/wsTokenStorage"
 import { provisionBridgeWs } from "../asyncActions/bridgeActions"
 import { exportPlotlyToHtml, collectChartsData } from "../utils/plotlyExport"
+import RiskAlertModal from "../components/RiskAlertModal"
 
 import {
   startSimulation,        // backend: старт «симуляции» = начало записи
@@ -243,6 +244,26 @@ export default function Dashboard() {
   const [bridgeNotice, setBridgeNotice] = useState(null)
 
   useNavigationGuard(hasUnsavedChanges)
+    // ==== Risk alert modal (только по сигналу модели) ====
+  const [showRiskAlert, setShowRiskAlert] = useState(false)
+  const [alertRiskLevel, setAlertRiskLevel] = useState(0)
+  const [alertAt, setAlertAt] = useState(null)    
+  const prevAlertRef = useRef(0) 
+  useEffect(() => {
+    const last = rawPoints.at(-1)
+    if (operationMode !== "playback" && last?.alert === 1) {
+      setAlertRiskLevel(typeof last.risk === "number" ? last.risk : 0)
+      if (prevAlertRef.current !== 1) {
+        const tsMs = last?.t ? last.t * 1000 : Date.now()
+        setAlertAt(tsMs)
+      }
+      setShowRiskAlert(true)
+      prevAlertRef.current = 1
+    } else {
+      setShowRiskAlert(false)
+      prevAlertRef.current = 0
+    }
+  }, [rawPoints.length, operationMode])
 
   // Основной cleanup при размонтировании
   useEffect(() => {
@@ -303,7 +324,9 @@ export default function Dashboard() {
       rawPoints, 
       currentCase,
       currentPatientData, 
-      operationMode
+      operationMode,
+      figo,
+      { horizonMin, strideSec }
     )
     
     if (chartsData && chartsData.charts && chartsData.charts.length > 0) {
@@ -398,16 +421,20 @@ export default function Dashboard() {
     }
   }
 
- // Если кейс сохранён — рвём любое подключение (demo/ws) и чистим пуллинг
- useEffect(() => {
-  if (!connectLocked) return
-  if (dataConnected) setDataConnected(false)
-  if (pollWsRef.current) { clearInterval(pollWsRef.current); pollWsRef.current = null }
-  if (pollRef.current)   { clearInterval(pollRef.current);   pollRef.current = null }
-  if (currentCase?.id) { dispatch(stopSimulation(currentCase.id)).catch(()=>{}) }
-  setDataMode("demo")
-  // resetCharts()
-}, [connectLocked])  // намеренно без dataMode/dataConnected
+  // Если кейс сохранён — рвём любое подключение (demo/ws) и чистим пуллинг
+  useEffect(() => {
+    if (!connectLocked) return
+    console.log('Зашел куда-то')
+    if (!(operationMode === 'playback')) {
+      if (dataConnected) setDataConnected(false)
+      if (pollWsRef.current) { clearInterval(pollWsRef.current); pollWsRef.current = null }
+      if (pollRef.current)   { clearInterval(pollRef.current);   pollRef.current = null }
+
+      if (currentCase?.id) { dispatch(stopSimulation(currentCase.id)).catch(()=>{}) }
+    }
+    setDataMode("demo")
+    // resetCharts()
+  }, [connectLocked])  // намеренно без dataMode/dataConnected
 
   // === Следим за выбором кейса: узнаём, есть ли данные, и ставим режим ===
   // === А также загружаем/удаляем точки в зависимости от содержимого кейса
@@ -614,7 +641,13 @@ export default function Dashboard() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  useEffect(() => { setFigo(null) }, [currentCase?.id, operationMode])
+  // Простой сброс FIGO: новый кейс в онлайне
+  useEffect(() => {
+    if (!currentCase) return
+    if (operationMode !== "playback") {
+      setFigo(null)
+    }
+  }, [currentCase?.id, operationMode])
   // === Видимые данные под текущее окно ===
   const displayData = useMemo(() => {
     const [t0, t1] = timeWindow
@@ -751,7 +784,7 @@ export default function Dashboard() {
                     key={h}
                     type="button"
                     onClick={() => setHorizonMin(h)}
-                    disabled={dataConnected || !currentCase}
+                    disabled={operationMode === "playback" || dataConnected || !currentCase}
                     className={`px-3 py-2 text-sm rounded border transition-colors flex-1 ${
                       horizonMin === h 
                         ? "bg-blue-600 text-white border-blue-600" 
@@ -773,7 +806,7 @@ export default function Dashboard() {
                     key={s} 
                     type="button"
                     onClick={() => setStrideSec(s)}
-                    disabled={dataConnected || !currentCase}
+                    disabled={operationMode === "playback" || dataConnected || !currentCase}
                     className={`px-3 py-2 text-sm rounded border transition-colors flex-1 ${
                       strideSec === s
                         ? "bg-blue-600 text-white border-blue-600"
@@ -805,6 +838,16 @@ export default function Dashboard() {
             setBridgeNotice(null)
           }}
         />
+        {/* Риск-алерт (toast в правом верхнем углу) */}
+        {operationMode !== "playback" && (
+        <RiskAlertModal
+          isOpen={showRiskAlert}
+          onClose={() => setShowRiskAlert(false)}
+          riskLevel={alertRiskLevel}
+          currentData={rawPoints.at(-1)}
+          alertAt={alertAt}
+        />
+        )}
 
         {currentCase ? (
         <>
@@ -846,7 +889,7 @@ export default function Dashboard() {
               series={[{ dataKey: "bpm", name: "ЧСС", type: "monotone", stroke: "#60A5FA" }]}
               yDynamic
               yClamp={[50, 210]}
-              yLabel="bpm"
+              yLabel="ЧСС"
               height={200}
               isStatic={false}
               alertKey="alert"
@@ -890,10 +933,10 @@ export default function Dashboard() {
             <RealtimeLineChart
               data={displayData}
               timeWindow={timeWindow}
-              series={[{ dataKey: "uc", name: "UC", type: "monotone", stroke: "#34D399" }]}
+              series={[{ dataKey: "uc", name: "МА", type: "monotone", stroke: "#34D399" }]}
               yDynamic
               yClamp={[0, 50]}
-              yLabel="UC"
+              yLabel="МА"
               height={200}
               isStatic={false}
               alertKey="alert"
@@ -908,7 +951,7 @@ export default function Dashboard() {
             <h2 className="text-lg font-medium text-gray-900">Вероятность осложнений</h2>
             {!(operationMode === 'playback') && 
               <span className="font-semibold text-lg text-red-600">
-                (`${(rawPoints.at(-1)?.risk ?? 0).toFixed(2) * 100}%`)
+                {`${((rawPoints.at(-1)?.risk ?? 0)* 100).toFixed(1)}%`}
               </span>
             }
           </div>
@@ -941,7 +984,7 @@ export default function Dashboard() {
               series={[{ dataKey: "risk", name: "Риск", type: "monotone", stroke: "#F87171" }]}
               yDynamic
               yClamp={[0, 1]}
-              yLabel="prob"
+              yLabel="Риск"
               referenceLines={[{ y: RISK_THR, stroke: "#FCA5A5" }]}
               height={200}
               // isStatic={false}

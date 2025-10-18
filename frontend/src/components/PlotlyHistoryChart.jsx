@@ -130,6 +130,21 @@ export default function PlotlyHistoryChart({
     [points, dataKey, yDynamic, yPad, yClamp]
   )
 
+  const sliderYRange = useMemo(() => {
+    if (!points?.length) return undefined
+    let vmin = +Infinity, vmax = -Infinity
+    for (const p of points) {
+      const v = p?.[dataKey]
+      if (typeof v === "number" && isFinite(v)) {
+        if (v < vmin) vmin = v
+        if (v > vmax) vmax = v
+      }
+    }
+    if (!isFinite(vmin) || !isFinite(vmax)) return undefined
+    if (vmin === vmax) { vmin -= 1; vmax += 1 }
+    return [vmin, vmax]
+  }, [points, dataKey])
+
   // Вычисляем alert-бэнды как непрерывные интервалы по alertKey
   const alertBands = useMemo(() => {
     if (!alertKey || !points?.length) return []
@@ -243,11 +258,16 @@ export default function PlotlyHistoryChart({
       showgrid: true,
       // Формат времени как у тебя в Recharts (локаль ru-RU)
       tickformat: "%H:%M:%S",
-      rangeslider: { 
+      rangeslider: {
         visible: true,
-        thickness: 0.30, // Толщина ползунка
+        thickness: 0.30,
         bgcolor: COLORS.paper,
         bordercolor: COLORS.grid,
+        yaxis: {
+          rangemode: "auto",
+          ...(sliderYRange ? { range: sliderYRange } : {}),
+          fixedrange: true,
+        },
       },
       // Автоматическое определение диапазона для ползунка
       autorange: true,
