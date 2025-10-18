@@ -49,6 +49,22 @@ def on_startup():
 #   POST   /sim/start            -> старт симуляции (нужен case_id, hz)
 #   POST   /sim/stop             -> стоп симуляции
 #   GET    /sim/status           -> статус активных симуляций
+#
+# WS (реальное время):
+#   GET    /ws/case/{case_id}      (WebSocket) -> подключение к комнате; query: token, H, stride
+#
+# WS-TOKEN (токены для WS-подключений):
+#   POST   /ws-token/create       -> выпустить токен для (user_id, case_id)
+#   POST   /ws-token/revoke      -> отозвать/деактивировать токен
+#
+# BRIDGE (drop-файлы для USB/WS-моста):
+#   POST   /bridge/provision/ws  -> создать JSON drop-файл с ws_url в /bridge_drop
+#
+# DEMO (пользовательский CSV для симуляции):
+#   POST   /demo/upload          -> загрузить demo.user.csv (замещает базовый demo.csv)
+#
+# HEALTH:
+#   GET    /health               -> статус сервиса (для мониторинга/оркестраторов)
 
 # Подключение роутеров
 app.include_router(auth.router, prefix="/auth", tags=["auth"])
