@@ -11,8 +11,10 @@ services:
     ports:
       - "${NGINX_PORT}:${NGINX_PORT}"
     depends_on:
-      - frontend
-      - backend
+      backend:
+        condition: service_healthy
+      ml:
+        condition: service_healthy
     volumes:
       - ./nginx/nginx.conf.template:/etc/nginx/nginx.conf.template:ro
     networks:
@@ -58,6 +60,12 @@ services:
     depends_on:
       - postgres
       - ml
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:${BACKEND_PORT}/health"]
+      interval: 20s
+      timeout: 5s
+      retries: 2
+      start_period: 3s
     networks:
       - app-network
     develop:
@@ -76,6 +84,12 @@ services:
       - ML_PORT=${ML_PORT}
     expose:
       - "${ML_PORT}"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:${ML_PORT}/health"]
+      interval: 20s
+      timeout: 5s
+      retries: 2
+      start_period: 3s
     networks:
       - app-network
 

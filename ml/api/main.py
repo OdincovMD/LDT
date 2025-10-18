@@ -35,3 +35,7 @@ def predict(req: WindowRequest):
         alert=alert,
         features=features
     )
+
+@app.get("/health")
+def health_check():
+    return {"status": "ok", "service": "ml"}
