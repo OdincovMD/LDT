@@ -28,10 +28,10 @@ export default function Home() {
     <div className="max-w-6xl mx-auto space-y-8">
       {/* Если пользователь авторизован — блок с аккаунтом */}
       {user && (
-        <div className="bg-white rounded-lg shadow-xl p-8">
+        <div className="bg-white border border-gray-300 rounded-2xl p-6 shadow-sm">
           <div className="text-center mb-6">
-            <div className="mx-auto w-24 h-24 bg-blue-500 rounded-full flex items-center justify-center mb-4">
-              <User className="text-white" size={40} />
+            <div className="mx-auto w-20 h-20 bg-blue-500 rounded-full flex items-center justify-center mb-4">
+              <User className="text-white" size={32} />
             </div>
             <h2 className="text-2xl font-bold text-gray-900 mb-2">
               Добро пожаловать, {user.name}!
@@ -39,20 +39,20 @@ export default function Home() {
             <p className="text-gray-600">Ваш профиль в системе мониторинга состояния плода</p>
           </div>
 
-          <div className="space-y-4 max-w-md mx-auto">
-            <div className="flex items-center p-4 bg-blue-50 rounded-lg border border-blue-100">
-              <User size={20} className="text-blue-600 mr-3" />
+          <div className="grid md:grid-cols-2 gap-4 max-w-md mx-auto">
+            <div className="flex items-center p-3 bg-blue-50 rounded-lg border border-blue-100">
+              <User size={18} className="text-blue-600 mr-3" />
               <div>
                 <p className="text-sm text-blue-800 font-medium">ФИО</p>
-                <p className="font-semibold text-gray-900">{user.name}</p>
+                <p className="font-semibold text-gray-900 text-sm">{user.name}</p>
               </div>
             </div>
 
-            <div className="flex items-center p-4 bg-blue-50 rounded-lg border border-blue-100">
-              <Mail size={20} className="text-blue-600 mr-3" />
+            <div className="flex items-center p-3 bg-blue-50 rounded-lg border border-blue-100">
+              <Mail size={18} className="text-blue-600 mr-3" />
               <div>
                 <p className="text-sm text-blue-800 font-medium">Email</p>
-                <p className="font-semibold text-gray-900">{user.email}</p>
+                <p className="font-semibold text-gray-900 text-sm">{user.email}</p>
               </div>
             </div>
           </div>
@@ -77,16 +77,14 @@ export default function Home() {
         </div>
 
         {/* Основные возможности */}
-        <div className="grid md:grid-cols-3 gap-6 mb-12">
-          <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-6 border border-blue-100">
+        <div className="grid md:grid-cols-3 gap-6 mb-12 text-center">
+          <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-6 border border-blue-100 ">
             <div className="mx-auto w-14 h-14 bg-blue-500 rounded-full flex items-center justify-center mb-4">
               <Activity className="text-white" size={28} />
             </div>
-            <h3 className="font-bold text-gray-900 text-lg mb-3">Автоматическая классификация паттернов КТГ</h3>
+            <h3 className="font-bold text-gray-900 text-lg mb-3 ">Автоматическая классификация паттернов КТГ</h3>
             <p className="text-sm text-gray-700 leading-relaxed">
-                Точная классификация сигналов кардиотокографии в соответствии с международными клиническими стандартами FIGO.
-                Система анализирует комплекс параметров включая базальный ритм, вариабельность, наличие акцелераций
-                и деселераций для объективной оценки состояния плода.
+                Классификация сигналов КТГ в соответствии с международными клиническими стандартами FIGO.
             </p>
           </div>
 
@@ -97,8 +95,6 @@ export default function Home() {
             <h3 className="font-bold text-gray-900 text-lg mb-3">Раннее выявление острой гипоксии</h3>
             <p className="text-sm text-gray-700 leading-relaxed">
                 Продвинутые алгоритмы детекции ранних признаков кислородной недостаточности плода.
-                Система идентифицирует малейшие отклонения в паттернах ЧСС, позволяя своевременно
-                предпринимать профилактические меры и снижать риски перинатальных осложнений.
             </p>
           </div>
 
@@ -109,8 +105,6 @@ export default function Home() {
             <h3 className="font-bold text-gray-900 text-lg mb-3">Прогнозирование метаболического ацидоза</h3>
             <p className="text-sm text-gray-700 leading-relaxed">
                 Валидация прогностических алгоритмов на основе объективных лабораторных данных.
-                Система коррелирует изменения КТГ-паттернов с биохимическими маркерами, обеспечивая
-                высокую достоверность прогнозов и снижая количество ложноположительных результатов.
             </p>
           </div>
         </div>
@@ -141,11 +135,11 @@ export default function Home() {
               <ul className="space-y-3 text-gray-700">
                 <li className="flex items-start">
                   <div className="w-2 h-2 bg-blue-500 rounded-full mt-2 mr-3"></div>
-                  <span><strong>Акцелерации</strong> - временные увеличения ЧСС</span>
+                  <span><strong>Деселерации</strong> - вариабельные, поздние и пролонгированные снижения ЧСС</span>
                 </li>
                 <li className="flex items-start">
                   <div className="w-2 h-2 bg-blue-500 rounded-full mt-2 mr-3"></div>
-                  <span><strong>Деселерации</strong> - вариабельные, поздние и пролонгированные снижения ЧСС</span>
+                  <span><strong>Акцелерации</strong> - временные увеличения ЧСС</span>
                 </li>
               </ul>
             </div>
@@ -181,8 +175,6 @@ export default function Home() {
                   <h5 className="font-semibold text-gray-900 mb-2">Детекция акцелераций</h5>
                   <p className="text-sm text-gray-700 leading-relaxed">
                     Алгоритм идентифицирует эпизоды повышения ЧСС, связанные с двигательной активностью плода.
-                    Наличие акцелераций свидетельствует о нормальной реактивности вегетативной нервной системы плода
-                    и является важным маркером благополучия.
                   </p>
                 </div>
               </div>
@@ -223,10 +215,8 @@ export default function Home() {
                 <div>
                   <h5 className="font-semibold text-gray-900 mb-2">Дополнительные признаки для повышения устойчивости</h5>
                   <p className="text-sm text-gray-700 leading-relaxed">
-                    Для повышения надежности прогнозирования система извлекает расширенный набор признаков включая
-                    статистические характеристики (медианное абсолютное отклонение, асимметрия, эксцесс), показатели
-                    вариабельности сердечного ритма (RMSSD, параметры Пуанкаре), и динамические характеристики
-                    (параметры Хёрста, автокорреляционные показатели, фрактальные размерности).
+                    Для повышения надежности прогнозирования система извлекает расширенный набор признаков, включая
+                    статистические характеристики, показатели вариабельности сердечного ритма, и динамические характеристики.
                   </p>
                 </div>
               </div>
@@ -234,14 +224,11 @@ export default function Home() {
           </div>
 
           <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl p-6 border border-green-200">
-            <h4 className="font-bold text-gray-900 text-xl mb-4">Архитектура системы прогнозирования</h4>
+            <h4 className="font-bold text-gray-900 text-xl mb-4">Сситема прогнозирования</h4>
             <p className="text-gray-700 leading-relaxed">
               Наша модель работает по принципу <strong>скользящего временного окна</strong>: по комплексным признакам,
               извлеченным из текущего временного интервала мониторинга, система прогнозирует вероятность развития
-              патологического состояния в следующем временном горизонте. Этот подход позволяет осуществлять
-              заблаговременное предупреждение медицинского персонала о риске развития дистресса плода, обеспечивая
-              критически важный временной резерв для принятия обоснованных клинических решений и своевременного
-              проведения профилактических мероприятий.
+              патологического состояния в следующем временном горизонте.
             </p>
             <div className="mt-4 p-4 bg-white rounded-lg border border-green-200">
               <p className="text-sm text-green-800 font-medium">

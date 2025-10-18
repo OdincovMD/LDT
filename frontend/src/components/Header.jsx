@@ -30,6 +30,7 @@ export default function Header() {
   }
 
   const pageDescriptions = {
+    [PAGE_NAMES.HOME]: "Описание системы",
     [PAGE_NAMES.PATIENTS]: "Управление пациентами и их исследованиями",
     [PAGE_NAMES.DASHBOARD]: "Мониторинг в реальном времени",
     [PAGE_NAMES.ABOUT]: "Информация о нашем проекте и команде",

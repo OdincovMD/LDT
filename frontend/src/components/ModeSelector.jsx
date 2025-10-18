@@ -74,7 +74,7 @@ const ModeSelector = ({
   )
 
   return (
-      <div className="bg-white rounded-2xl p-4 mb-4 shadow">
+      <div className="bg-white border border-gray-300 rounded-2xl p-4 mb-4 shadow">
       <div className="flex items-center space-x-2 mb-4">
         <Settings size={20} className="text-slate-600" />
         <h3 className="text-lg font-semibold text-slate-800">Режим работы</h3>

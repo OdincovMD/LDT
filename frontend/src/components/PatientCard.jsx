@@ -54,9 +54,12 @@ const PatientCard = ({ patient, isExpanded, onClick }) => {
   const allCases = useSelector((state) => state.cases.case_array) ?? []
 
   // Фильтруем кейсы конкретного пациента
-  const patientCases = useMemo(
-    () => allCases.filter((c) => c.patient_id === patient?.id),
-    [allCases, patient?.id]
+  const patientCases = useMemo(() => {
+    const filteredCases = allCases.filter((c) => c.patient_id === patient?.id)
+    return filteredCases.sort((a, b) => {
+        return new Date(b.created_at) - new Date(a.created_at);
+    })
+   }, [allCases, patient?.id]
   )
 
   const [isCreateCaseModalOpen, setIsCreateCaseModalOpen] = React.useState(false)
@@ -151,6 +154,7 @@ const PatientCard = ({ patient, isExpanded, onClick }) => {
           <div className="space-y-2">
             {patientCases.length > 0 ? (
               patientCases.map((caseItem) => (
+                
                 <CaseItem key={caseItem.id} caseItem={caseItem} />
               ))
             ) : (
@@ -162,7 +166,7 @@ const PatientCard = ({ patient, isExpanded, onClick }) => {
           </div>
 
           {/* Действия */}
-          <div className="flex space-x-2 mt-4 pt-3 border-top border-gray-100">
+          <div className="flex space-x-2 mt-4 pt-3 border-top border-gray-300">
             <button
               onClick={handleNavigateToDashboard}
               className="flex-1 bg-blue-600 text-white text-center py-2 px-3 rounded text-sm hover:bg-blue-700"

@@ -771,7 +771,7 @@ export default function Dashboard() {
         )}
 
         {/* Параметры работы модели */}
-        <div className="flex flex-col items-center justify-center bg-white border border-gray-200 rounded-2xl shadow-sm p-4 mb-4">
+        <div className="flex flex-col items-center justify-center bg-white border border-gray-300 rounded-2xl shadow-sm p-4 mb-4">
           <div className="text-sm font-medium text-slate-700 mb-4">Параметры работы модели</div>
           
           <div className="flex flex-col space-y-4 max-w-md">
@@ -852,7 +852,7 @@ export default function Dashboard() {
         {currentCase ? (
         <>
         {/* ЧСС */}
-        <section className="bg-white border border-gray-200 rounded-2xl p-4 shadow-sm">
+        <section className="bg-white border border-gray-300 rounded-2xl p-4 shadow-sm">
           <div className="flex justify-between items-start mb-2">
             <h2 className="text-lg font-medium text-gray-900">ЧСС (уд/мин)</h2>
             {!(operationMode === 'playback') && 
@@ -899,7 +899,7 @@ export default function Dashboard() {
         </section>
 
         {/* Маточная активность */}
-        <section className="bg-white border border-gray-200 rounded-2xl p-4 shadow-sm">
+        <section className="bg-white border border-gray-300 rounded-2xl p-4 shadow-sm">
           <div className="flex justify-between items-start mb-2">
             <h2 className="text-lg font-medium text-gray-900">Маточная активность</h2>
             {!(operationMode === 'playback') &&
@@ -946,7 +946,7 @@ export default function Dashboard() {
         </section>
 
         {/* Вероятность осложнений */}
-        <section className="bg-white border border-gray-200 rounded-2xl p-4 shadow-sm">
+        <section className="bg-white border border-gray-300 rounded-2xl p-4 shadow-sm">
           <div className="flex justify-between items-start mb-2">
             <h2 className="text-lg font-medium text-gray-900">Вероятность осложнений</h2>
             {!(operationMode === 'playback') && 
