@@ -7,5 +7,6 @@ export default defineConfig({
     host: true,
     port: Number(process.env.FRONTEND_PORT || 5173),
     watch: { usePolling: true },
+    allowedHosts: true
   }
 })

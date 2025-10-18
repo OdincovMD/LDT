@@ -38,8 +38,41 @@ http {
         listen ${NGINX_PORT};
         server_name _;
 
-        # --- API (бекенд) ---
+        # ===== WebSocket - доступен извне =====
+        location ^~ /ws/ {
+            proxy_http_version 1.1;
+            proxy_set_header Upgrade            $http_upgrade;
+            proxy_set_header Connection         $connection_upgrade;
+            proxy_set_header Host               $host;
+            proxy_set_header X-Real-IP          $remote_addr;
+            proxy_set_header X-Forwarded-For    $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto  $scheme;
+
+            proxy_buffering off;
+            proxy_read_timeout  3600s;
+            proxy_send_timeout  3600s;
+
+            proxy_pass http://backend:${BACKEND_PORT};
+        }
+
+        # ===== FRONTEND - доступен извне =====
+        location / {
+            proxy_http_version 1.1;
+            proxy_set_header Host              $host;
+            proxy_set_header X-Real-IP         $remote_addr;
+            proxy_set_header X-Forwarded-For   $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto $scheme;
+            proxy_set_header Upgrade           $http_upgrade;
+            proxy_set_header Connection        $connection_upgrade;
+            proxy_pass http://frontend_upstream;
+        }
+
+        # ===== API и документация - ТОЛЬКО для внутреннего доступа =====
         location ^~ /api/ {
+            allow 127.0.0.1;
+            allow 188.120.235.203;
+            deny all;
+
             proxy_http_version 1.1;
             proxy_set_header Host              $host;
             proxy_set_header X-Real-IP         $remote_addr;
@@ -50,25 +83,12 @@ http {
             rewrite ^/api/?(.*)$ /$1 break;
             proxy_pass http://backend_upstream;
         }
-        # WebSocket
-        location ^~ /ws/ {
-            proxy_http_version 1.1;
-            proxy_set_header Upgrade            $http_upgrade;
-            proxy_set_header Connection         $connection_upgrade;
-            proxy_set_header Host               $host;
-            proxy_set_header X-Real-IP          $remote_addr;
-            proxy_set_header X-Forwarded-For    $proxy_add_x_forwarded_for;
-            proxy_set_header X-Forwarded-Proto  $scheme;
 
-            proxy_buffering off;         # важно для ping/pong
-            proxy_read_timeout  3600s;
-            proxy_send_timeout  3600s;
-
-            proxy_pass http://backend:${BACKEND_PORT};
-        }
-
-        # Swagger / OpenAPI напрямую на бекенд
         location = /docs {
+            allow 127.0.0.1;
+            allow 188.120.235.203;
+            deny all;
+
             proxy_set_header Host              $host;
             proxy_set_header X-Real-IP         $remote_addr;
             proxy_set_header X-Forwarded-For   $proxy_add_x_forwarded_for;
@@ -77,23 +97,15 @@ http {
         }
 
         location = /openapi.json {
+            allow 127.0.0.1;
+            allow 188.120.235.203;
+            deny all;
+
             proxy_set_header Host              $host;
             proxy_set_header X-Real-IP         $remote_addr;
             proxy_set_header X-Forwarded-For   $proxy_add_x_forwarded_for;
             proxy_set_header X-Forwarded-Proto $scheme;
             proxy_pass http://backend_upstream;
-        }
-
-        # --- FRONTEND (всё остальное) ---
-        location / {
-            proxy_http_version 1.1;
-            proxy_set_header Host              $host;
-            proxy_set_header X-Real-IP         $remote_addr;
-            proxy_set_header X-Forwarded-For   $proxy_add_x_forwarded_for;
-            proxy_set_header X-Forwarded-Proto $scheme;
-            proxy_set_header Upgrade           $http_upgrade;
-            proxy_set_header Connection        $connection_upgrade;
-            proxy_pass http://frontend_upstream;
         }
 
         client_max_body_size 16m;

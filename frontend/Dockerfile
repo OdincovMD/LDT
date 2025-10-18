@@ -12,4 +12,4 @@ RUN echo "export const env = { BACKEND_URL: '${BACKEND_URL}' }" > /app/src/impor
 
 EXPOSE ${FRONTEND_PORT}
 
-CMD ["sh", "-c", "npm run dev -- --host 0.0.0.0 --port ${FRONTEND_PORT}"]
+CMD ["sh", "-c", "npm run build -- --host 0.0.0.0 --port ${FRONTEND_PORT}"]
