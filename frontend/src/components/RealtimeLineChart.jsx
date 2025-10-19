@@ -1,8 +1,7 @@
 /**
  * @component RealtimeLineChart
- * @description Компонент графика для отображения временных рядов в реальном времени. Поддерживает множественные серии, алерты, динамические оси и референсные линии.
+ * @description Компонент - график, отображающий временной ряд в реальном времени. Поддерживает множественные серии, предупреждения, динамические оси и референсные линии.
  */
-// components/RealtimeLineChart.jsx
 import React, { useMemo } from 'react'
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Area,

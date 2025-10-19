@@ -1,6 +1,6 @@
 /**
  * @component Home
- * @description Главная страница приложения. Содержит информацию о системе мониторинга состояния плода, технические детали и возможности платформы.
+ * @description Страница "Главная". Содержит информацию о пользователе, а также предоставляет краткое описание системы мониторинга состояния плода и возможности платформы.
  */
 import { useSelector } from "react-redux"
 import { User, Mail, Activity, Heart, AlertTriangle, Shield, Cpu, BarChart3 } from "lucide-react"

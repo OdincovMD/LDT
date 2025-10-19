@@ -32,7 +32,7 @@ def predict(req: WindowRequest):
     return PredictionResponse(
         proba=proba,
         label=int(result["label"]),
-        alert=alert,
+        alert=1,
         features=features
     )
 

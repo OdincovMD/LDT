@@ -1,6 +1,6 @@
 /**
  * @component CreateCaseModal
- * @description Модальное окно создания нового медицинского исследования (кейса). Позволяет ввести описание исследования для выбранного пациента.
+ * @description Компонент - модальное окно создания нового медицинского исследования (кейса). Позволяет создать исследование и ввести его описание для выбранного пациента.
  */
 import React, { useEffect, useRef, useCallback, useState } from "react"
 import PropTypes from "prop-types"

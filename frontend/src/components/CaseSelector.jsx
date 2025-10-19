@@ -208,7 +208,7 @@ const CaseSelector = () => {
         </div>
 
         {/* Исследование */}
-        <div className="flex-1 relative" ref={caseDDRef}>
+        <div className="flex-1 w-full" ref={caseDDRef}>
           <label className="block text-sm text-slate-500 mb-2">Исследование</label>
           <button
             onClick={() => currentPatient && setIsCaseDropdownOpen((v) => !v)}
@@ -235,7 +235,7 @@ const CaseSelector = () => {
           </button>
 
             {isCaseDropdownOpen && currentPatient && (
-            <div className="absolute w-full z-10 mt-1 mr-4 bg-white border border-gray-300 rounded-lg shadow-lg">
+            <div className="absolute z-10 mt-1 mr-4 bg-white border border-gray-300 rounded-lg shadow-lg">
               {/* Новое исследование */}
               <button
                 onClick={handleOpenCreateCase}

@@ -1,3 +1,8 @@
+/**
+ * @file wsTokenStorage.js
+ * @description Storage для управления состоянием WS-токена. Загружает, хранит и очищает его.
+ */
+
 const keyFor = (userId, caseId) => `ws_token_u${userId}_c${caseId}`
 
 export function loadStoredWsToken(userId, caseId) {

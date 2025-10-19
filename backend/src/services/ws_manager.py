@@ -1,3 +1,9 @@
+"""
+Менеджер WebSocket-комнат (по case_id).
+Хранит активные соединения FastAPI WebSocket, безопасно добавляет/удаляет их
+и выполняет рассылку сообщений внутри комнаты.
+"""
+
 from typing import Dict, Set
 from fastapi import WebSocket
 from asyncio import Lock

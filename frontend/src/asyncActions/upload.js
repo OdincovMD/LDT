@@ -1,10 +1,8 @@
-// src/asyncActions/upload.js
 /**
  * @file upload.js
  * @description Async Thunk для загрузки пользовательского CSV-файла демо-данных.
  * Бэкенд-роут: POST /api/demo/upload (проксируется nginx'ом)
  */
-
 import { createAsyncThunk } from "@reduxjs/toolkit"
 import { env } from "../imports/ENV"
 import { BACKEND_ENDPOINTS } from "../imports/ENDPOINTS"

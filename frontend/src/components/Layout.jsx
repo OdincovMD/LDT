@@ -1,8 +1,7 @@
 /**
  * @component Layout
- * @description Основной layout приложения. Управляет расположением Sidebar, Header и основного контента.
+ * @description Компонент - компоновка приложения. Управляет расположением Sidebar, Header и основного контента.
  */
-// src/components/Layout.jsx
 import React from "react"
 import { useSelector } from "react-redux"
 import Sidebar from "./Sidebar"

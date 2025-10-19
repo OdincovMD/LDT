@@ -1,3 +1,8 @@
+"""
+Маршрут подготовки drop-файла для USB/WS-моста.
+POST /provision/ws: берёт WS-токен из БД, собирает ws://…/ws/case/{case_id}?token=…&H&stride,
+создаёт JSON в /bridge_drop (имя с таймстампом) и возвращает filename, путь и ws_url.
+"""
 import os
 import json
 from datetime import datetime, timezone

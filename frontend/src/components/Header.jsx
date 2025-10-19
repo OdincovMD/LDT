@@ -1,8 +1,7 @@
 /**
  * @component Header
- * @description Шапка приложения. Отображает заголовок текущей страницы, информацию о пользователе и кнопку выхода.
+ * @description Компонент - заголовок приложения. Отображает заголовок текущей страницы, её описание и информацию текущем о пользователе.
  */
-// src/components/Header.jsx
 import React, { useMemo, useCallback } from "react"
 import { useDispatch, useSelector } from "react-redux"
 import { LogOut, UserCircle } from "lucide-react"

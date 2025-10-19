@@ -1,4 +1,7 @@
-// src/utils/plotlyExport.js
+/**
+ * @file plotlyExport.js
+ * @description Утилита для экспорта компонентов PlotlyHistoryChart в формат .html. Также содержит метаданные об исследовании. Предназначен для просмотра графиков независимо от работоспособности сервера.
+ */
 
 /**
  * Экспорт всех графиков Plotly в один HTML файл с идентичным отображением
@@ -409,7 +412,7 @@ export const collectChartsData = (plotlyComponents, rawPoints, currentCase, curr
   // Метаданные для файла
   const metadata = {
     patientName: currentPatient.name || 'Неизвестный пациент',
-    caseName: `Исследование №${currentCase?.id}` || 'Исследование',
+    caseName: currentCase?.description || `Исследование №${currentCase?.id}` || 'Исследование',
     filename: generateFilename(currentCase, currentPatient),
     recordingPeriod: getRecordingPeriod(rawPoints),
     pointsCount: rawPoints.length,
@@ -641,7 +644,6 @@ const getChartLayout = (yLabel, yClamp, shapes, yRange) => ({
 const generateFilename = (currentCase, currentPatient) => {
 
   const patientName = currentPatient?.name || 'пациент'
-  console.log(patientName)
   const caseName = `Исследование№${currentCase?.id}` || 'исследование'
   const date = new Date().toISOString().split('T')[0]
   

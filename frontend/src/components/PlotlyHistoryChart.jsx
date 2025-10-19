@@ -1,4 +1,7 @@
-// src/components/PlotlyHistoryChart.jsx
+/**
+ * @component PlotlyHistoryChart
+ * @description Компонент - интерактивный график. Показывает результаты исследования, сохраненные на сервере. Позволяет удобно просматривать свое содержимое.
+ */
 import React, { useEffect, useMemo, useRef, useState } from "react"
 import Plot from 'react-plotly.js'
 

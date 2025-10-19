@@ -1,6 +1,6 @@
 /**
  * @file index.js
- * @description Главный файл Redux store. Конфигурирует и объединяет все reducers приложения.
+ * @description Главный файл Redux store. Конфигурирует и объединяет все редьюсеры приложения.
  */
 import { configureStore } from "@reduxjs/toolkit"
 import { combineReducers } from "redux"
