@@ -216,12 +216,6 @@ const generateHtmlContent = (chartsData) => {
             <div class="info-item">
                 Период записи: <div class="info-value">${chartsData.metadata?.recordingPeriod || 'Не указан'}</div>
             </div>
-            <div class="info-item">
-                Горизонт прогноза: <div class="info-value">${meta.horizonMin != null ? meta.horizonMin + ' мин' : '—'}</div>
-            </div>
-            <div class="info-item">
-                Время обновления предсказаний: <div class="info-value">${meta.strideSec != null ? meta.strideSec + ' сек' : '—'}</div>
-            </div>
         </div>
     </div>
 
@@ -642,8 +636,8 @@ const getRecordingPeriod = (points) => {
   const firstPoint = points[0]
   const lastPoint = points[points.length - 1]
   
-  const startTime = new Date(firstPoint.t * 1000)
-  const endTime = new Date(lastPoint.t * 1000)
+  const startTime = new Date(firstPoint.t * 1000 - 3 * 3600 * 1000)
+  const endTime = new Date(lastPoint.t * 1000 - 3 * 3600 * 1000) 
   
   return `${startTime.toLocaleTimeString('ru-RU')} - ${endTime.toLocaleTimeString('ru-RU')}`
 }
