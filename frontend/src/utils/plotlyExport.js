@@ -19,6 +19,7 @@ export const exportPlotlyToHtml = (chartsData, filename = 'charts_export.html') 
 const generateHtmlContent = (chartsData) => {
   const figo = chartsData.figo || {}
   const meta = chartsData.metadata || {}
+
   const fv = {
     baseline: figo.baseline ?? null,
     bpm_sd: figo.bpm_sd ?? null,
@@ -321,6 +322,12 @@ const generateHtmlContent = (chartsData) => {
                             },
                             autorange: true,
                             fixedrange: false,
+                            showspikes: true,
+                                  spikecolor: "#9CA3AF",
+                                  spikethickness: 0.5,
+                                  spikedash: "dot", 
+                                  spikemode: "across",
+                                  spikesnap: "cursor",
                         },
                         yaxis: {
                             title: { text: chart.layout.yaxis.title.text },
@@ -553,6 +560,21 @@ const getYLabel = (dataKey) => {
 const getChartData = (points, dataKey, color) => {
   const x = points.map(p => new Date(p.t * 1000))
   const y = points.map(p => p[dataKey])
+
+  var hoverTemplate
+  switch(dataKey) {
+    case "bpm":
+      hoverTemplate = 'Время: %{x|%H:%M:%S}<br>ЧСС: %{y:.1f}<extra></extra>'
+      break
+    case "uc":
+      hoverTemplate = 'Время: %{x|%H:%M:%S}<br>МА: %{y:.1f}<extra></extra>'
+      break
+    case "risk":
+      hoverTemplate = 'Время: %{x|%H:%M:%S}<br>Риск: %{y:.2f}<extra></extra>'
+      break
+    default:
+      ""
+  }
   
   return [{
     x: x,
@@ -564,6 +586,8 @@ const getChartData = (points, dataKey, color) => {
       color: color,
       width: 2
     },
+
+    hovertemplate: hoverTemplate,
     connectgaps: true
   }]
 }

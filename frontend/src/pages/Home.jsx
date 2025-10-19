@@ -39,7 +39,7 @@ export default function Home() {
             <p className="text-gray-600">Ваш профиль в системе мониторинга состояния плода</p>
           </div>
 
-          <div className="grid md:grid-cols-2 gap-4 max-w-md mx-auto">
+          <div className="grid md:grid-cols-1 gap-4 max-w-md mx-auto">
             <div className="flex items-center p-3 bg-blue-50 rounded-lg border border-blue-100">
               <User size={18} className="text-blue-600 mr-3" />
               <div>
@@ -224,7 +224,7 @@ export default function Home() {
           </div>
 
           <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl p-6 border border-green-200">
-            <h4 className="font-bold text-gray-900 text-xl mb-4">Сситема прогнозирования</h4>
+            <h4 className="font-bold text-gray-900 text-xl mb-4">Система прогнозирования</h4>
             <p className="text-gray-700 leading-relaxed">
               Наша модель работает по принципу <strong>скользящего временного окна</strong>: по комплексным признакам,
               извлеченным из текущего временного интервала мониторинга, система прогнозирует вероятность развития

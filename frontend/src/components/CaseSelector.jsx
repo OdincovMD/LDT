@@ -1,8 +1,7 @@
 /**
  * @component CaseSelector
- * @description Компонент выбора пациента и исследования (кейса). Управляет загрузкой пациентов и исследований, отображает выпадающие списки и модальное окно создания нового исследования.
+ * @description Компонент - выбор пациента и исследования (кейса). Управляет загрузкой пациентов и исследований, отображает выпадающие списки и модальное окно создания нового исследования.
  */
-// src/components/CaseSelector.jsx
 import React, { useEffect, useMemo, useRef, useCallback } from "react"
 import { useSelector, useDispatch } from "react-redux"
 import { ChevronDown, User, FolderPlus, Clock } from "lucide-react"
@@ -153,11 +152,22 @@ const CaseSelector = () => {
     setIsCreateCaseOpen(true)
   }, [currentPatient])
 
+  const sortedPatients = useMemo(() => {
+    return patient_array
+      .slice()
+      .sort((a, b) => {
+        const nameA = a.name?.toLowerCase() || ''
+        const nameB = b.name?.toLowerCase() || ''
+
+        return nameA.localeCompare(nameB)
+      })
+  }, [patient_array])
+
   return (
     <div className="bg-white border border-gray-300 rounded-2xl shadow-sm p-4 mb-4 relative">
       <div className="flex flex-col md:flex-row gap-4">
         {/* Пациент */}
-        <div className="flex-1" ref={patientDDRef}>
+        <div className="flex-1 relative" ref={patientDDRef}>
           <label className="block text-sm text-slate-500 mb-2">Пациент</label>
           <button
             onClick={() => setIsPatientDropdownOpen((v) => !v)}
@@ -173,15 +183,15 @@ const CaseSelector = () => {
           </button>
 
           {isPatientDropdownOpen && (
-            <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
-              {patient_array.length > 0 ? (
-                patient_array.map((patient) => {
+            <div className="absolute w-full z-10 mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+              {sortedPatients.length > 0 ? (
+                sortedPatients.map((patient) => {
                   const age = ageFromBirthDate(patient.birth_date)
                   return (
                     <button
                       key={patient.id}
                       onClick={() => handlePatientSelect(patient)}
-                      className="w-full px-4 py-3 text-left hover:bg-gray-100 transition-colors flex items-center justify-between"
+                      className="w-full px-4 py-3 text-left border-t border-gray-300 hover:bg-gray-100 transition-colors flex items-center justify-between first:border-t-0"
                     >
                       <span className="text-slate-800">{patient.name}</span>
                       {age !== null && (
@@ -198,7 +208,7 @@ const CaseSelector = () => {
         </div>
 
         {/* Исследование */}
-        <div className="flex-1" ref={caseDDRef}>
+        <div className="flex-1 relative" ref={caseDDRef}>
           <label className="block text-sm text-slate-500 mb-2">Исследование</label>
           <button
             onClick={() => currentPatient && setIsCaseDropdownOpen((v) => !v)}
@@ -225,7 +235,7 @@ const CaseSelector = () => {
           </button>
 
             {isCaseDropdownOpen && currentPatient && (
-            <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg">
+            <div className="absolute w-full z-10 mt-1 mr-4 bg-white border border-gray-300 rounded-lg shadow-lg">
               {/* Новое исследование */}
               <button
                 onClick={handleOpenCreateCase}
