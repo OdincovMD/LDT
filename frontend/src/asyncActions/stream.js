@@ -91,12 +91,14 @@ export const loadHistoricalData = createAsyncThunk(
 
       const rawData = await rawDataResponse.json()
       const predictions = await predictionsResponse.json()
+      const freq = Math.ceil((rawData.length - HISTORY_OFFSET) / predictions.length)
 
       const dataWithRisk = rawData.map((rawPoint, index) => {
-        const prediction =
+        const predictionIndex = Math.floor((index - HISTORY_OFFSET) / freq)
+        const prediction = 
           index < HISTORY_OFFSET
             ? { ...predictionDummy, probability: 0 }
-            : predictions[index - HISTORY_OFFSET]
+            : predictions[Math.min(predictionIndex, predictions.length - 1)]
 
         return {
           ...rawPoint,

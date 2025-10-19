@@ -289,7 +289,7 @@ export default function Dashboard() {
     return () => window.removeEventListener('beforeunload', handleBeforeUnload)
   }, [dispatch, currentCase?.id, recordingMode])
 
-  const parseTs = (t) => (typeof t === "string" ? new Date(t).getTime() / 1000 : t)
+  const parseTs = (t, timezone=0) => (typeof t === "string" ? new Date(t).getTime() / 1000 + timezone * 3600: t)
 
   // === Хелпер: сброс локальных данных графика ===
   const resetCharts = () => {
@@ -449,7 +449,7 @@ export default function Dashboard() {
             const hist = await dispatch(loadHistoricalData(currentCase.id)).unwrap()
             dispatch(setHistoricalData(hist))
             const points = (hist || []).map((it) => ({
-              t: parseTs(it.timestamp),
+              t: parseTs(it.timestamp, 3),
               bpm: it.bpm,
               uc: it.uc,
               risk: it.risk ?? 0,

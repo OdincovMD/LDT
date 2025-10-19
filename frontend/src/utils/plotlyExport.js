@@ -22,6 +22,7 @@ export const exportPlotlyToHtml = (chartsData, filename = 'charts_export.html') 
 const generateHtmlContent = (chartsData) => {
   const figo = chartsData.figo || {}
   const meta = chartsData.metadata || {}
+
   const fv = {
     baseline: figo.baseline ?? null,
     bpm_sd: figo.bpm_sd ?? null,
@@ -219,12 +220,6 @@ const generateHtmlContent = (chartsData) => {
             <div class="info-item">
                 Период записи: <div class="info-value">${chartsData.metadata?.recordingPeriod || 'Не указан'}</div>
             </div>
-            <div class="info-item">
-                Горизонт прогноза: <div class="info-value">${meta.horizonMin != null ? meta.horizonMin + ' мин' : '—'}</div>
-            </div>
-            <div class="info-item">
-                Время обновления предсказаний: <div class="info-value">${meta.strideSec != null ? meta.strideSec + ' сек' : '—'}</div>
-            </div>
         </div>
     </div>
 
@@ -330,6 +325,12 @@ const generateHtmlContent = (chartsData) => {
                             },
                             autorange: true,
                             fixedrange: false,
+                            showspikes: true,
+                                  spikecolor: "#9CA3AF",
+                                  spikethickness: 0.5,
+                                  spikedash: "dot", 
+                                  spikemode: "across",
+                                  spikesnap: "cursor",
                         },
                         yaxis: {
                             title: { text: chart.layout.yaxis.title.text },
@@ -562,6 +563,21 @@ const getYLabel = (dataKey) => {
 const getChartData = (points, dataKey, color) => {
   const x = points.map(p => new Date(p.t * 1000))
   const y = points.map(p => p[dataKey])
+
+  var hoverTemplate
+  switch(dataKey) {
+    case "bpm":
+      hoverTemplate = 'Время: %{x|%H:%M:%S}<br>ЧСС: %{y:.1f}<extra></extra>'
+      break
+    case "uc":
+      hoverTemplate = 'Время: %{x|%H:%M:%S}<br>МА: %{y:.1f}<extra></extra>'
+      break
+    case "risk":
+      hoverTemplate = 'Время: %{x|%H:%M:%S}<br>Риск: %{y:.2f}<extra></extra>'
+      break
+    default:
+      ""
+  }
   
   return [{
     x: x,
@@ -573,6 +589,8 @@ const getChartData = (points, dataKey, color) => {
       color: color,
       width: 2
     },
+
+    hovertemplate: hoverTemplate,
     connectgaps: true
   }]
 }
@@ -644,8 +662,8 @@ const getRecordingPeriod = (points) => {
   const firstPoint = points[0]
   const lastPoint = points[points.length - 1]
   
-  const startTime = new Date(firstPoint.t * 1000)
-  const endTime = new Date(lastPoint.t * 1000)
+  const startTime = new Date(firstPoint.t * 1000 - 3 * 3600 * 1000)
+  const endTime = new Date(lastPoint.t * 1000 - 3 * 3600 * 1000) 
   
   return `${startTime.toLocaleTimeString('ru-RU')} - ${endTime.toLocaleTimeString('ru-RU')}`
 }
