@@ -70,8 +70,8 @@ http {
         # ===== API и документация - ТОЛЬКО для внутреннего доступа =====
         location ^~ /api/ {
             allow 127.0.0.1;
-            allow 188.120.235.203;
-            deny all;
+            allow ${HOST};
+            ${DEV};
 
             proxy_http_version 1.1;
             proxy_set_header Host              $host;
@@ -86,8 +86,8 @@ http {
 
         location = /docs {
             allow 127.0.0.1;
-            allow 188.120.235.203;
-            deny all;
+            allow ${HOST};
+            ${DEV};
 
             proxy_set_header Host              $host;
             proxy_set_header X-Real-IP         $remote_addr;
@@ -98,8 +98,8 @@ http {
 
         location = /openapi.json {
             allow 127.0.0.1;
-            allow 188.120.235.203;
-            deny all;
+            allow ${HOST};
+            ${DEV};
 
             proxy_set_header Host              $host;
             proxy_set_header X-Real-IP         $remote_addr;
