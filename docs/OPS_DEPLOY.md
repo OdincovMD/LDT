@@ -40,6 +40,9 @@ ML_URL=http://ml:8000/predict
 # sim worker
 CSV_PATH=/app/src/demo.csv
 MAX_UPLOAD_BYTES=30000000
+
+HOST=172.0.0.1
+DEV=allow all
 ```
 
 > При изменении портов/хостов — пересоберите/перезапустите контейнеры.
