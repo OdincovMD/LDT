@@ -1,8 +1,7 @@
 /**
  * @component Controls
- * @description Компонент управления подключением. Позволяет выбирать режим подключения (демо/WebSocket/USB) и управлять подключением/отключением к источнику данных.
+ * @description Компонент - управление подключением. Позволяет выбирать режим подключения (демо/WebSocket/USB) и управлять подключением/отключением к выбранному источнику данных.
  */
-// src/components/Controls.jsx
 import React, { useCallback, useMemo, useEffect, useState, useRef } from "react"
 import PropTypes from "prop-types"
 import { uploadDemoCsv } from "../asyncActions/upload"

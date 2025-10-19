@@ -1,3 +1,7 @@
+/**
+ * @file wsToken.js
+ * @description Async Thunks для работы с токеном для передачи данных по WS. Создание нового токена и проверка его существования.
+ */
 import { createAsyncThunk } from "@reduxjs/toolkit"
 import { env } from "../imports/ENV"
 import { BACKEND_ENDPOINTS } from "../imports/ENDPOINTS"

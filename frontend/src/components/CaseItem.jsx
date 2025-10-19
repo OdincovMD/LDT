@@ -1,8 +1,7 @@
 /**
  * @component CaseItem
- * @description Карточка медицинского исследования (кейса). Отображает информацию о случае, дату создания и количество записей. При клике открывает дашборд с данными исследования.
+ * @description Компонент - карточка медицинского исследования (кейса). Отображает информацию об исследовании, дату создания и количество записей. При нажатии открывает страницу Dashboard.jsx с данными исследования.
  */
-// src/components/CaseItem.jsx
 import React, { useCallback, useMemo } from "react"
 import { useDispatch } from "react-redux"
 import { useNavigate } from "react-router-dom"

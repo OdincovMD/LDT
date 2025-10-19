@@ -1,6 +1,6 @@
 /**
  * @component About
- * @description Страница "О нас". Содержит информацию о команде разработчиков и проекте для хакатона "Лидеры Цифровой Трансформации 2025".
+ * @description Страница "О нас". Содержит информацию о команде разработчиков и проекте для хакатона "Лидеры Цифровой Трансформации 2025", Задача 3.
  */
 import { useState } from 'react'
 import { ChevronDown, ChevronUp, Trophy, Users, GraduationCap, ExternalLink } from 'lucide-react'

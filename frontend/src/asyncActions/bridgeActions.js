@@ -1,14 +1,15 @@
+/**
+ * @file bridgeActions.js
+ * @description Создаёт drop-файл для USB-моста (токен берётся на бэке из БД).
+ */
 import { createAsyncThunk } from "@reduxjs/toolkit"
 import { env } from "../imports/ENV"
 import { BACKEND_ENDPOINTS } from "../imports/ENDPOINTS"
-
-/**
- * Создаёт drop-файл для USB-моста (токен берётся на бэке из БД).
- * body: { user_id, case_id, H, stride, name_hint? }
- * response: { filename, path_in_container, ws_url }
- */
 export const provisionBridgeWs = createAsyncThunk(
 "bridge/provisionWs",
+
+//  body: { user_id, case_id, H, stride, name_hint? }
+//  response: { filename, path_in_container, ws_url }
 async ({ userId, caseId, H = 300, stride = 15, nameHint }, { rejectWithValue }) => {
     try {
     const url = `${env.BACKEND_URL}${BACKEND_ENDPOINTS.BRIDGE.PROVISION_WS}?user_id=${encodeURIComponent(

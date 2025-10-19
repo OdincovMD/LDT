@@ -1,8 +1,7 @@
 /**
  * @component CreatePatientModal
- * @description Модальное окно создания нового пациента. Позволяет ввести ФИО и дату рождения пациента.
+ * @description Компонент - модальное окно создания нового пациента. Позволяет ввести ФИО и дату рождения пациента.
  */
-// src/components/CreatePatientModal.jsx
 import React, { useEffect, useRef, useCallback, useState } from "react"
 import PropTypes from "prop-types"
 import { useForm } from "react-hook-form"

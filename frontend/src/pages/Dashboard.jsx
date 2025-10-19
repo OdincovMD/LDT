@@ -1,8 +1,7 @@
 /**
  * @component Dashboard
- * @description Главная страница системы мониторинга. Отображает графики ЧСС, маточной активности и рисков в реальном времени, управляет режимами записи и просмотра данных.
+ * @description Страница системы мониторинга. Отображает графики ЧСС, маточной активности и вероятностей в реальном времени, управляет режимами записи и просмотра данных. Позволяет выбирать параметры модели для предсказания, скачивать готовые исследования в формате html.
  */
-// pages/Dashboard.jsx
 import React, { useEffect, useRef, useState, useMemo } from "react"
 import { useNavigate } from 'react-router-dom'
 import { HelpCircle, ChevronDown, ChevronUp, Copy, Check, Download } from 'lucide-react'
@@ -424,7 +423,6 @@ export default function Dashboard() {
   // Если кейс сохранён — рвём любое подключение (demo/ws) и чистим пуллинг
   useEffect(() => {
     if (!connectLocked) return
-    console.log('Зашел куда-то')
     if (!(operationMode === 'playback')) {
       if (dataConnected) setDataConnected(false)
       if (pollWsRef.current) { clearInterval(pollWsRef.current); pollWsRef.current = null }

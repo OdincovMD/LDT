@@ -1,3 +1,7 @@
+/**
+ * @component main
+ * @description Корневой компонент приложения. Обеспечивает рендер всех зависимостей и возможность навигации по сайту.
+ */
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { BrowserRouter } from 'react-router-dom'

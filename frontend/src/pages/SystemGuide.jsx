@@ -1,6 +1,6 @@
 /**
  * @component SystemGuide
- * @description Страница с инструкциями по подключению к системе мониторинга. Содержит руководства для разных режимов работы.
+ * @description Страница с инструкциями по подключению к системе мониторинга. Содержит руководства для разных режимов работы: Демо, WS, USB.
  */
 import React, { useState } from 'react'
 import { Link } from 'react-router-dom'
@@ -15,7 +15,7 @@ export default function SystemGuide() {
     usb: false
   })
 
-    /**
+  /**
    * Миниатюрная кнопка режима записи для вставки в текст
    */
   const MiniRecordButton = ({ className = "" }) => {
